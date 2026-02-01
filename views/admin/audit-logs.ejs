@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Audit Logs - Admin</title>
+</head>
+<body>
+  <%
+    const body = `
+      <h1>📋 Audit Logs</h1>
+
+      <% if (rbacBypass) { %>
+        <div class="alert alert-warning">
+          ⚠️ <strong>Warning:</strong> RBAC is currently DISABLED. All users can access this page.
+        </div>
+      <% } %>
+
+      <div class="card">
+        <% if (logs.length === 0) { %>
+          <p style="text-align: center; color: #999; padding: 2rem;">No audit logs available. Enable audit logging in the security panel.</p>
+        <% } else { %>
+          <table style="font-size: 0.9rem;">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>User</th>
+                <th>Role</th>
+                <th>Action</th>
+                <th>Resource</th>
+                <th>IP Address</th>
+                <th>Success</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% logs.forEach(log => { %>
+                <tr>
+                  <td style="white-space: nowrap;"><%= new Date(log.timestamp).toLocaleString() %></td>
+                  <td><%= log.username || 'N/A' %></td>
+                  <td><%= log.role || 'N/A' %></td>
+                  <td><%= log.action %></td>
+                  <td>
+                    <% if (log.resource_type && log.resource_id) { %>
+                      <%= log.resource_type %> #<%= log.resource_id %>
+                    <% } else { %>
+                      -
+                    <% } %>
+                  </td>
+                  <td><%= log.ip_address || 'N/A' %></td>
+                  <td>
+                    <% if (log.success) { %>
+                      <span style="color: #27ae60;">✓</span>
+                    <% } else { %>
+                      <span style="color: #e74c3c;">✗</span>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+
+          <% if (totalPages > 1) { %>
+            <div style="margin-top: 1.5rem; text-align: center;">
+              <% if (currentPage > 1) { %>
+                <a href="/admin/audit-logs?page=<%= currentPage - 1 %>" class="btn btn-secondary">← Previous</a>
+              <% } %>
+              <span style="margin: 0 1rem;">Page <%= currentPage %> of <%= totalPages %></span>
+              <% if (currentPage < totalPages) { %>
+                <a href="/admin/audit-logs?page=<%= currentPage + 1 %>" class="btn btn-secondary">Next →</a>
+              <% } %>
+            </div>
+          <% } %>
+        <% } %>
+      </div>
+    `;
+  %>
+  <%- include('../layout', { body: body }) %>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard</title>
+</head>
+<body>
+  <%
+    const body = `
+      <h1>⚙️ Admin Dashboard</h1>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+        <div class="card" style="text-align: center; padding: 1.5rem;">
+          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">👥</div>
+          <div style="font-size: 2rem; font-weight: 700; color: #3498db;"><%= stats.totalUsers %></div>
+          <div style="color: #666;">Total Users</div>
+        </div>
+        <div class="card" style="text-align: center; padding: 1.5rem;">
+          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">👨‍🎓</div>
+          <div style="font-size: 2rem; font-weight: 700; color: #27ae60;"><%= stats.totalStudents %></div>
+          <div style="color: #666;">Students</div>
+        </div>
+        <div class="card" style="text-align: center; padding: 1.5rem;">
+          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">👨‍🏫</div>
+          <div style="font-size: 2rem; font-weight: 700; color: #e67e22;"><%= stats.totalProfessors %></div>
+          <div style="color: #666;">Professors</div>
+        </div>
+        <div class="card" style="text-align: center; padding: 1.5rem;">
+          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📚</div>
+          <div style="font-size: 2rem; font-weight: 700; color: #9b59b6;"><%= stats.totalClasses %></div>
+          <div style="color: #666;">Classes</div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <div class="card">
+          <h2>Quick Actions</h2>
+          <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem;">
+            <a href="/admin/security" class="btn btn-primary">🔒 Security Settings</a>
+            <a href="/admin/audit-logs" class="btn btn-secondary">📋 View Audit Logs</a>
+            <a href="/admin/mfa-setup" class="btn btn-secondary">🔐 Configure MFA</a>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Recent Logins</h2>
+          <% if (stats.recentLogins.length === 0) { %>
+            <p style="color: #999; margin-top: 1rem;">No recent logins</p>
+          <% } else { %>
+            <table>
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Role</th>
+                  <th>Last Login</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% stats.recentLogins.forEach(login => { %>
+                  <tr>
+                    <td><%= login.username %></td>
+                    <td><%= login.role %></td>
+                    <td><%= login.last_login ? new Date(login.last_login).toLocaleString() : 'Never' %></td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          <% } %>
+        </div>
+      </div>
+    `;
+  %>
+  <%- include('../layout', { body: body }) %>
+</body>
+</html>

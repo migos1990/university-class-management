@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Student Dashboard</title>
+</head>
+<body>
+  <%
+    const body = `
+      <h1>👨‍🎓 Student Dashboard</h1>
+
+      <div class="card">
+        <h2>My Enrolled Classes</h2>
+
+        <% if (enrollments.length === 0) { %>
+          <p style="color: #666; text-align: center; padding: 2rem;">You are not enrolled in any classes.</p>
+        <% } else { %>
+          <table>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Class Name</th>
+                <th>Semester</th>
+                <th>Grade</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% enrollments.forEach(enrollment => { %>
+                <tr>
+                  <td><strong><%= enrollment.code %></strong></td>
+                  <td><%= enrollment.name %></td>
+                  <td><%= enrollment.semester %></td>
+                  <td>
+                    <% if (enrollment.grade) { %>
+                      <span style="background: #d4edda; padding: 4px 8px; border-radius: 4px; color: #155724; font-weight: 600;">
+                        <%= enrollment.grade %>
+                      </span>
+                    <% } else { %>
+                      <span style="color: #999;">In Progress</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <a href="/classes/<%= enrollment.class_id %>" class="btn btn-primary" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">
+                      View Classes
+                    </a>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        <% } %>
+      </div>
+
+      <div class="card">
+        <h2>About Security Features</h2>
+        <p style="color: #666;">
+          This platform demonstrates various security concepts. Notice the security status bar at the top of the page
+          showing which security features are currently enabled. Ask your instructor to toggle features to see how
+          they affect the application.
+        </p>
+      </div>
+    `;
+  %>
+  <%- include('../layout', { body: body }) %>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title><%= classData.code %> - Class Details</title>
+</head>
+<body>
+  <%
+    const body = `
+      <a href="/dashboard" style="text-decoration: none; color: #3498db;">&larr; Back to Dashboard</a>
+
+      <div class="card" style="margin-top: 1rem;">
+        <h1><%= classData.code %>: <%= classData.name %></h1>
+        <p style="color: #666; margin-top: 0.5rem;"><%= classData.description %></p>
+        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e0e0e0;">
+          <strong>Semester:</strong> <%= classData.semester %> &nbsp;|&nbsp;
+          <strong>Professor:</strong> <%= classData.professor_name || 'TBA' %>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Course Sessions</h2>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 80px;">Session</th>
+              <th>Title</th>
+              <th>Date</th>
+              <th style="width: 150px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% sessions.forEach(session => { %>
+              <tr>
+                <td><strong>#<%= session.session_number %></strong></td>
+                <td><%= session.title %></td>
+                <td><%= session.date || 'TBA' %></td>
+                <td>
+                  <a href="/sessions/<%= session.id %>" class="btn btn-primary" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">
+                    View
+                  </a>
+                  <% if (canEdit) { %>
+                    <a href="/sessions/<%= session.id %>/edit" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">
+                      Edit
+                    </a>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if (user.role === 'professor' || user.role === 'admin') { %>
+        <div class="card">
+          <h2>Enrolled Students (<%= enrolledStudents.length %>)</h2>
+          <% if (enrolledStudents.length === 0) { %>
+            <p style="color: #999;">No students enrolled yet.</p>
+          <% } else { %>
+            <table>
+              <thead>
+                <tr>
+                  <th>Username</th>
+                  <th>Email</th>
+                  <th>Grade</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% enrolledStudents.forEach(student => { %>
+                  <tr>
+                    <td><%= student.username %></td>
+                    <td><%= student.email %></td>
+                    <td><%= student.grade || 'In Progress' %></td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          <% } %>
+        </div>
+      <% } %>
+    `;
+  %>
+  <%- include('layout', { body: body }) %>
+</body>
+</html>

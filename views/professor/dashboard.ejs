@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Professor Dashboard</title>
+</head>
+<body>
+  <%
+    const body = `
+      <h1>👨‍🏫 Professor Dashboard</h1>
+
+      <div class="card">
+        <h2>All Classes</h2>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Class Name</th>
+              <th>Semester</th>
+              <th>Enrolled Students</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% classes.forEach(classItem => { %>
+              <tr>
+                <td><strong><%= classItem.code %></strong></td>
+                <td><%= classItem.name %></td>
+                <td><%= classItem.semester %></td>
+                <td><%= classItem.enrolled_count %> students</td>
+                <td>
+                  <a href="/classes/<%= classItem.id %>" class="btn btn-primary" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">
+                    View Details
+                  </a>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    `;
+  %>
+  <%- include('../layout', { body: body }) %>
+</body>
+</html>

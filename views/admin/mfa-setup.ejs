@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MFA Setup - Admin</title>
+</head>
+<body>
+  <%
+    const body = `
+      <h1>🔐 Multi-Factor Authentication Setup</h1>
+
+      <div class="card">
+        <% if (alreadyEnabled) { %>
+          <div class="alert alert-info">
+            ✓ MFA is already enabled for your account.
+          </div>
+
+          <p style="margin-top: 1rem;">
+            When you log in, you'll be prompted to enter a 6-digit code from your Google Authenticator app.
+          </p>
+
+          <div style="margin-top: 2rem;">
+            <button onclick="disableMFA()" class="btn btn-danger">Disable MFA</button>
+            <a href="/admin/security" class="btn btn-secondary">Back to Security Panel</a>
+          </div>
+
+          <script>
+            function disableMFA() {
+              if (confirm('Are you sure you want to disable MFA? This will make your account less secure.')) {
+                fetch('/admin/mfa-disable', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' }
+                })
+                .then(res => res.json())
+                .then(data => {
+                  if (data.success) {
+                    alert('MFA disabled successfully');
+                    location.reload();
+                  } else {
+                    alert('Error disabling MFA');
+                  }
+                })
+                .catch(err => alert('Error: ' + err.message));
+              }
+            }
+          </script>
+        <% } else { %>
+          <h2>Step 1: Install Google Authenticator</h2>
+          <p style="color: #666; margin-bottom: 1rem;">
+            Download Google Authenticator on your mobile device:
+          </p>
+          <ul style="margin-left: 2rem; margin-bottom: 2rem; color: #666;">
+            <li><a href="https://apps.apple.com/app/google-authenticator/id388497605" target="_blank">iOS App Store</a></li>
+            <li><a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" target="_blank">Google Play Store</a></li>
+          </ul>
+
+          <h2>Step 2: Scan QR Code</h2>
+          <p style="color: #666; margin-bottom: 1rem;">
+            Open Google Authenticator and scan this QR code:
+          </p>
+
+          <div style="text-align: center; margin: 2rem 0; padding: 2rem; background: #f8f9fa; border-radius: 8px;">
+            <img src="<%= qrCodeUrl %>" alt="QR Code" style="max-width: 250px; border: 4px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          </div>
+
+          <p style="color: #666; margin-bottom: 0.5rem;">
+            <strong>Manual Entry:</strong> If you can't scan the QR code, enter this secret manually:
+          </p>
+          <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px; font-family: monospace; word-break: break-all; margin-bottom: 2rem;">
+            <%= secret %>
+          </div>
+
+          <h2>Step 3: Enter Verification Code</h2>
+          <p style="color: #666; margin-bottom: 1rem;">
+            Enter the 6-digit code shown in Google Authenticator to verify setup:
+          </p>
+
+          <div id="error-message" style="display: none;" class="alert alert-danger"></div>
+          <div id="success-message" style="display: none;" class="alert alert-info"></div>
+
+          <div style="display: flex; gap: 1rem; align-items: center;">
+            <input type="text" id="mfa-code" placeholder="Enter 6-digit code" maxlength="6" pattern="[0-9]{6}"
+                   style="width: 200px; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 1.5rem; text-align: center; letter-spacing: 0.5rem; font-family: monospace;">
+            <button onclick="verifyCode()" class="btn btn-success">Verify & Enable MFA</button>
+          </div>
+
+          <script>
+            function verifyCode() {
+              const code = document.getElementById('mfa-code').value;
+
+              if (code.length !== 6) {
+                showError('Please enter a 6-digit code');
+                return;
+              }
+
+              fetch('/admin/mfa-setup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code })
+              })
+              .then(res => res.json())
+              .then(data => {
+                if (data.success) {
+                  showSuccess('MFA enabled successfully! Redirecting...');
+                  setTimeout(() => location.href = '/admin/security', 2000);
+                } else {
+                  showError(data.error || 'Verification failed. Please try again.');
+                }
+              })
+              .catch(err => showError('Error: ' + err.message));
+            }
+
+            function showError(message) {
+              const errorDiv = document.getElementById('error-message');
+              errorDiv.textContent = message;
+              errorDiv.style.display = 'block';
+              document.getElementById('success-message').style.display = 'none';
+            }
+
+            function showSuccess(message) {
+              const successDiv = document.getElementById('success-message');
+              successDiv.textContent = message;
+              successDiv.style.display = 'block';
+              document.getElementById('error-message').style.display = 'none';
+            }
+
+            // Allow Enter key to submit
+            document.getElementById('mfa-code').addEventListener('keypress', function(e) {
+              if (e.key === 'Enter') {
+                verifyCode();
+              }
+            });
+          </script>
+        <% } %>
+      </div>
+    `;
+  %>
+  <%- include('../layout', { body: body }) %>
+</body>
+</html>
