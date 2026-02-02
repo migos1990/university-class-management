@@ -6,9 +6,17 @@ const { auditLog } = require('../middleware/audit');
 const { db } = require('../config/database');
 const { updateSecuritySetting } = require('../config/security');
 const { hashPassword } = require('../utils/passwordHash');
-const { encrypt, decrypt } = require('../utils/encryption');
+const { encrypt, decrypt, saveCustomKey, deleteCustomKey, getKeyInfo } = require('../utils/encryption');
 const speakeasy = require('speakeasy');
 const qrcode = require('qrcode');
+const {
+  createBackup,
+  listBackups,
+  restoreBackup,
+  startBackupSchedule,
+  stopBackupSchedule,
+  cleanupOldBackups
+} = require('../utils/backupManager');
 
 /**
  * GET /admin/security
@@ -288,5 +296,392 @@ async function decryptSensitiveFields() {
 
   console.log(`Decrypted ${users.length} SSNs and ${enrollments.length} grades`);
 }
+
+/**
+ * GET /admin/backups
+ * Backup management page
+ */
+router.get('/backups', requireAuth, requireRole(['admin']), (req, res) => {
+  const backups = listBackups();
+  const settings = db.prepare('SELECT * FROM security_settings WHERE id = 1').get();
+
+  res.render('admin/backups', {
+    backups,
+    backupSettings: {
+      enabled: settings.backup_enabled || 0,
+      frequency: settings.backup_frequency || 60,
+      lastBackup: settings.last_backup_time
+    },
+    rbacBypass: req.rbacBypass
+  });
+});
+
+/**
+ * POST /admin/backups/create
+ * Create manual backup
+ */
+router.post('/backups/create', requireAuth, requireRole(['admin']), (req, res) => {
+  const result = createBackup();
+
+  if (req.securitySettings.audit_logging) {
+    db.prepare(`
+      INSERT INTO audit_logs (user_id, username, role, action, details, success)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(
+      req.session.user.id,
+      req.session.user.username,
+      req.session.user.role,
+      'MANUAL_BACKUP',
+      JSON.stringify(result),
+      result.success ? 1 : 0
+    );
+  }
+
+  res.json(result);
+});
+
+/**
+ * POST /admin/backups/toggle
+ * Enable/disable automatic backups
+ */
+router.post('/backups/toggle', requireAuth, requireRole(['admin']), (req, res) => {
+  const currentValue = req.securitySettings.backup_enabled;
+  const newValue = !currentValue;
+
+  updateSecuritySetting('backup_enabled', newValue);
+
+  if (newValue) {
+    const frequency = req.securitySettings.backup_frequency || 60;
+    startBackupSchedule(frequency);
+  } else {
+    stopBackupSchedule();
+  }
+
+  if (req.securitySettings.audit_logging) {
+    db.prepare(`
+      INSERT INTO audit_logs (user_id, username, role, action, details)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(
+      req.session.user.id,
+      req.session.user.username,
+      req.session.user.role,
+      'TOGGLE_BACKUPS',
+      JSON.stringify({ newValue })
+    );
+  }
+
+  res.json({ success: true, enabled: newValue });
+});
+
+/**
+ * POST /admin/backups/set-frequency
+ * Change backup frequency
+ */
+router.post('/backups/set-frequency', requireAuth, requireRole(['admin']), (req, res) => {
+  const { frequency } = req.body;
+
+  if (!frequency || ![5, 15, 30, 60, 360, 720, 1440].includes(parseInt(frequency))) {
+    return res.status(400).json({ success: false, error: 'Invalid frequency' });
+  }
+
+  db.prepare(`
+    UPDATE security_settings
+    SET backup_frequency = ?
+    WHERE id = 1
+  `).run(parseInt(frequency));
+
+  // Restart schedule if backups are enabled
+  if (req.securitySettings.backup_enabled) {
+    startBackupSchedule(parseInt(frequency));
+  }
+
+  res.json({ success: true, frequency: parseInt(frequency) });
+});
+
+/**
+ * POST /admin/backups/restore/:filename
+ * Restore from backup
+ */
+router.post('/backups/restore/:filename', requireAuth, requireRole(['admin']), (req, res) => {
+  const { filename } = req.params;
+  const result = restoreBackup(filename);
+
+  if (req.securitySettings.audit_logging) {
+    db.prepare(`
+      INSERT INTO audit_logs (user_id, username, role, action, details, success)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(
+      req.session.user.id,
+      req.session.user.username,
+      req.session.user.role,
+      'RESTORE_BACKUP',
+      JSON.stringify({ filename, safetyBackup: result.safetyBackup }),
+      result.success ? 1 : 0
+    );
+  }
+
+  res.json(result);
+});
+
+/**
+ * GET /admin/backups/download/:filename
+ * Download backup file
+ */
+router.get('/backups/download/:filename', requireAuth, requireRole(['admin']), (req, res) => {
+  const { filename } = req.params;
+  const backups = listBackups();
+  const backup = backups.find(b => b.filename === filename);
+
+  if (!backup) {
+    return res.status(404).json({ error: 'Backup not found' });
+  }
+
+  res.download(backup.filepath, filename);
+});
+
+/**
+ * POST /admin/backups/cleanup
+ * Clean up old backups
+ */
+router.post('/backups/cleanup', requireAuth, requireRole(['admin']), (req, res) => {
+  const deletedCount = cleanupOldBackups(50);
+  res.json({ success: true, deletedCount });
+});
+
+/**
+ * GET /admin/byok
+ * Bring Your Own Key management page
+ */
+router.get('/byok', requireAuth, requireRole(['admin']), (req, res) => {
+  const keyInfo = getKeyInfo();
+  const fieldEncryptionEnabled = req.securitySettings.field_encryption;
+
+  res.render('admin/byok', {
+    keyInfo,
+    fieldEncryptionEnabled,
+    rbacBypass: req.rbacBypass
+  });
+});
+
+/**
+ * POST /admin/byok/upload
+ * Upload a custom encryption key
+ */
+router.post('/byok/upload', requireAuth, requireRole(['admin']), (req, res) => {
+  const { keyData } = req.body;
+
+  // Check if field encryption is enabled
+  if (req.securitySettings.field_encryption) {
+    return res.status(400).json({
+      success: false,
+      error: 'Cannot change encryption key while field encryption is enabled. Disable field encryption first to prevent data loss.'
+    });
+  }
+
+  if (!keyData) {
+    return res.status(400).json({
+      success: false,
+      error: 'Key data is required'
+    });
+  }
+
+  const result = saveCustomKey(keyData);
+
+  // Audit log
+  if (req.securitySettings.audit_logging) {
+    db.prepare(`
+      INSERT INTO audit_logs (user_id, username, role, action, details, success)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(
+      req.session.user.id,
+      req.session.user.username,
+      req.session.user.role,
+      'BYOK_UPLOAD',
+      JSON.stringify({ keyLength: keyData.length }),
+      result.success ? 1 : 0
+    );
+  }
+
+  res.json(result);
+});
+
+/**
+ * POST /admin/byok/delete
+ * Delete custom key and revert to default
+ */
+router.post('/byok/delete', requireAuth, requireRole(['admin']), (req, res) => {
+  // Check if field encryption is enabled
+  if (req.securitySettings.field_encryption) {
+    return res.status(400).json({
+      success: false,
+      error: 'Cannot delete encryption key while field encryption is enabled. Disable field encryption first to prevent data loss.'
+    });
+  }
+
+  const result = deleteCustomKey();
+
+  // Audit log
+  if (req.securitySettings.audit_logging) {
+    db.prepare(`
+      INSERT INTO audit_logs (user_id, username, role, action, details, success)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(
+      req.session.user.id,
+      req.session.user.username,
+      req.session.user.role,
+      'BYOK_DELETE',
+      JSON.stringify({ revertedToDefault: true }),
+      result.success ? 1 : 0
+    );
+  }
+
+  res.json(result);
+});
+
+/**
+ * GET /admin/deletion-requests
+ * View pending and completed class deletion requests
+ */
+router.get('/deletion-requests', requireAuth, requireRole(['admin']), (req, res) => {
+  // Get all deletion requests with class and user information
+  const allRequests = db.prepare(`
+    SELECT dr.*, c.code, c.name, u.username
+    FROM deletion_requests dr
+    LEFT JOIN classes c ON dr.class_id = c.id
+    LEFT JOIN users u ON dr.requested_by = u.id
+  `).all();
+
+  // Separate pending and completed requests
+  const pendingRequests = allRequests.filter(r => r.status === 'pending');
+  const completedRequests = allRequests.filter(r => r.status !== 'pending')
+    .sort((a, b) => new Date(b.reviewed_at) - new Date(a.reviewed_at))
+    .slice(0, 20); // Show last 20 completed
+
+  res.render('admin/deletion-requests', {
+    pendingRequests,
+    completedRequests,
+    rbacBypass: req.rbacBypass
+  });
+});
+
+/**
+ * POST /admin/deletion-requests/:id/approve
+ * Approve a class deletion request
+ */
+router.post('/deletion-requests/:id/approve', requireAuth, requireRole(['admin']), (req, res) => {
+  const requestId = req.params.id;
+  const adminId = req.session.user.id;
+
+  // Get the deletion request
+  const request = db.prepare('SELECT * FROM deletion_requests WHERE id = ?').get(requestId);
+  if (!request) {
+    return res.status(404).json({ success: false, error: 'Deletion request not found' });
+  }
+
+  if (request.status !== 'pending') {
+    return res.status(400).json({ success: false, error: 'Request has already been reviewed' });
+  }
+
+  // Get class information for audit log
+  const classData = db.prepare('SELECT * FROM classes WHERE id = ?').get(request.class_id);
+  if (!classData) {
+    return res.status(404).json({ success: false, error: 'Class not found' });
+  }
+
+  // Update request status
+  db.prepare(`
+    UPDATE deletion_requests
+    SET status = 'approved', reviewed_by = ?, reviewed_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).run(adminId, requestId);
+
+  // Delete the class (cascades to sessions and enrollments)
+  db.prepare('DELETE FROM classes WHERE id = ?').run(request.class_id);
+
+  // Audit log
+  if (req.securitySettings.audit_logging) {
+    db.prepare(`
+      INSERT INTO audit_logs (user_id, username, role, action, details, success)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(
+      adminId,
+      req.session.user.username,
+      req.session.user.role,
+      'APPROVE_CLASS_DELETION',
+      JSON.stringify({
+        requestId,
+        classId: request.class_id,
+        classCode: classData.code,
+        requestedBy: request.requested_by
+      }),
+      1
+    );
+  }
+
+  res.json({
+    success: true,
+    message: 'Deletion request approved. Class has been deleted.'
+  });
+});
+
+/**
+ * POST /admin/deletion-requests/:id/reject
+ * Reject a class deletion request
+ */
+router.post('/deletion-requests/:id/reject', requireAuth, requireRole(['admin']), (req, res) => {
+  const requestId = req.params.id;
+  const adminId = req.session.user.id;
+  const { reason } = req.body;
+
+  if (!reason || reason.trim().length === 0) {
+    return res.status(400).json({ success: false, error: 'Rejection reason is required' });
+  }
+
+  // Get the deletion request
+  const request = db.prepare('SELECT * FROM deletion_requests WHERE id = ?').get(requestId);
+  if (!request) {
+    return res.status(404).json({ success: false, error: 'Deletion request not found' });
+  }
+
+  if (request.status !== 'pending') {
+    return res.status(400).json({ success: false, error: 'Request has already been reviewed' });
+  }
+
+  // Get class information for audit log
+  const classData = db.prepare('SELECT * FROM classes WHERE id = ?').get(request.class_id);
+
+  // Update request status
+  db.prepare(`
+    UPDATE deletion_requests
+    SET status = 'rejected', reviewed_by = ?, reviewed_at = CURRENT_TIMESTAMP, rejection_reason = ?
+    WHERE id = ?
+  `).run(adminId, reason.trim(), requestId);
+
+  // Audit log
+  if (req.securitySettings.audit_logging) {
+    db.prepare(`
+      INSERT INTO audit_logs (user_id, username, role, action, details, success)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(
+      adminId,
+      req.session.user.username,
+      req.session.user.role,
+      'REJECT_CLASS_DELETION',
+      JSON.stringify({
+        requestId,
+        classId: request.class_id,
+        classCode: classData?.code,
+        requestedBy: request.requested_by,
+        reason: reason.trim()
+      }),
+      1
+    );
+  }
+
+  res.json({
+    success: true,
+    message: 'Deletion request rejected.'
+  });
+});
 
 module.exports = router;

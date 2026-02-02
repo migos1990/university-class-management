@@ -12,7 +12,11 @@ function getSecuritySettings() {
     field_encryption: 0,
     https_enabled: 0,
     audit_logging: 0,
-    rate_limiting: 0
+    rate_limiting: 0,
+    backup_enabled: 0,
+    backup_frequency: 60,
+    last_backup_time: null,
+    segregation_of_duties: 0
   };
 }
 

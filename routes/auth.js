@@ -176,4 +176,19 @@ router.get('/logout', (req, res) => {
   });
 });
 
+/**
+ * POST /auth/set-language
+ * Set user's language preference
+ */
+router.post('/set-language', (req, res) => {
+  const { lang } = req.body;
+
+  if (!lang || !['en', 'fr'].includes(lang)) {
+    return res.status(400).json({ success: false, error: 'Invalid language' });
+  }
+
+  req.session.language = lang;
+  res.json({ success: true, language: lang });
+});
+
 module.exports = router;

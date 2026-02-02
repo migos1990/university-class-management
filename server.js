@@ -10,6 +10,8 @@ const fs = require('fs');
 const { initializeDatabase, isDatabaseSeeded } = require('./config/database');
 const { seedDatabase } = require('./utils/seedData');
 const { loadSecuritySettings, getSecuritySettings } = require('./config/security');
+const { languageMiddleware } = require('./utils/i18n');
+const { initializeBackupSystem } = require('./utils/backupManager');
 
 // Initialize app
 const app = express();
@@ -22,6 +24,10 @@ if (!isDatabaseSeeded()) {
   console.log('Database is empty. Seeding with sample data...');
   seedDatabase();
 }
+
+// Initialize backup system
+console.log('Initializing backup system...');
+initializeBackupSystem();
 
 // View engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -47,6 +53,9 @@ app.use(session({
 
 // Load security settings into all requests
 app.use(loadSecuritySettings);
+
+// Load language preferences and translation function
+app.use(languageMiddleware);
 
 // Make user available in all views
 app.use((req, res, next) => {

@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title : 'HEC Montréal - Application Security' %></title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: #f0f2f5;
+    }
+
+    /* Sidebar Layout */
+    .app-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 260px;
+      background: #002855;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+      z-index: 100;
+    }
+
+    .sidebar-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: white;
+    }
+
+    .sidebar-logo img {
+      width: 40px;
+      height: 40px;
+      border-radius: 6px;
+    }
+
+    .sidebar-logo-text {
+      font-size: 1.1rem;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .sidebar-logo-subtitle {
+      font-size: 0.75rem;
+      opacity: 0.7;
+      font-weight: 400;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 1rem 0;
+      overflow-y: auto;
+    }
+
+    .nav-section {
+      padding: 0 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .nav-section-title {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      opacity: 0.5;
+      margin-bottom: 0.5rem;
+      padding-left: 0.75rem;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0.75rem;
+      color: rgba(255,255,255,0.8);
+      text-decoration: none;
+      border-radius: 6px;
+      transition: all 0.2s;
+      font-size: 0.95rem;
+    }
+
+    .nav-link:hover {
+      background: rgba(255,255,255,0.1);
+      color: white;
+    }
+
+    .nav-link.active {
+      background: rgba(255,255,255,0.15);
+      color: white;
+    }
+
+    .nav-icon {
+      width: 20px;
+      text-align: center;
+      font-size: 1.1rem;
+    }
+
+    .sidebar-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 1rem;
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+
+    .user-details {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .user-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-role {
+      font-size: 0.75rem;
+      opacity: 0.7;
+      text-transform: capitalize;
+    }
+
+    .logout-btn {
+      display: block;
+      width: 100%;
+      padding: 0.6rem;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      text-align: center;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      transition: background 0.2s;
+    }
+
+    .logout-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      margin-left: 260px;
+      min-height: 100vh;
+    }
+
+    .security-status {
+      background: white;
+      padding: 0.75rem 1.5rem;
+      border-bottom: 1px solid #e0e0e0;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .security-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .security-label {
+      font-size: 0.8rem;
+      color: #666;
+      margin-right: 8px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .badge-success {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .badge-danger {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .page-content {
+      padding: 2rem;
+      max-width: 1400px;
+    }
+
+    /* Cards */
+    .card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card h2 {
+      margin-bottom: 1rem;
+      color: #002855;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-block;
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #002855;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #001a3d;
+    }
+
+    .btn-success {
+      background: #27ae60;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #229954;
+    }
+
+    .btn-danger {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #c0392b;
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+
+    /* Alerts */
+    .alert {
+      padding: 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+    }
+
+    .alert-warning {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .alert-danger {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .alert-info {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
+
+    .alert-success {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #002855;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    tr:hover {
+      background: #f8f9fa;
+    }
+
+    /* Page Header */
+    .page-header {
+      margin-bottom: 1.5rem;
+    }
+
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #002855;
+      margin-bottom: 0.25rem;
+    }
+
+    .page-subtitle {
+      color: #666;
+      font-size: 0.95rem;
+    }
+
+    /* Grid Layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+
+    /* Stat Cards */
+    .stat-card {
+      background: white;
+      border-radius: 8px;
+      padding: 1.25rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+
+    .stat-icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #002855;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <% if (typeof user !== 'undefined' && user) { %>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <a href="/dashboard" class="sidebar-logo">
+          <img src="/images/hec-logo.svg" alt="HEC Montréal">
+          <div>
+            <div class="sidebar-logo-text">HEC Montréal</div>
+            <div class="sidebar-logo-subtitle">Application Security</div>
+          </div>
+        </a>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">Main</div>
+          <a href="/dashboard" class="nav-link">
+            <span class="nav-icon">📊</span>
+            <span>Dashboard</span>
+          </a>
+          <a href="/classes" class="nav-link">
+            <span class="nav-icon">📚</span>
+            <span>Classes</span>
+          </a>
+        </div>
+
+        <% if (user.role === 'admin') { %>
+        <div class="nav-section">
+          <div class="nav-section-title">Administration</div>
+          <a href="/admin/security" class="nav-link">
+            <span class="nav-icon">🔒</span>
+            <span>Security Panel</span>
+          </a>
+          <a href="/admin/audit-logs" class="nav-link">
+            <span class="nav-icon">📋</span>
+            <span>Audit Logs</span>
+          </a>
+          <a href="/admin/mfa-setup" class="nav-link">
+            <span class="nav-icon">🔐</span>
+            <span>MFA Setup</span>
+          </a>
+          <a href="/admin/backups" class="nav-link">
+            <span class="nav-icon">💾</span>
+            <span>Backups</span>
+          </a>
+        </div>
+        <% } %>
+
+        <% if (user.role === 'professor') { %>
+        <div class="nav-section">
+          <div class="nav-section-title">Teaching</div>
+          <a href="/dashboard" class="nav-link">
+            <span class="nav-icon">📝</span>
+            <span>My Classes</span>
+          </a>
+        </div>
+        <% } %>
+
+        <% if (user.role === 'student') { %>
+        <div class="nav-section">
+          <div class="nav-section-title">Learning</div>
+          <a href="/dashboard" class="nav-link">
+            <span class="nav-icon">📖</span>
+            <span>My Enrollments</span>
+          </a>
+        </div>
+        <% } %>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar">👤</div>
+          <div class="user-details">
+            <div class="user-name"><%= user.username %></div>
+            <div class="user-role"><%= user.role %></div>
+          </div>
+        </div>
+        <a href="/auth/logout" class="logout-btn">Logout</a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="security-status">
+        <div class="security-badges">
+          <span class="security-label">Security Status:</span>
+          <span class="badge <%= securitySettings.mfa_enabled ? 'badge-success' : 'badge-danger' %>">
+            MFA: <%= securitySettings.mfa_enabled ? 'ON' : 'OFF' %>
+          </span>
+          <span class="badge <%= securitySettings.rbac_enabled ? 'badge-success' : 'badge-danger' %>">
+            RBAC: <%= securitySettings.rbac_enabled ? 'ON' : 'OFF' %>
+          </span>
+          <span class="badge <%= securitySettings.encryption_at_rest ? 'badge-success' : 'badge-danger' %>">
+            Passwords: <%= securitySettings.encryption_at_rest ? 'Encrypted' : 'Plaintext' %>
+          </span>
+          <span class="badge <%= securitySettings.field_encryption ? 'badge-success' : 'badge-danger' %>">
+            Data: <%= securitySettings.field_encryption ? 'Encrypted' : 'Plaintext' %>
+          </span>
+          <span class="badge <%= securitySettings.https_enabled ? 'badge-success' : 'badge-danger' %>">
+            <%= securitySettings.https_enabled ? 'HTTPS' : 'HTTP' %>
+          </span>
+          <span class="badge <%= securitySettings.audit_logging ? 'badge-success' : 'badge-danger' %>">
+            Logging: <%= securitySettings.audit_logging ? 'ON' : 'OFF' %>
+          </span>
+          <span class="badge <%= securitySettings.rate_limiting ? 'badge-success' : 'badge-danger' %>">
+            Rate Limit: <%= securitySettings.rate_limiting ? 'ON' : 'OFF' %>
+          </span>
+        </div>
+      </div>
+
+      <div class="page-content">
+  <% } else { %>
+  <div class="page-content" style="padding: 2rem;">
+  <% } %>

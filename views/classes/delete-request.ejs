@@ -1,0 +1,104 @@
+<%- include('../partials/header') %>
+
+<h1>🗑️ <%= typeof t !== 'undefined' ? t('sod.requestDeletion') : 'Request Class Deletion' %></h1>
+
+<div class="card">
+  <h2><%= typeof t !== 'undefined' ? t('sod.classDetails') : 'Class Details' %></h2>
+
+  <table style="margin-top: 1rem; width: 100%;">
+    <tr>
+      <th style="width: 200px; text-align: right; padding-right: 1rem;"><%= typeof t !== 'undefined' ? t('classes.code') : 'Class Code' %>:</th>
+      <td><strong><%= classData.code %></strong></td>
+    </tr>
+    <tr>
+      <th style="text-align: right; padding-right: 1rem;"><%= typeof t !== 'undefined' ? t('classes.name') : 'Class Name' %>:</th>
+      <td><%= classData.name %></td>
+    </tr>
+    <tr>
+      <th style="text-align: right; padding-right: 1rem;"><%= typeof t !== 'undefined' ? t('classes.description') : 'Description' %>:</th>
+      <td><%= classData.description || 'N/A' %></td>
+    </tr>
+    <tr>
+      <th style="text-align: right; padding-right: 1rem;"><%= typeof t !== 'undefined' ? t('classes.semester') : 'Semester' %>:</th>
+      <td><%= classData.semester %></td>
+    </tr>
+  </table>
+</div>
+
+<% if (existingRequest) { %>
+  <div class="card" style="margin-top: 2rem;">
+    <h2>⏳ <%= typeof t !== 'undefined' ? t('sod.pendingRequest') : 'Pending Deletion Request' %></h2>
+
+    <div class="alert alert-info" style="margin-top: 1rem;">
+      <p><strong><%= typeof t !== 'undefined' ? t('sod.alreadySubmitted') : 'You have already submitted a deletion request for this class.' %></strong></p>
+      <p style="margin-top: 0.5rem;">
+        <strong><%= typeof t !== 'undefined' ? t('sod.requestedOn') : 'Requested on' %>:</strong> <%= new Date(existingRequest.requested_at).toLocaleString() %>
+      </p>
+      <p style="margin-top: 0.5rem; color: #666;">
+        <%= typeof t !== 'undefined' ? t('sod.waitingApproval') : 'Your request is awaiting administrator approval. You will be notified once it has been reviewed.' %>
+      </p>
+    </div>
+
+    <div style="margin-top: 1.5rem;">
+      <a href="/classes/<%= classData.id %>" class="btn btn-secondary"><%= typeof t !== 'undefined' ? t('common.back') : 'Back to Class' %></a>
+    </div>
+  </div>
+<% } else { %>
+  <div class="card" style="margin-top: 2rem;">
+    <h2>📋 <%= typeof t !== 'undefined' ? t('sod.sodWorkflow') : 'Segregation of Duties Workflow' %></h2>
+
+    <div class="alert alert-warning" style="margin-top: 1rem;">
+      <p><strong><%= typeof t !== 'undefined' ? t('sod.sodEnabled') : 'Segregation of Duties (SoD) is currently enabled.' %></strong></p>
+      <p style="margin-top: 0.5rem; color: #666;">
+        <%= typeof t !== 'undefined' ? t('sod.workflowExplanation') : 'This security feature requires administrative approval before classes can be deleted. This prevents unauthorized or accidental deletions and ensures proper oversight.' %>
+      </p>
+    </div>
+
+    <div style="margin-top: 1.5rem;">
+      <h3 style="font-size: 1.1rem; margin-bottom: 1rem;"><%= typeof t !== 'undefined' ? t('sod.howItWorks') : 'How it works' %>:</h3>
+      <ol style="margin-left: 1.5rem; color: #555; line-height: 1.8;">
+        <li><%= typeof t !== 'undefined' ? t('sod.step1') : 'You submit a deletion request for this class' %></li>
+        <li><%= typeof t !== 'undefined' ? t('sod.step2') : 'An administrator reviews your request' %></li>
+        <li><%= typeof t !== 'undefined' ? t('sod.step3') : 'If approved, the class will be deleted along with all sessions and enrollments' %></li>
+        <li><%= typeof t !== 'undefined' ? t('sod.step4') : 'If rejected, you will be notified with the reason' %></li>
+      </ol>
+    </div>
+
+    <div class="alert alert-danger" style="margin-top: 1.5rem;">
+      ⚠️ <strong><%= typeof t !== 'undefined' ? t('common.warning') : 'Warning' %>:</strong>
+      <%= typeof t !== 'undefined' ? t('sod.deletionWarning') : 'If your request is approved, this action cannot be undone. All class sessions, enrollments, and student grades will be permanently deleted.' %>
+    </div>
+
+    <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+      <button class="btn btn-danger" onclick="submitRequest()">
+        <%= typeof t !== 'undefined' ? t('sod.submitRequest') : 'Submit Deletion Request' %>
+      </button>
+      <a href="/classes/<%= classData.id %>" class="btn btn-secondary"><%= typeof t !== 'undefined' ? t('common.cancel') : 'Cancel' %></a>
+    </div>
+  </div>
+<% } %>
+
+<script>
+  function submitRequest() {
+    if (!confirm('Are you sure you want to submit a deletion request for this class? An administrator will need to approve before deletion occurs.')) {
+      return;
+    }
+
+    fetch('/classes/<%= classData.id %>/delete-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert('Deletion request submitted successfully! You will be notified when an administrator reviews your request.');
+        location.reload();
+      } else {
+        alert('Error: ' + (data.error || 'Unknown error'));
+      }
+    })
+    .catch(err => alert('Error: ' + err.message));
+  }
+</script>
+
+<%- include('../partials/footer') %>

@@ -1,74 +1,69 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Admin Dashboard</title>
-</head>
-<body>
-  <%
-    const body = `
-      <h1>⚙️ Admin Dashboard</h1>
+<%- include('../partials/header') %>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-        <div class="card" style="text-align: center; padding: 1.5rem;">
-          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">👥</div>
-          <div style="font-size: 2rem; font-weight: 700; color: #3498db;"><%= stats.totalUsers %></div>
-          <div style="color: #666;">Total Users</div>
-        </div>
-        <div class="card" style="text-align: center; padding: 1.5rem;">
-          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">👨‍🎓</div>
-          <div style="font-size: 2rem; font-weight: 700; color: #27ae60;"><%= stats.totalStudents %></div>
-          <div style="color: #666;">Students</div>
-        </div>
-        <div class="card" style="text-align: center; padding: 1.5rem;">
-          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">👨‍🏫</div>
-          <div style="font-size: 2rem; font-weight: 700; color: #e67e22;"><%= stats.totalProfessors %></div>
-          <div style="color: #666;">Professors</div>
-        </div>
-        <div class="card" style="text-align: center; padding: 1.5rem;">
-          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📚</div>
-          <div style="font-size: 2rem; font-weight: 700; color: #9b59b6;"><%= stats.totalClasses %></div>
-          <div style="color: #666;">Classes</div>
-        </div>
-      </div>
+<div class="page-header">
+  <h1 class="page-title">Admin Dashboard</h1>
+  <p class="page-subtitle">System overview and quick actions</p>
+</div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-        <div class="card">
-          <h2>Quick Actions</h2>
-          <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem;">
-            <a href="/admin/security" class="btn btn-primary">🔒 Security Settings</a>
-            <a href="/admin/audit-logs" class="btn btn-secondary">📋 View Audit Logs</a>
-            <a href="/admin/mfa-setup" class="btn btn-secondary">🔐 Configure MFA</a>
-          </div>
-        </div>
+<div class="grid-4" style="margin-bottom: 2rem;">
+  <div class="stat-card">
+    <div class="stat-icon">👥</div>
+    <div class="stat-value"><%= stats.totalUsers %></div>
+    <div class="stat-label">Total Users</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">👨‍🎓</div>
+    <div class="stat-value"><%= stats.totalStudents %></div>
+    <div class="stat-label">Students</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">👨‍🏫</div>
+    <div class="stat-value"><%= stats.totalProfessors %></div>
+    <div class="stat-label">Professors</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">📚</div>
+    <div class="stat-value"><%= stats.totalClasses %></div>
+    <div class="stat-label">Classes</div>
+  </div>
+</div>
 
-        <div class="card">
-          <h2>Recent Logins</h2>
-          <% if (stats.recentLogins.length === 0) { %>
-            <p style="color: #999; margin-top: 1rem;">No recent logins</p>
-          <% } else { %>
-            <table>
-              <thead>
-                <tr>
-                  <th>User</th>
-                  <th>Role</th>
-                  <th>Last Login</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% stats.recentLogins.forEach(login => { %>
-                  <tr>
-                    <td><%= login.username %></td>
-                    <td><%= login.role %></td>
-                    <td><%= login.last_login ? new Date(login.last_login).toLocaleString() : 'Never' %></td>
-                  </tr>
-                <% }); %>
-              </tbody>
-            </table>
-          <% } %>
-        </div>
-      </div>
-    `;
-  %>
-  <%- include('../layout', { body: body }) %>
-</body>
-</html>
+<div class="grid-2">
+  <div class="card">
+    <h2>Quick Actions</h2>
+    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+      <a href="/admin/security" class="btn btn-primary" style="text-align: center;">Security Settings</a>
+      <a href="/admin/audit-logs" class="btn btn-secondary" style="text-align: center;">View Audit Logs</a>
+      <a href="/admin/mfa-setup" class="btn btn-secondary" style="text-align: center;">Configure MFA</a>
+      <a href="/admin/backups" class="btn btn-secondary" style="text-align: center;">Database Backups</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Recent Logins</h2>
+    <% if (stats.recentLogins.length === 0) { %>
+      <p style="color: #999;">No recent logins recorded</p>
+    <% } else { %>
+      <table>
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>Last Login</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% stats.recentLogins.forEach(login => { %>
+            <tr>
+              <td><%= login.username %></td>
+              <td style="text-transform: capitalize;"><%= login.role %></td>
+              <td><%= login.last_login ? new Date(login.last_login).toLocaleString() : 'Never' %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

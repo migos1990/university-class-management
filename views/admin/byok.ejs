@@ -1,0 +1,177 @@
+<%- include('../partials/header') %>
+
+<h1>🔑 <%= typeof t !== 'undefined' ? t('byok.title') : 'Bring Your Own Key (BYOK)' %></h1>
+
+<% if (rbacBypass) { %>
+  <div class="alert alert-warning">
+    ⚠️ <strong><%= typeof t !== 'undefined' ? t('common.warning') : 'Warning' %>:</strong> RBAC is currently DISABLED.
+  </div>
+<% } %>
+
+<!-- Current Key Status -->
+<div class="card">
+  <h2><%= typeof t !== 'undefined' ? t('byok.currentKeyStatus') : 'Current Key Status' %></h2>
+
+  <div style="margin-bottom: 1.5rem;">
+    <p><strong><%= typeof t !== 'undefined' ? t('byok.keyType') : 'Key Type' %>:</strong>
+      <span class="badge <%= keyInfo.usingCustomKey ? 'badge-success' : 'badge-warning' %>">
+        <%= keyInfo.usingCustomKey ? (typeof t !== 'undefined' ? t('byok.custom') : 'Custom') : (typeof t !== 'undefined' ? t('byok.default') : 'Default') %>
+      </span>
+    </p>
+    <p style="color: #666; font-size: 0.9rem;"><%= keyInfo.keyPath %></p>
+  </div>
+
+  <% if (fieldEncryptionEnabled) { %>
+    <div class="alert alert-danger">
+      ⚠️ <strong><%= typeof t !== 'undefined' ? t('byok.encryptionWarning') : 'Warning' %>:</strong>
+      <%= typeof t !== 'undefined' ? t('byok.encryptionWarningText') : 'Field encryption is currently ENABLED. You must disable field encryption in the Security Panel before uploading or deleting encryption keys to prevent data loss.' %>
+    </div>
+  <% } %>
+</div>
+
+<!-- Key Generation Instructions -->
+<div class="card" style="margin-top: 2rem;">
+  <h2><%= typeof t !== 'undefined' ? t('byok.generateKey') : 'Generate Your Own Key' %></h2>
+
+  <p style="margin-bottom: 1rem;">
+    <%= typeof t !== 'undefined' ? t('byok.instructions') : 'Use OpenSSL to generate a secure 256-bit encryption key. Run the following command in your terminal:' %>
+  </p>
+
+  <div style="margin-bottom: 1.5rem;">
+    <h3 style="margin-bottom: 0.5rem; font-size: 1rem;">Windows (PowerShell or Git Bash):</h3>
+    <pre style="background: #2c3e50; color: #ecf0f1; padding: 1rem; border-radius: 4px; overflow-x: auto;"><code>openssl rand -base64 32</code></pre>
+
+    <h3 style="margin-bottom: 0.5rem; margin-top: 1rem; font-size: 1rem;">Mac / Linux:</h3>
+    <pre style="background: #2c3e50; color: #ecf0f1; padding: 1rem; border-radius: 4px; overflow-x: auto;"><code>openssl rand -base64 32</code></pre>
+  </div>
+
+  <div class="alert alert-info">
+    ℹ️ <strong><%= typeof t !== 'undefined' ? t('byok.note') : 'Note' %>:</strong>
+    <%= typeof t !== 'undefined' ? t('byok.noteText') : 'This will generate a random 32-byte key encoded in base64 format. Copy the entire output (e.g., "1vX9K7kJ2mN5pQ8rT3uV6wY0zA4bC7dE9fG2hI5jL8m=").' %>
+  </div>
+</div>
+
+<!-- Upload Custom Key -->
+<div class="card" style="margin-top: 2rem;">
+  <h2><%= typeof t !== 'undefined' ? t('byok.uploadKey') : 'Upload Custom Encryption Key' %></h2>
+
+  <form id="upload-key-form" style="margin-top: 1rem;">
+    <div style="margin-bottom: 1rem;">
+      <label for="custom-key" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+        <%= typeof t !== 'undefined' ? t('byok.pasteKey') : 'Paste your base64-encoded key here:' %>
+      </label>
+      <textarea
+        id="custom-key"
+        name="customKey"
+        rows="4"
+        style="width: 100%; padding: 0.75rem; border: 2px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 0.9rem;"
+        placeholder="Example: 1vX9K7kJ2mN5pQ8rT3uV6wY0zA4bC7dE9fG2hI5jL8m="
+        <%= fieldEncryptionEnabled ? 'disabled' : '' %>
+      ></textarea>
+    </div>
+
+    <button
+      type="submit"
+      class="btn btn-primary"
+      <%= fieldEncryptionEnabled ? 'disabled' : '' %>
+    >
+      <%= typeof t !== 'undefined' ? t('byok.uploadButton') : 'Upload Custom Key' %>
+    </button>
+
+    <% if (keyInfo.usingCustomKey) { %>
+      <button
+        type="button"
+        class="btn btn-danger"
+        onclick="deleteCustomKey()"
+        style="margin-left: 1rem;"
+        <%= fieldEncryptionEnabled ? 'disabled' : '' %>
+      >
+        <%= typeof t !== 'undefined' ? t('byok.deleteButton') : 'Delete Custom Key (Revert to Default)' %>
+      </button>
+    <% } %>
+  </form>
+</div>
+
+<!-- Security Best Practices -->
+<div class="card" style="margin-top: 2rem;">
+  <h2><%= typeof t !== 'undefined' ? t('byok.bestPractices') : 'Security Best Practices' %></h2>
+
+  <ul style="margin-left: 1.5rem; color: #555;">
+    <li style="margin-bottom: 0.5rem;">
+      <%= typeof t !== 'undefined' ? t('byok.practice1') : '🔒 Always DISABLE field encryption before changing or deleting encryption keys' %>
+    </li>
+    <li style="margin-bottom: 0.5rem;">
+      <%= typeof t !== 'undefined' ? t('byok.practice2') : '💾 Keep a secure backup of your custom key - if you lose it, encrypted data cannot be recovered' %>
+    </li>
+    <li style="margin-bottom: 0.5rem;">
+      <%= typeof t !== 'undefined' ? t('byok.practice3') : '🔄 After uploading a new key, existing encrypted data remains encrypted with the OLD key until you decrypt and re-encrypt it' %>
+    </li>
+    <li style="margin-bottom: 0.5rem;">
+      <%= typeof t !== 'undefined' ? t('byok.practice4') : '⚠️ Changing keys while data is encrypted will make that data permanently unrecoverable' %>
+    </li>
+    <li style="margin-bottom: 0.5rem;">
+      <%= typeof t !== 'undefined' ? t('byok.practice5') : '📝 Document your key management procedures and keep keys in a secure location' %>
+    </li>
+  </ul>
+</div>
+
+<script>
+  document.getElementById('upload-key-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const keyData = document.getElementById('custom-key').value.trim();
+
+    if (!keyData) {
+      alert('Please enter a key');
+      return;
+    }
+
+    if (keyData.length < 16) {
+      alert('Key must be at least 16 characters long');
+      return;
+    }
+
+    if (!confirm('⚠️ Are you sure you want to upload this custom encryption key? Make sure field encryption is disabled first!')) {
+      return;
+    }
+
+    fetch('/admin/byok/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ keyData })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert('Custom encryption key uploaded successfully!');
+        location.reload();
+      } else {
+        alert('Error: ' + (data.error || 'Unknown error'));
+      }
+    })
+    .catch(err => alert('Error: ' + err.message));
+  });
+
+  function deleteCustomKey() {
+    if (!confirm('⚠️ Are you sure you want to delete the custom key and revert to the default key? Make sure field encryption is disabled first!')) {
+      return;
+    }
+
+    fetch('/admin/byok/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert('Custom key deleted successfully. Reverted to default key.');
+        location.reload();
+      } else {
+        alert('Error: ' + (data.error || 'Unknown error'));
+      }
+    })
+    .catch(err => alert('Error: ' + err.message));
+  }
+</script>
+
+<%- include('../partials/footer') %>

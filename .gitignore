@@ -8,6 +8,13 @@ database/
 # SSL Certificates (generated on setup)
 ssl/
 
+# Backups (generated at runtime)
+backups/*
+!backups/.gitkeep
+
+# Encryption Keys (BYOK - never commit)
+keys/
+
 # Logs
 *.log
 npm-debug.log*

@@ -1,50 +1,41 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Edit Session - <%= session.title %></title>
-</head>
-<body>
-  <%
-    const body = `
-      <a href="/sessions/<%= session.id %>" style="text-decoration: none; color: #3498db;">&larr; Back to Session</a>
+<%- include('../partials/header') %>
 
-      <div class="card" style="margin-top: 1rem;">
-        <h1>Edit Session</h1>
-        <p style="color: #666;"><%= session.class_code %>: <%= session.class_name %> - Session <%= session.session_number %></p>
+<a href="/sessions/<%= session.id %>" style="text-decoration: none; color: #3498db;">&larr; Back to Session</a>
 
-        <% if (rbacBypass) { %>
-          <div class="alert alert-warning" style="margin-top: 1rem;">
-            ⚠️ <strong>Warning:</strong> RBAC is currently DISABLED. Normally only professors and admins can edit sessions.
-          </div>
-        <% } %>
+<div class="card" style="margin-top: 1rem;">
+  <h1>Edit Session</h1>
+  <p style="color: #666;"><%= session.class_code %>: <%= session.class_name %> - Session <%= session.session_number %></p>
 
-        <form method="POST" action="/sessions/<%= session.id %>/edit" style="margin-top: 2rem;">
-          <div style="margin-bottom: 1.5rem;">
-            <label for="title" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Title</label>
-            <input type="text" id="title" name="title" value="<%= session.title %>" required
-                   style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 1rem;">
-          </div>
+  <% if (rbacBypass) { %>
+    <div class="alert alert-warning" style="margin-top: 1rem;">
+      ⚠️ <strong>Warning:</strong> RBAC is currently DISABLED. Normally only professors and admins can edit sessions.
+    </div>
+  <% } %>
 
-          <div style="margin-bottom: 1.5rem;">
-            <label for="description" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Description</label>
-            <textarea id="description" name="description" rows="3"
-                      style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 1rem;"><%= session.description || '' %></textarea>
-          </div>
+  <form method="POST" action="/sessions/<%= session.id %>/edit" style="margin-top: 2rem;">
+    <div style="margin-bottom: 1.5rem;">
+      <label for="title" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Title</label>
+      <input type="text" id="title" name="title" value="<%= session.title %>" required
+             style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 1rem;">
+    </div>
 
-          <div style="margin-bottom: 1.5rem;">
-            <label for="content" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Content</label>
-            <textarea id="content" name="content" rows="15" required
-                      style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 1rem; font-family: inherit;"><%= session.content || '' %></textarea>
-          </div>
+    <div style="margin-bottom: 1.5rem;">
+      <label for="description" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Description</label>
+      <textarea id="description" name="description" rows="3"
+                style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 1rem;"><%= session.description || '' %></textarea>
+    </div>
 
-          <div style="display: flex; gap: 1rem;">
-            <button type="submit" class="btn btn-success">Save Changes</button>
-            <a href="/sessions/<%= session.id %>" class="btn btn-secondary">Cancel</a>
-          </div>
-        </form>
-      </div>
-    `;
-  %>
-  <%- include('../layout', { body: body }) %>
-</body>
-</html>
+    <div style="margin-bottom: 1.5rem;">
+      <label for="content" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Content</label>
+      <textarea id="content" name="content" rows="15" required
+                style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 1rem; font-family: inherit;"><%= session.content || '' %></textarea>
+    </div>
+
+    <div style="display: flex; gap: 1rem;">
+      <button type="submit" class="btn btn-success">Save Changes</button>
+      <a href="/sessions/<%= session.id %>" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

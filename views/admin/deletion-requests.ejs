@@ -1,0 +1,196 @@
+<%- include('../partials/header') %>
+
+<h1>🗑️ <%= typeof t !== 'undefined' ? t('sod.deletionRequests') : 'Class Deletion Requests' %></h1>
+
+<% if (rbacBypass) { %>
+  <div class="alert alert-warning">
+    ⚠️ <strong><%= typeof t !== 'undefined' ? t('common.warning') : 'Warning' %>:</strong> RBAC is currently DISABLED.
+  </div>
+<% } %>
+
+<!-- Pending Requests -->
+<div class="card">
+  <h2>⏳ <%= typeof t !== 'undefined' ? t('sod.pendingRequests') : 'Pending Requests' %> (<%= pendingRequests.length %>)</h2>
+
+  <% if (pendingRequests.length === 0) { %>
+    <p style="color: #666; font-style: italic; margin-top: 1rem;">
+      <%= typeof t !== 'undefined' ? t('sod.noPendingRequests') : 'No pending deletion requests at this time.' %>
+    </p>
+  <% } else { %>
+    <table style="margin-top: 1rem;">
+      <thead>
+        <tr>
+          <th><%= typeof t !== 'undefined' ? t('sod.requestId') : 'Request ID' %></th>
+          <th><%= typeof t !== 'undefined' ? t('classes.code') : 'Class Code' %></th>
+          <th><%= typeof t !== 'undefined' ? t('classes.name') : 'Class Name' %></th>
+          <th><%= typeof t !== 'undefined' ? t('sod.requestedBy') : 'Requested By' %></th>
+          <th><%= typeof t !== 'undefined' ? t('sod.requestedOn') : 'Requested On' %></th>
+          <th><%= typeof t !== 'undefined' ? t('common.actions') : 'Actions' %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% pendingRequests.forEach(request => { %>
+          <tr>
+            <td style="font-family: monospace;">#<%= request.id %></td>
+            <td style="font-weight: 600;"><%= request.code || 'N/A' %></td>
+            <td><%= request.name || 'Class not found' %></td>
+            <td><%= request.username || 'Unknown' %></td>
+            <td><%= new Date(request.requested_at).toLocaleString() %></td>
+            <td>
+              <button class="btn btn-success" onclick="approveRequest(<%= request.id %>)" style="padding: 0.4rem 0.8rem; font-size: 0.9rem;">
+                <%= typeof t !== 'undefined' ? t('sod.approve') : 'Approve' %>
+              </button>
+              <button class="btn btn-danger" onclick="showRejectModal(<%= request.id %>, '<%= request.code %>')" style="padding: 0.4rem 0.8rem; font-size: 0.9rem; margin-left: 0.5rem;">
+                <%= typeof t !== 'undefined' ? t('sod.reject') : 'Reject' %>
+              </button>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</div>
+
+<!-- Completed Requests -->
+<div class="card" style="margin-top: 2rem;">
+  <h2>✅ <%= typeof t !== 'undefined' ? t('sod.completedRequests') : 'Completed Requests (Last 20)' %></h2>
+
+  <% if (completedRequests.length === 0) { %>
+    <p style="color: #666; font-style: italic; margin-top: 1rem;">
+      <%= typeof t !== 'undefined' ? t('sod.noCompletedRequests') : 'No completed requests yet.' %>
+    </p>
+  <% } else { %>
+    <table style="margin-top: 1rem;">
+      <thead>
+        <tr>
+          <th><%= typeof t !== 'undefined' ? t('sod.requestId') : 'Request ID' %></th>
+          <th><%= typeof t !== 'undefined' ? t('classes.code') : 'Class Code' %></th>
+          <th><%= typeof t !== 'undefined' ? t('classes.name') : 'Class Name' %></th>
+          <th><%= typeof t !== 'undefined' ? t('sod.requestedBy') : 'Requested By' %></th>
+          <th><%= typeof t !== 'undefined' ? t('common.status') : 'Status' %></th>
+          <th><%= typeof t !== 'undefined' ? t('sod.reviewedOn') : 'Reviewed On' %></th>
+          <th><%= typeof t !== 'undefined' ? t('sod.details') : 'Details' %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% completedRequests.forEach(request => { %>
+          <tr>
+            <td style="font-family: monospace;">#<%= request.id %></td>
+            <td style="font-weight: 600;"><%= request.code || 'N/A' %></td>
+            <td><%= request.name || 'Deleted' %></td>
+            <td><%= request.username || 'Unknown' %></td>
+            <td>
+              <% if (request.status === 'approved') { %>
+                <span class="badge badge-success"><%= typeof t !== 'undefined' ? t('sod.approved') : 'Approved' %></span>
+              <% } else { %>
+                <span class="badge badge-danger"><%= typeof t !== 'undefined' ? t('sod.rejected') : 'Rejected' %></span>
+              <% } %>
+            </td>
+            <td><%= new Date(request.reviewed_at).toLocaleString() %></td>
+            <td>
+              <% if (request.status === 'rejected' && request.rejection_reason) { %>
+                <button class="btn btn-secondary" onclick="showReason('<%= request.rejection_reason.replace(/'/g, "\\'") %>')" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">
+                  <%= typeof t !== 'undefined' ? t('sod.viewReason') : 'View Reason' %>
+                </button>
+              <% } else { %>
+                <span style="color: #999;">-</span>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</div>
+
+<!-- Reject Modal (Hidden) -->
+<div id="reject-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+  <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 500px; width: 90%;">
+    <h3 style="margin-bottom: 1rem;"><%= typeof t !== 'undefined' ? t('sod.rejectRequest') : 'Reject Deletion Request' %></h3>
+    <p style="margin-bottom: 1rem; color: #666;">
+      <%= typeof t !== 'undefined' ? t('sod.rejectPrompt') : 'Please provide a reason for rejecting this deletion request. The professor will see this reason.' %>
+    </p>
+    <p style="margin-bottom: 1rem;"><strong><%= typeof t !== 'undefined' ? t('classes.code') : 'Class Code' %>:</strong> <span id="reject-class-code"></span></p>
+    <textarea
+      id="reject-reason"
+      rows="4"
+      style="width: 100%; padding: 0.75rem; border: 2px solid #ddd; border-radius: 4px; margin-bottom: 1rem; font-family: inherit;"
+      placeholder="<%= typeof t !== 'undefined' ? t('sod.reasonPlaceholder') : 'Example: This class is still active and has enrolled students. Please wait until the semester ends.' %>"
+    ></textarea>
+    <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+      <button class="btn btn-secondary" onclick="closeRejectModal()"><%= typeof t !== 'undefined' ? t('common.cancel') : 'Cancel' %></button>
+      <button class="btn btn-danger" onclick="submitRejection()"><%= typeof t !== 'undefined' ? t('sod.reject') : 'Reject Request' %></button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentRejectId = null;
+
+  function approveRequest(requestId) {
+    if (!confirm('Are you sure you want to APPROVE this deletion request? The class and all related data will be permanently deleted.')) {
+      return;
+    }
+
+    fetch(`/admin/deletion-requests/${requestId}/approve`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert('Deletion request approved. Class has been deleted.');
+        location.reload();
+      } else {
+        alert('Error: ' + (data.error || 'Unknown error'));
+      }
+    })
+    .catch(err => alert('Error: ' + err.message));
+  }
+
+  function showRejectModal(requestId, classCode) {
+    currentRejectId = requestId;
+    document.getElementById('reject-class-code').textContent = classCode;
+    document.getElementById('reject-reason').value = '';
+    document.getElementById('reject-modal').style.display = 'flex';
+  }
+
+  function closeRejectModal() {
+    currentRejectId = null;
+    document.getElementById('reject-modal').style.display = 'none';
+  }
+
+  function submitRejection() {
+    const reason = document.getElementById('reject-reason').value.trim();
+    if (!reason) {
+      alert('Please provide a reason for rejection.');
+      return;
+    }
+
+    fetch(`/admin/deletion-requests/${currentRejectId}/reject`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert('Deletion request rejected.');
+        location.reload();
+      } else {
+        alert('Error: ' + (data.error || 'Unknown error'));
+      }
+    })
+    .catch(err => alert('Error: ' + err.message));
+  }
+
+  function showReason(reason) {
+    alert('Rejection Reason:\n\n' + reason);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeRejectModal();
+  });
+</script>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,25 @@
+<svg id="Logo_HEC_Montréal" data-name="Logo HEC Montréal" xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+  <g id="Groupe_1" data-name="Groupe 1">
+    <rect id="Rectangle_3" data-name="Rectangle 3" width="100" height="100" fill="#002855"/>
+  </g>
+  <g id="Groupe_3" data-name="Groupe 3" transform="translate(6.524 47.207)">
+    <g id="Groupe_2" data-name="Groupe 2" transform="translate(0 0.498)">
+      <path id="Tracé_1" data-name="Tracé 1" d="M72.681,385H68.66v7.644H60.144V385H56.06v7.644H52.4v3.822h3.66v8.877h4.084v-8.877H68.66v8.877h4.084V385Z" transform="translate(-52.4 -384.975)" fill="#fff"/>
+      <path id="Tracé_2" data-name="Tracé 2" d="M231.223,384.825v7.644H227.5v3.822h3.723v8.877h13.384v-3.822h-9.375v-5.067h8.79v-3.822h-8.79v-3.835h9.375s.012-3.822,0-3.822C244.606,384.825,231.347,384.825,231.223,384.825Z" transform="translate(-205.7 -384.8)" fill="#fff"/>
+    </g>
+    <path id="Tracé_3" data-name="Tracé 3" d="M373.7,391.42a10.82,10.82,0,0,0,11.08,10.769,11.076,11.076,0,0,0,8.765-4.183c0,.012.112-.137.174-.212-.112-.075-3.249-2.353-3.349-2.428-.05.062-.149.2-.149.2a6.769,6.769,0,0,1-5.441,2.689,6.891,6.891,0,0,1-6.76-6.847,6.759,6.759,0,0,1,6.76-6.686,6.425,6.425,0,0,1,5.378,2.814l3.561-2.341-.162-.2a11.068,11.068,0,0,0-8.765-4.2C378.58,380.8,373.7,385.382,373.7,391.42Z" transform="translate(-333.698 -380.8)" fill="#fff"/>
+  </g>
+  <g id="Groupe_5" data-name="Groupe 5" transform="translate(10.184 70.033)">
+    <g id="Groupe_4" data-name="Groupe 4" transform="translate(57.749)">
+      <rect id="Rectangle_4" data-name="Rectangle 4" width="5.042" height="1.942" fill="#fff"/>
+    </g>
+    <path id="Tracé_4" data-name="Tracé 4" d="M589,603.8h2.527l.9-2h4.557l.9,2H600.4l-5.7-11.6Zm5.7-7.047,1.507,3.1H593.22Z" transform="translate(-526.188 -588.839)" fill="#fff"/>
+    <path id="Tracé_5" data-name="Tracé 5" d="M517.355,597.5v4.108H515.5v2.054h1.855v4.768h7.2v-2.054h-5.042v-2.714h4.719v-2.054h-4.719v-2.054h5.042V597.5Z" transform="translate(-461.755 -593.479)" fill="#fff"/>
+    <path id="Tracé_6" data-name="Tracé 6" d="M87.029,599.906,81.8,595.3v11.217H84v-6.437l3.025,2.664,3.025-2.664v6.437h2.191V595.3Z" transform="translate(-81.8 -591.553)" fill="#fff"/>
+    <path id="Tracé_7" data-name="Tracé 7" d="M179.864,595.3a5.818,5.818,0,0,0-5.964,5.789,5.969,5.969,0,0,0,11.927,0A5.811,5.811,0,0,0,179.864,595.3Zm0,9.362a3.616,3.616,0,0,1-3.623-3.573,3.623,3.623,0,1,1,7.246,0A3.616,3.616,0,0,1,179.864,604.662Z" transform="translate(-162.434 -591.553)" fill="#fff"/>
+    <path id="Tracé_8" data-name="Tracé 8" d="M277.812,605.292H280v-6.349l6.972,6.81V594.361h-2.2v6.013L277.8,593.9C277.812,593.888,277.812,605.217,277.812,605.292Z" transform="translate(-253.512 -590.327)" fill="#fff"/>
+    <path id="Tracé_9" data-name="Tracé 9" d="M369.6,597.5h-8.5v2.091h3.175v8.839h2.191v-8.839h3.162V597.5Z" transform="translate(-326.487 -593.479)" fill="#fff"/>
+    <path id="Tracé_10" data-name="Tracé 10" d="M684.654,597.5H682.5v10.943h6.325v-2.092h-4.133v-8.839A.062.062,0,0,0,684.654,597.5Z" transform="translate(-608.047 -593.479)" fill="#fff"/>
+    <path id="Tracé_11" data-name="Tracé 11" d="M433.2,603.625l.149-.025a2.76,2.76,0,0,0,2.54-2.913c0-2.042-1.332-3.187-3.66-3.187H426.78v4.121H425v2.042h1.78v4.781h2.191v-4.781h1.805s2.727,4.744,2.739,4.781h2.59C436.043,608.331,433.2,603.625,433.2,603.625Zm-4.233-2v-2.079H432.4A1.165,1.165,0,0,1,433.7,600.7c0,.51-.349.921-1.307.921Z" transform="translate(-382.476 -593.479)" fill="#fff"/>
+  </g>
+</svg>

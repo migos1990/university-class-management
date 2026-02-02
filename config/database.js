@@ -15,10 +15,11 @@ let db = {
   classes: [],
   sessions: [],
   enrollments: [],
-  security_settings: [{ id: 1, mfa_enabled: 0, rbac_enabled: 1, encryption_at_rest: 0, field_encryption: 0, https_enabled: 0, audit_logging: 0, rate_limiting: 0 }],
+  security_settings: [{ id: 1, mfa_enabled: 0, rbac_enabled: 1, encryption_at_rest: 0, field_encryption: 0, https_enabled: 0, audit_logging: 0, rate_limiting: 0, backup_enabled: 0, backup_frequency: 60, last_backup_time: null, segregation_of_duties: 0 }],
   audit_logs: [],
   rate_limit_attempts: [],
-  _counters: { users: 0, classes: 0, sessions: 0, enrollments: 0, audit_logs: 0, rate_limit_attempts: 0 }
+  deletion_requests: [],
+  _counters: { users: 0, classes: 0, sessions: 0, enrollments: 0, audit_logs: 0, rate_limit_attempts: 0, deletion_requests: 0 }
 };
 
 // Load database from file if exists
@@ -176,6 +177,46 @@ function executeSQL(sql, params = []) {
         return attempt || null;
       }
     }
+
+    if (sql.includes('FROM deletion_requests')) {
+      if (sql.includes('WHERE id')) {
+        return db.deletion_requests.find(dr => dr.id === parseInt(params[0])) || null;
+      }
+      if (sql.includes('WHERE class_id')) {
+        return db.deletion_requests.find(dr => dr.class_id === parseInt(params[0])) || null;
+      }
+      if (sql.includes('WHERE status')) {
+        const status = params[0];
+        // If there's a requested_by filter
+        if (sql.includes('AND requested_by')) {
+          const requestedBy = params[1];
+          return db.deletion_requests.filter(dr => dr.status === status && dr.requested_by === requestedBy);
+        }
+        return db.deletion_requests.filter(dr => dr.status === status);
+      }
+      if (sql.includes('WHERE requested_by')) {
+        return db.deletion_requests.filter(dr => dr.requested_by === params[0]);
+      }
+      if (sql.includes('COUNT(*)')) {
+        return { count: db.deletion_requests.length };
+      }
+      // Return all with joined class and user information
+      if (sql.includes('c.code') && sql.includes('u.username')) {
+        return db.deletion_requests.map(dr => {
+          const cls = db.classes.find(c => c.id === dr.class_id);
+          const requester = db.users.find(u => u.id === dr.requested_by);
+          const reviewer = dr.reviewed_by ? db.users.find(u => u.id === dr.reviewed_by) : null;
+          return {
+            ...dr,
+            class_code: cls?.code,
+            class_name: cls?.name,
+            requester_name: requester?.username,
+            reviewer_name: reviewer?.username
+          };
+        });
+      }
+      return db.deletion_requests;
+    }
   }
 
   // INSERT queries
@@ -275,6 +316,21 @@ function executeSQL(sql, params = []) {
       db.rate_limit_attempts.push(attempt);
       return { lastID: attempt.id, changes: 1 };
     }
+
+    if (sql.includes('INTO deletion_requests')) {
+      const request = {
+        id: ++db._counters.deletion_requests,
+        class_id: params[0],
+        requested_by: params[1],
+        requested_at: new Date().toISOString(),
+        status: params[2] || 'pending',
+        reviewed_by: null,
+        reviewed_at: null,
+        rejection_reason: null
+      };
+      db.deletion_requests.push(request);
+      return { lastID: request.id, changes: 1 };
+    }
   }
 
   // UPDATE queries
@@ -344,8 +400,29 @@ function executeSQL(sql, params = []) {
       if (sql.includes('https_enabled')) settings.https_enabled = params[0];
       if (sql.includes('audit_logging')) settings.audit_logging = params[0];
       if (sql.includes('rate_limiting')) settings.rate_limiting = params[0];
+      if (sql.includes('backup_enabled')) settings.backup_enabled = params[0];
+      if (sql.includes('backup_frequency')) settings.backup_frequency = params[0];
+      if (sql.includes('last_backup_time')) settings.last_backup_time = params[0];
+      if (sql.includes('segregation_of_duties')) settings.segregation_of_duties = params[0];
       settings.updated_at = new Date().toISOString();
       return { changes: 1 };
+    }
+
+    if (sql.includes('UPDATE deletion_requests')) {
+      const requestId = params[params.length - 1];
+      const request = db.deletion_requests.find(dr => dr.id === requestId);
+      if (request) {
+        // Update status (approve or reject)
+        if (sql.includes('status')) {
+          request.status = params[0];
+          request.reviewed_by = params[1];
+          request.reviewed_at = new Date().toISOString();
+          if (params[2]) {
+            request.rejection_reason = params[2];
+          }
+        }
+      }
+      return { changes: request ? 1 : 0 };
     }
   }
 
@@ -356,14 +433,38 @@ function executeSQL(sql, params = []) {
       return { changes: 1 };
     }
     if (sql.includes('FROM classes')) {
+      // Support DELETE by ID (for SoD feature)
+      if (sql.includes('WHERE id')) {
+        const classId = params[0];
+        const before = db.classes.length;
+        db.classes = db.classes.filter(c => c.id !== classId);
+        // Cascade delete: remove related sessions and enrollments
+        db.sessions = db.sessions.filter(s => s.class_id !== classId);
+        db.enrollments = db.enrollments.filter(e => e.class_id !== classId);
+        return { changes: before - db.classes.length };
+      }
       db.classes = [];
       return { changes: 1 };
     }
     if (sql.includes('FROM sessions')) {
+      // Support DELETE by class_id (for cascading class deletion)
+      if (sql.includes('WHERE class_id')) {
+        const classId = params[0];
+        const before = db.sessions.length;
+        db.sessions = db.sessions.filter(s => s.class_id !== classId);
+        return { changes: before - db.sessions.length };
+      }
       db.sessions = [];
       return { changes: 1 };
     }
     if (sql.includes('FROM enrollments')) {
+      // Support DELETE by class_id (for cascading class deletion)
+      if (sql.includes('WHERE class_id')) {
+        const classId = params[0];
+        const before = db.enrollments.length;
+        db.enrollments = db.enrollments.filter(e => e.class_id !== classId);
+        return { changes: before - db.enrollments.length };
+      }
       db.enrollments = [];
       return { changes: 1 };
     }
@@ -379,6 +480,16 @@ function executeSQL(sql, params = []) {
         return { changes: before - db.rate_limit_attempts.length };
       }
       db.rate_limit_attempts = [];
+      return { changes: 1 };
+    }
+    if (sql.includes('FROM deletion_requests')) {
+      if (sql.includes('WHERE id')) {
+        const requestId = params[0];
+        const before = db.deletion_requests.length;
+        db.deletion_requests = db.deletion_requests.filter(dr => dr.id !== requestId);
+        return { changes: before - db.deletion_requests.length };
+      }
+      db.deletion_requests = [];
       return { changes: 1 };
     }
   }

@@ -1,0 +1,213 @@
+<%- include('../partials/header') %>
+
+<h1>💾 <%= typeof t !== 'undefined' ? t('backups.title') : 'Database Backups' %></h1>
+
+<% if (rbacBypass) { %>
+  <div class="alert alert-warning">
+    ⚠️ <strong><%= typeof t !== 'undefined' ? t('common.warning') : 'Warning' %>:</strong> RBAC is currently DISABLED.
+  </div>
+<% } %>
+
+<!-- Backup Settings -->
+<div class="card">
+  <h2><%= typeof t !== 'undefined' ? t('backups.status') : 'Backup Status' %></h2>
+
+  <div style="margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <div>
+        <h3 style="margin-bottom: 0.5rem;"><%= typeof t !== 'undefined' ? t('backups.enabled') : 'Backups Enabled' %></h3>
+        <p style="color: #666; margin: 0;">
+          <% if (backupSettings.enabled) { %>
+            <span class="badge badge-success"><%= typeof t !== 'undefined' ? t('security.status.on') : 'ON' %></span>
+          <% } else { %>
+            <span class="badge badge-danger"><%= typeof t !== 'undefined' ? t('security.status.off') : 'OFF' %></span>
+          <% } %>
+        </p>
+      </div>
+      <button class="btn <%= backupSettings.enabled ? 'btn-danger' : 'btn-success' %>"
+              onclick="toggleBackups()">
+        <%= backupSettings.enabled ? (typeof t !== 'undefined' ? t('common.disable') : 'Disable') : (typeof t !== 'undefined' ? t('common.enable') : 'Enable') %>
+      </button>
+    </div>
+
+    <% if (backupSettings.enabled) { %>
+      <div style="margin-top: 1.5rem;">
+        <label for="backup-frequency" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+          <%= typeof t !== 'undefined' ? t('backups.frequency') : 'Backup Frequency' %>:
+        </label>
+        <select id="backup-frequency" onchange="changeFrequency(this.value)"
+                style="padding: 0.6rem; border-radius: 4px; border: 1px solid #ddd; width: 100%; max-width: 300px;">
+          <option value="5" <%= backupSettings.frequency === 5 ? 'selected' : '' %>>
+            <%= typeof t !== 'undefined' ? t('backups.frequencies.5') : 'Every 5 minutes' %>
+          </option>
+          <option value="15" <%= backupSettings.frequency === 15 ? 'selected' : '' %>>
+            <%= typeof t !== 'undefined' ? t('backups.frequencies.15') : 'Every 15 minutes' %>
+          </option>
+          <option value="30" <%= backupSettings.frequency === 30 ? 'selected' : '' %>>
+            <%= typeof t !== 'undefined' ? t('backups.frequencies.30') : 'Every 30 minutes' %>
+          </option>
+          <option value="60" <%= backupSettings.frequency === 60 ? 'selected' : '' %>>
+            <%= typeof t !== 'undefined' ? t('backups.frequencies.60') : 'Every hour' %>
+          </option>
+          <option value="360" <%= backupSettings.frequency === 360 ? 'selected' : '' %>>
+            <%= typeof t !== 'undefined' ? t('backups.frequencies.360') : 'Every 6 hours' %>
+          </option>
+          <option value="720" <%= backupSettings.frequency === 720 ? 'selected' : '' %>>
+            <%= typeof t !== 'undefined' ? t('backups.frequencies.720') : 'Every 12 hours' %>
+          </option>
+          <option value="1440" <%= backupSettings.frequency === 1440 ? 'selected' : '' %>>
+            <%= typeof t !== 'undefined' ? t('backups.frequencies.1440') : 'Every 24 hours' %>
+          </option>
+        </select>
+      </div>
+
+      <div style="margin-top: 1rem;">
+        <p><strong><%= typeof t !== 'undefined' ? t('backups.lastBackup') : 'Last Backup' %>:</strong>
+          <%= backupSettings.lastBackup ? new Date(backupSettings.lastBackup).toLocaleString() : (typeof t !== 'undefined' ? (currentLang === 'fr' ? 'Jamais' : 'Never') : 'Never') %>
+        </p>
+      </div>
+    <% } %>
+
+    <div style="margin-top: 1.5rem;">
+      <button class="btn btn-primary" onclick="createBackup()">
+        <%= typeof t !== 'undefined' ? t('backups.backupNow') : 'Backup Now' %>
+      </button>
+      <button class="btn btn-secondary" onclick="cleanupOldBackups()" style="margin-left: 1rem;">
+        <%= typeof t !== 'undefined' ? t('backups.cleanupOld') : 'Clean Up Old Backups (Keep Last 50)' %>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Backup List -->
+<div class="card" style="margin-top: 2rem;">
+  <h2><%= typeof t !== 'undefined' ? t('backups.availableBackups') : 'Available Backups' %> (<%= backups.length %>)</h2>
+
+  <% if (backups.length === 0) { %>
+    <p style="color: #666; font-style: italic;"><%= typeof t !== 'undefined' ? t('backups.noBackups') : 'No backups found. Create your first backup above.' %></p>
+  <% } else { %>
+    <table>
+      <thead>
+        <tr>
+          <th><%= typeof t !== 'undefined' ? t('backups.filename') : 'Filename' %></th>
+          <th><%= typeof t !== 'undefined' ? t('backups.created') : 'Created' %></th>
+          <th><%= typeof t !== 'undefined' ? t('backups.size') : 'Size' %></th>
+          <th><%= typeof t !== 'undefined' ? t('backups.actions') : 'Actions' %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% backups.forEach(backup => { %>
+          <tr>
+            <td style="font-family: monospace; font-size: 0.9rem;"><%= backup.filename %></td>
+            <td><%= new Date(backup.created).toLocaleString() %></td>
+            <td><%= (backup.size / 1024).toFixed(2) %> KB</td>
+            <td>
+              <a href="/admin/backups/download/<%= backup.filename %>" class="btn btn-secondary" style="padding: 0.3rem 0.8rem; font-size: 0.9rem;">
+                <%= typeof t !== 'undefined' ? t('backups.download') : 'Download' %>
+              </a>
+              <button class="btn btn-primary" onclick="restoreBackup('<%= backup.filename %>')"
+                      style="padding: 0.3rem 0.8rem; font-size: 0.9rem; margin-left: 0.5rem;">
+                <%= typeof t !== 'undefined' ? t('backups.restore') : 'Restore' %>
+              </button>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</div>
+
+<script>
+  function toggleBackups() {
+    if (!confirm('Are you sure you want to toggle automatic backups?')) return;
+
+    fetch('/admin/backups/toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        location.reload();
+      } else {
+        alert('Error: ' + (data.error || 'Unknown error'));
+      }
+    })
+    .catch(err => alert('Error: ' + err.message));
+  }
+
+  function changeFrequency(frequency) {
+    fetch('/admin/backups/set-frequency', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ frequency: parseInt(frequency) })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert('Backup frequency updated successfully!');
+      } else {
+        alert('Error: ' + (data.error || 'Unknown error'));
+      }
+    })
+    .catch(err => alert('Error: ' + err.message));
+  }
+
+  function createBackup() {
+    fetch('/admin/backups/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert('Backup created successfully!');
+        location.reload();
+      } else {
+        alert('Error: ' + (data.error || 'Unknown error'));
+      }
+    })
+    .catch(err => alert('Error: ' + err.message));
+  }
+
+  function restoreBackup(filename) {
+    if (!confirm('⚠️ This will restore the database to the state in this backup. Current data will be backed up first. Continue?')) {
+      return;
+    }
+
+    fetch(`/admin/backups/restore/${filename}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert('Database restored successfully! Please restart the server for changes to take effect.');
+      } else {
+        alert('Error: ' + (data.error || 'Unknown error'));
+      }
+    })
+    .catch(err => alert('Error: ' + err.message));
+  }
+
+  function cleanupOldBackups() {
+    if (!confirm('This will delete all backups except the 50 most recent. Continue?')) return;
+
+    fetch('/admin/backups/cleanup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert('Old backups cleaned up!');
+        location.reload();
+      } else {
+        alert('Error: ' + (data.error || 'Unknown error'));
+      }
+    })
+    .catch(err => alert('Error: ' + err.message));
+  }
+</script>
+
+<%- include('../partials/footer') %>

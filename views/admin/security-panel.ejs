@@ -1,186 +1,374 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Security Panel - Admin</title>
-</head>
-<body>
-  <%
-    const body = `
-      <h1>🔒 Security Configuration Panel</h1>
+<%- include('../partials/header') %>
 
-      <% if (rbacBypass) { %>
-        <div class="alert alert-warning">
-          ⚠️ <strong>Warning:</strong> RBAC is currently DISABLED. All users can access this page.
-        </div>
-      <% } %>
+<div class="page-header">
+  <h1 class="page-title">Security Configuration</h1>
+  <p class="page-subtitle">Toggle security features to demonstrate secure vs insecure implementations</p>
+</div>
 
-      <div class="card">
-        <p style="margin-bottom: 2rem; color: #666;">
-          Toggle security features on and off to demonstrate the difference between secure and insecure implementations.
-          Students can observe the effects in the database and through the application behavior.
-        </p>
+<% if (typeof rbacBypass !== 'undefined' && rbacBypass) { %>
+  <div class="alert alert-warning">
+    <strong>Warning:</strong> RBAC is currently DISABLED. All users can access this page.
+  </div>
+<% } %>
 
-        <div class="security-feature" style="margin-bottom: 2rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <h3>Multi-Factor Authentication (MFA)</h3>
-              <p style="color: #666; font-size: 0.95rem;">Require Google Authenticator TOTP for admin login</p>
-            </div>
-            <label class="toggle-switch" style="position: relative; display: inline-block; width: 60px; height: 34px;">
-              <input type="checkbox" id="toggle-mfa" <%= securitySettings.mfa_enabled ? 'checked' : '' %> onchange="toggleFeature('mfa_enabled', this.checked)">
-              <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px;"></span>
-            </label>
-          </div>
-          <div style="margin-top: 1rem;">
-            <a href="/admin/mfa-setup" class="btn btn-secondary">Configure MFA</a>
-          </div>
-        </div>
+<style>
+  .security-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
 
-        <div class="security-feature" style="margin-bottom: 2rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <h3>Role-Based Access Control (RBAC)</h3>
-              <p style="color: #666; font-size: 0.95rem;">Restrict access based on user roles (student/professor/admin)</p>
-            </div>
-            <label class="toggle-switch" style="position: relative; display: inline-block; width: 60px; height: 34px;">
-              <input type="checkbox" id="toggle-rbac" <%= securitySettings.rbac_enabled ? 'checked' : '' %> onchange="toggleFeature('rbac_enabled', this.checked)">
-              <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px;"></span>
-            </label>
-          </div>
-        </div>
+  .security-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+  }
 
-        <div class="security-feature" style="margin-bottom: 2rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <h3>Password Encryption (bcrypt)</h3>
-              <p style="color: #666; font-size: 0.95rem;">Hash passwords with bcrypt instead of storing plaintext</p>
-            </div>
-            <label class="toggle-switch" style="position: relative; display: inline-block; width: 60px; height: 34px;">
-              <input type="checkbox" id="toggle-encryption-at-rest" <%= securitySettings.encryption_at_rest ? 'checked' : '' %> onchange="toggleFeature('encryption_at_rest', this.checked)">
-              <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px;"></span>
-            </label>
-          </div>
-          <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #999;">
-            Open database/classmanagement.db in DB Browser to see the difference
-          </p>
-        </div>
+  .security-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  }
 
-        <div class="security-feature" style="margin-bottom: 2rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <h3>Field Encryption (AES-256)</h3>
-              <p style="color: #666; font-size: 0.95rem;">Encrypt sensitive data like SSN and grades</p>
-            </div>
-            <label class="toggle-switch" style="position: relative; display: inline-block; width: 60px; height: 34px;">
-              <input type="checkbox" id="toggle-field-encryption" <%= securitySettings.field_encryption ? 'checked' : '' %> onchange="toggleFeature('field_encryption', this.checked)">
-              <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px;"></span>
-            </label>
-          </div>
-        </div>
+  .security-card-header {
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px solid #f0f0f0;
+  }
 
-        <div class="security-feature" style="margin-bottom: 2rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <h3>HTTPS/TLS</h3>
-              <p style="color: #666; font-size: 0.95rem;">Secure communication with encryption in transit</p>
-            </div>
-            <label class="toggle-switch" style="position: relative; display: inline-block; width: 60px; height: 34px;">
-              <input type="checkbox" id="toggle-https" <%= securitySettings.https_enabled ? 'checked' : '' %> onchange="toggleFeature('https_enabled', this.checked)">
-              <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px;"></span>
-            </label>
-          </div>
-          <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #999;">
-            Requires server restart to take effect
-          </p>
-        </div>
+  .security-card-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
 
-        <div class="security-feature" style="margin-bottom: 2rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <h3>Audit Logging</h3>
-              <p style="color: #666; font-size: 0.95rem;">Track all user actions and security events</p>
-            </div>
-            <label class="toggle-switch" style="position: relative; display: inline-block; width: 60px; height: 34px;">
-              <input type="checkbox" id="toggle-audit-logging" <%= securitySettings.audit_logging ? 'checked' : '' %> onchange="toggleFeature('audit_logging', this.checked)">
-              <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px;"></span>
-            </label>
-          </div>
-          <div style="margin-top: 1rem;">
-            <a href="/admin/audit-logs" class="btn btn-secondary">View Audit Logs</a>
-          </div>
-        </div>
+  .security-card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #002855;
+    margin-bottom: 0.25rem;
+  }
 
-        <div class="security-feature" style="padding-top: 2rem; border-top: 1px solid #e0e0e0;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <h3>Rate Limiting</h3>
-              <p style="color: #666; font-size: 0.95rem;">Protect against brute force login attempts</p>
-            </div>
-            <label class="toggle-switch" style="position: relative; display: inline-block; width: 60px; height: 34px;">
-              <input type="checkbox" id="toggle-rate-limiting" <%= securitySettings.rate_limiting ? 'checked' : '' %> onchange="toggleFeature('rate_limiting', this.checked)">
-              <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px;"></span>
-            </label>
-          </div>
-        </div>
+  .security-card-desc {
+    font-size: 0.85rem;
+    color: #666;
+    line-height: 1.4;
+  }
+
+  .security-card-body {
+    padding: 1.25rem 1.5rem;
+    background: #fafbfc;
+  }
+
+  .impact-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #999;
+    margin-bottom: 0.5rem;
+  }
+
+  .impact-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+  }
+
+  .impact-arrow {
+    color: #ccc;
+    font-weight: bold;
+  }
+
+  .impact-off {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-family: monospace;
+  }
+
+  .impact-on {
+    background: #d4edda;
+    color: #155724;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-family: monospace;
+  }
+
+  .toggle-switch {
+    position: relative;
+    width: 52px;
+    height: 28px;
+    flex-shrink: 0;
+  }
+
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.3s;
+    border-radius: 28px;
+  }
+
+  .toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  .toggle-switch input:checked + .toggle-slider {
+    background-color: #27ae60;
+  }
+
+  .toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(24px);
+  }
+
+  .security-card-action {
+    padding: 0 1.5rem 1.25rem;
+    background: #fafbfc;
+  }
+</style>
+
+<div class="security-grid">
+  <!-- MFA Card -->
+  <div class="security-card">
+    <div class="security-card-header">
+      <div>
+        <div class="security-card-icon">🔐</div>
+        <div class="security-card-title">Multi-Factor Authentication</div>
+        <div class="security-card-desc">Require TOTP code for admin login via Google Authenticator</div>
       </div>
+      <label class="toggle-switch">
+        <input type="checkbox" <%= securitySettings.mfa_enabled ? 'checked' : '' %> onchange="toggleFeature('mfa_enabled')">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="security-card-body">
+      <div class="impact-label">Security Impact</div>
+      <div class="impact-row">
+        <span class="impact-off">Password only</span>
+        <span class="impact-arrow">→</span>
+        <span class="impact-on">Password + TOTP code</span>
+      </div>
+    </div>
+    <div class="security-card-action">
+      <a href="/admin/mfa-setup" class="btn btn-secondary" style="width: 100%; text-align: center;">Configure MFA</a>
+    </div>
+  </div>
 
-      <style>
-        .toggle-switch input {
-          opacity: 0;
-          width: 0;
-          height: 0;
-        }
+  <!-- RBAC Card -->
+  <div class="security-card">
+    <div class="security-card-header">
+      <div>
+        <div class="security-card-icon">👥</div>
+        <div class="security-card-title">Role-Based Access Control</div>
+        <div class="security-card-desc">Restrict page access based on user roles</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" <%= securitySettings.rbac_enabled ? 'checked' : '' %> onchange="toggleFeature('rbac_enabled')">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="security-card-body">
+      <div class="impact-label">Security Impact</div>
+      <div class="impact-row">
+        <span class="impact-off">All pages accessible</span>
+        <span class="impact-arrow">→</span>
+        <span class="impact-on">Role-restricted access</span>
+      </div>
+    </div>
+  </div>
 
-        .slider:before {
-          position: absolute;
-          content: "";
-          height: 26px;
-          width: 26px;
-          left: 4px;
-          bottom: 4px;
-          background-color: white;
-          transition: .4s;
-          border-radius: 50%;
-        }
+  <!-- Password Encryption Card -->
+  <div class="security-card">
+    <div class="security-card-header">
+      <div>
+        <div class="security-card-icon">🔑</div>
+        <div class="security-card-title">Password Encryption</div>
+        <div class="security-card-desc">Hash passwords with bcrypt algorithm</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" <%= securitySettings.encryption_at_rest ? 'checked' : '' %> onchange="toggleFeature('encryption_at_rest')">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="security-card-body">
+      <div class="impact-label">Database Storage</div>
+      <div class="impact-row">
+        <span class="impact-off">admin123</span>
+        <span class="impact-arrow">→</span>
+        <span class="impact-on">$2b$10$xK3...</span>
+      </div>
+    </div>
+  </div>
 
-        input:checked + .slider {
-          background-color: #27ae60 !important;
-        }
+  <!-- Field Encryption Card -->
+  <div class="security-card">
+    <div class="security-card-header">
+      <div>
+        <div class="security-card-icon">🛡️</div>
+        <div class="security-card-title">Data Encryption (AES-256)</div>
+        <div class="security-card-desc">Encrypt sensitive data like SSN and grades</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" <%= securitySettings.field_encryption ? 'checked' : '' %> onchange="toggleFeature('field_encryption')">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="security-card-body">
+      <div class="impact-label">Sensitive Data Storage</div>
+      <div class="impact-row">
+        <span class="impact-off">SSN: 123-45-6789</span>
+        <span class="impact-arrow">→</span>
+        <span class="impact-on">SSN: aGVsbG8...</span>
+      </div>
+    </div>
+  </div>
 
-        input:checked + .slider:before {
-          transform: translateX(26px);
-        }
-      </style>
+  <!-- HTTPS Card -->
+  <div class="security-card">
+    <div class="security-card-header">
+      <div>
+        <div class="security-card-icon">🌐</div>
+        <div class="security-card-title">HTTPS / TLS</div>
+        <div class="security-card-desc">Encrypt data in transit with TLS certificates</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" <%= securitySettings.https_enabled ? 'checked' : '' %> onchange="toggleFeature('https_enabled')">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="security-card-body">
+      <div class="impact-label">Connection Security</div>
+      <div class="impact-row">
+        <span class="impact-off">http://localhost</span>
+        <span class="impact-arrow">→</span>
+        <span class="impact-on">https://localhost</span>
+      </div>
+      <p style="font-size: 0.75rem; color: #999; margin-top: 0.5rem;">Requires server restart</p>
+    </div>
+  </div>
 
-      <script>
-        function toggleFeature(feature, enabled) {
-          fetch(\`/admin/security/toggle/\${feature}\`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          })
-          .then(res => res.json())
-          .then(data => {
-            if (data.success) {
-              if (data.requiresRestart) {
-                alert(data.message);
-              } else {
-                location.reload();
-              }
-            } else {
-              alert('Error: ' + (data.error || 'Unknown error'));
-              location.reload();
-            }
-          })
-          .catch(err => {
-            alert('Error: ' + err.message);
-            location.reload();
-          });
+  <!-- Audit Logging Card -->
+  <div class="security-card">
+    <div class="security-card-header">
+      <div>
+        <div class="security-card-icon">📋</div>
+        <div class="security-card-title">Audit Logging</div>
+        <div class="security-card-desc">Track all user actions and security events</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" <%= securitySettings.audit_logging ? 'checked' : '' %> onchange="toggleFeature('audit_logging')">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="security-card-body">
+      <div class="impact-label">Event Tracking</div>
+      <div class="impact-row">
+        <span class="impact-off">No records</span>
+        <span class="impact-arrow">→</span>
+        <span class="impact-on">Login, changes logged</span>
+      </div>
+    </div>
+    <div class="security-card-action">
+      <a href="/admin/audit-logs" class="btn btn-secondary" style="width: 100%; text-align: center;">View Audit Logs</a>
+    </div>
+  </div>
+
+  <!-- Rate Limiting Card -->
+  <div class="security-card">
+    <div class="security-card-header">
+      <div>
+        <div class="security-card-icon">⏱️</div>
+        <div class="security-card-title">Rate Limiting</div>
+        <div class="security-card-desc">Protect against brute force login attempts</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" <%= securitySettings.rate_limiting ? 'checked' : '' %> onchange="toggleFeature('rate_limiting')">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="security-card-body">
+      <div class="impact-label">Login Protection</div>
+      <div class="impact-row">
+        <span class="impact-off">Unlimited attempts</span>
+        <span class="impact-arrow">→</span>
+        <span class="impact-on">5 attempts / 15 min</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Segregation of Duties Card -->
+  <% if (typeof securitySettings.segregation_of_duties !== 'undefined') { %>
+  <div class="security-card">
+    <div class="security-card-header">
+      <div>
+        <div class="security-card-icon">✋</div>
+        <div class="security-card-title">Segregation of Duties</div>
+        <div class="security-card-desc">Require admin approval for class deletions</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" <%= securitySettings.segregation_of_duties ? 'checked' : '' %> onchange="toggleFeature('segregation_of_duties')">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="security-card-body">
+      <div class="impact-label">Deletion Workflow</div>
+      <div class="impact-row">
+        <span class="impact-off">Instant delete</span>
+        <span class="impact-arrow">→</span>
+        <span class="impact-on">Request → Approve</span>
+      </div>
+    </div>
+  </div>
+  <% } %>
+</div>
+
+<script>
+  function toggleFeature(feature) {
+    fetch('/admin/security/toggle/' + feature, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        if (data.requiresRestart) {
+          alert(data.message);
         }
-      </script>
-    `;
-  %>
-  <%- include('../layout', { body: body }) %>
-</body>
-</html>
+        location.reload();
+      } else {
+        alert('Error: ' + (data.error || 'Unknown error'));
+        location.reload();
+      }
+    })
+    .catch(err => {
+      alert('Error: ' + err.message);
+      location.reload();
+    });
+  }
+</script>
+
+<%- include('../partials/footer') %>
