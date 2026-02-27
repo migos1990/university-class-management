@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { db } = require('../config/database');
 
-const BACKUP_DIR = path.join(__dirname, '..', 'backups');
+const BACKUP_DIR = process.env.BACKUP_DIR || path.join(__dirname, '..', 'backups');
 let backupInterval = null;
 
 /**
@@ -33,7 +33,8 @@ function createBackup() {
     const filepath = path.join(BACKUP_DIR, filename);
 
     // Read current database file
-    const dbPath = path.join(__dirname, '..', 'database', 'data.json');
+    const dbDir = process.env.DATA_DIR || path.join(__dirname, '..', 'database');
+    const dbPath = path.join(dbDir, 'data.json');
 
     if (!fs.existsSync(dbPath)) {
       return { success: false, error: 'Database file not found' };
@@ -103,7 +104,8 @@ function restoreBackup(filename) {
       throw new Error('Backup file not found');
     }
 
-    const dbPath = path.join(__dirname, '..', 'database', 'data.json');
+    const dbDir = process.env.DATA_DIR || path.join(__dirname, '..', 'database');
+    const dbPath = path.join(dbDir, 'data.json');
     const backupData = fs.readFileSync(backupPath, 'utf8');
 
     // Validate JSON before restoring

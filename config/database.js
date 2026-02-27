@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 
-const dbDir = path.join(__dirname, '..', 'database');
+const dbDir = process.env.DATA_DIR || path.join(__dirname, '..', 'database');
 const dbPath = path.join(dbDir, 'data.json');
 
 // Ensure database directory exists
@@ -19,7 +19,29 @@ let db = {
   audit_logs: [],
   rate_limit_attempts: [],
   deletion_requests: [],
-  _counters: { users: 0, classes: 0, sessions: 0, enrollments: 0, audit_logs: 0, rate_limit_attempts: 0, deletion_requests: 0 }
+  // Security curriculum collections
+  sca_findings: [],
+  sca_student_reviews: [],
+  dast_scenarios: [],
+  dast_student_findings: [],
+  vulnerabilities: [],
+  vm_status_history: [],
+  vm_comments: [],
+  pentest_engagements: [],
+  pentest_findings: [],
+  pentest_phase_notes: [],
+  _counters: {
+    users: 0, classes: 0, sessions: 0, enrollments: 0,
+    audit_logs: 0, rate_limit_attempts: 0, deletion_requests: 0,
+    sca_student_reviews: 0,
+    dast_student_findings: 0,
+    vulnerabilities: 0,
+    vm_status_history: 0,
+    vm_comments: 0,
+    pentest_engagements: 0,
+    pentest_findings: 0,
+    pentest_phase_notes: 0
+  }
 };
 
 // Load database from file if exists
@@ -187,7 +209,6 @@ function executeSQL(sql, params = []) {
       }
       if (sql.includes('WHERE status')) {
         const status = params[0];
-        // If there's a requested_by filter
         if (sql.includes('AND requested_by')) {
           const requestedBy = params[1];
           return db.deletion_requests.filter(dr => dr.status === status && dr.requested_by === requestedBy);
@@ -200,7 +221,6 @@ function executeSQL(sql, params = []) {
       if (sql.includes('COUNT(*)')) {
         return { count: db.deletion_requests.length };
       }
-      // Return all with joined class and user information
       if (sql.includes('c.code') && sql.includes('u.username')) {
         return db.deletion_requests.map(dr => {
           const cls = db.classes.find(c => c.id === dr.class_id);
@@ -216,6 +236,146 @@ function executeSQL(sql, params = []) {
         });
       }
       return db.deletion_requests;
+    }
+
+    // --- SCA ---
+    if (sql.includes('FROM sca_findings')) {
+      if (!db.sca_findings) db.sca_findings = [];
+      if (sql.includes('WHERE id')) {
+        return db.sca_findings.find(f => f.id === parseInt(params[0])) || null;
+      }
+      if (sql.includes('WHERE severity')) {
+        return db.sca_findings.filter(f => f.severity === params[0]);
+      }
+      return db.sca_findings;
+    }
+
+    if (sql.includes('FROM sca_student_reviews')) {
+      if (!db.sca_student_reviews) db.sca_student_reviews = [];
+      if (sql.includes('WHERE finding_id') && sql.includes('AND student_id')) {
+        return db.sca_student_reviews.find(r => r.finding_id === parseInt(params[0]) && r.student_id === params[1]) || null;
+      }
+      if (sql.includes('WHERE finding_id')) {
+        return db.sca_student_reviews.filter(r => r.finding_id === parseInt(params[0]));
+      }
+      if (sql.includes('WHERE student_id')) {
+        return db.sca_student_reviews.filter(r => r.student_id === params[0]);
+      }
+      return db.sca_student_reviews;
+    }
+
+    // --- DAST ---
+    if (sql.includes('FROM dast_scenarios')) {
+      if (!db.dast_scenarios) db.dast_scenarios = [];
+      if (sql.includes('WHERE id')) {
+        return db.dast_scenarios.find(s => s.id === parseInt(params[0])) || null;
+      }
+      if (sql.includes('WHERE active')) {
+        return db.dast_scenarios.filter(s => s.active === 1);
+      }
+      return db.dast_scenarios;
+    }
+
+    if (sql.includes('FROM dast_student_findings')) {
+      if (!db.dast_student_findings) db.dast_student_findings = [];
+      if (sql.includes('WHERE id')) {
+        return db.dast_student_findings.find(f => f.id === parseInt(params[0])) || null;
+      }
+      if (sql.includes('WHERE scenario_id') && sql.includes('AND student_id')) {
+        return db.dast_student_findings.find(f => f.scenario_id === parseInt(params[0]) && f.student_id === params[1]) || null;
+      }
+      if (sql.includes('WHERE scenario_id')) {
+        return db.dast_student_findings.filter(f => f.scenario_id === parseInt(params[0]));
+      }
+      if (sql.includes('WHERE student_id')) {
+        return db.dast_student_findings.filter(f => f.student_id === params[0]);
+      }
+      return db.dast_student_findings;
+    }
+
+    // --- VM ---
+    if (sql.includes('FROM vulnerabilities')) {
+      if (!db.vulnerabilities) db.vulnerabilities = [];
+      if (sql.includes('WHERE id')) {
+        return db.vulnerabilities.find(v => v.id === parseInt(params[0])) || null;
+      }
+      if (sql.includes('WHERE source') && sql.includes('AND source_id')) {
+        return db.vulnerabilities.find(v => v.source === params[0] && v.source_id === params[1]) || null;
+      }
+      if (sql.includes('WHERE severity')) {
+        return db.vulnerabilities.filter(v => v.severity === params[0]);
+      }
+      if (sql.includes('WHERE status')) {
+        return db.vulnerabilities.filter(v => v.status === params[0]);
+      }
+      if (sql.includes('WHERE assigned_to')) {
+        return db.vulnerabilities.filter(v => v.assigned_to === params[0]);
+      }
+      if (sql.includes('COUNT(*)') && sql.includes('WHERE severity')) {
+        const sev = params[0];
+        return { count: db.vulnerabilities.filter(v => v.severity === sev).length };
+      }
+      if (sql.includes('COUNT(*)') && sql.includes('WHERE status')) {
+        const st = params[0];
+        return { count: db.vulnerabilities.filter(v => v.status === st).length };
+      }
+      if (sql.includes('COUNT(*)')) {
+        return { count: db.vulnerabilities.length };
+      }
+      return db.vulnerabilities.slice().sort((a, b) => b.id - a.id);
+    }
+
+    if (sql.includes('FROM vm_status_history')) {
+      if (!db.vm_status_history) db.vm_status_history = [];
+      if (sql.includes('WHERE vuln_id')) {
+        return db.vm_status_history.filter(h => h.vuln_id === parseInt(params[0])).sort((a, b) => new Date(b.changed_at) - new Date(a.changed_at));
+      }
+      return db.vm_status_history;
+    }
+
+    if (sql.includes('FROM vm_comments')) {
+      if (!db.vm_comments) db.vm_comments = [];
+      if (sql.includes('WHERE vuln_id')) {
+        return db.vm_comments.filter(c => c.vuln_id === parseInt(params[0])).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      }
+      return db.vm_comments;
+    }
+
+    // --- Pentest ---
+    if (sql.includes('FROM pentest_engagements')) {
+      if (!db.pentest_engagements) db.pentest_engagements = [];
+      if (sql.includes('WHERE id')) {
+        return db.pentest_engagements.find(e => e.id === parseInt(params[0])) || null;
+      }
+      if (sql.includes('WHERE student_id')) {
+        return db.pentest_engagements.find(e => e.student_id === params[0]) || null;
+      }
+      return db.pentest_engagements.slice().sort((a, b) => new Date(b.started_at) - new Date(a.started_at));
+    }
+
+    if (sql.includes('FROM pentest_findings')) {
+      if (!db.pentest_findings) db.pentest_findings = [];
+      if (sql.includes('WHERE id')) {
+        return db.pentest_findings.find(f => f.id === parseInt(params[0])) || null;
+      }
+      if (sql.includes('WHERE engagement_id') && sql.includes('AND phase')) {
+        return db.pentest_findings.filter(f => f.engagement_id === parseInt(params[0]) && f.phase === params[1]);
+      }
+      if (sql.includes('WHERE engagement_id')) {
+        return db.pentest_findings.filter(f => f.engagement_id === parseInt(params[0]));
+      }
+      return db.pentest_findings;
+    }
+
+    if (sql.includes('FROM pentest_phase_notes')) {
+      if (!db.pentest_phase_notes) db.pentest_phase_notes = [];
+      if (sql.includes('WHERE engagement_id') && sql.includes('AND phase')) {
+        return db.pentest_phase_notes.find(n => n.engagement_id === parseInt(params[0]) && n.phase === params[1]) || null;
+      }
+      if (sql.includes('WHERE engagement_id')) {
+        return db.pentest_phase_notes.filter(n => n.engagement_id === parseInt(params[0]));
+      }
+      return db.pentest_phase_notes;
     }
   }
 
@@ -331,6 +491,208 @@ function executeSQL(sql, params = []) {
       db.deletion_requests.push(request);
       return { lastID: request.id, changes: 1 };
     }
+
+    // --- SCA ---
+    if (sql.includes('INTO sca_findings')) {
+      if (!db.sca_findings) db.sca_findings = [];
+      const finding = {
+        id: params[0],  // pre-assigned id from seed
+        title: params[1],
+        file_path: params[2],
+        line_number: params[3],
+        code_snippet: params[4],
+        category: params[5],
+        cwe: params[6],
+        severity: params[7],
+        description: params[8],
+        tool: params[9],
+        remediation: params[10],
+        false_positive_reason: params[11] || null,
+        created_at: new Date().toISOString()
+      };
+      db.sca_findings.push(finding);
+      return { lastID: finding.id, changes: 1 };
+    }
+
+    if (sql.includes('INTO sca_student_reviews')) {
+      if (!db.sca_student_reviews) db.sca_student_reviews = [];
+      if (!db._counters.sca_student_reviews) db._counters.sca_student_reviews = 0;
+      const review = {
+        id: ++db._counters.sca_student_reviews,
+        finding_id: params[0],
+        student_id: params[1],
+        classification: params[2],
+        student_notes: params[3] || null,
+        remediation_notes: params[4] || null,
+        status: params[5] || 'pending',
+        submitted_at: params[6] || null,
+        created_at: new Date().toISOString()
+      };
+      db.sca_student_reviews.push(review);
+      return { lastID: review.id, changes: 1 };
+    }
+
+    // --- DAST ---
+    if (sql.includes('INTO dast_scenarios')) {
+      if (!db.dast_scenarios) db.dast_scenarios = [];
+      const scenario = {
+        id: params[0],
+        title: params[1],
+        vulnerability_type: params[2],
+        owasp_category: params[3],
+        severity: params[4],
+        description: params[5],
+        precondition: params[6] || 'none',
+        steps: params[7],
+        exploit_url: params[8] || null,
+        expected_finding: params[9],
+        affected_file: params[10],
+        affected_lines: params[11] || null,
+        cvss_base_score: params[12] || null,
+        active: params[13] !== undefined ? params[13] : 1
+      };
+      db.dast_scenarios.push(scenario);
+      return { lastID: scenario.id, changes: 1 };
+    }
+
+    if (sql.includes('INTO dast_student_findings')) {
+      if (!db.dast_student_findings) db.dast_student_findings = [];
+      if (!db._counters.dast_student_findings) db._counters.dast_student_findings = 0;
+      const finding = {
+        id: ++db._counters.dast_student_findings,
+        scenario_id: params[0],
+        student_id: params[1],
+        triggered: params[2] || 0,
+        trigger_evidence: params[3] || null,
+        impact_assessment: params[4] || null,
+        reproduction_steps: params[5] || null,
+        recommendation: params[6] || null,
+        severity_rating: params[7] || null,
+        submitted_at: params[8] || null,
+        instructor_feedback: null,
+        grade: null,
+        created_at: new Date().toISOString()
+      };
+      db.dast_student_findings.push(finding);
+      return { lastID: finding.id, changes: 1 };
+    }
+
+    // --- VM ---
+    if (sql.includes('INTO vulnerabilities')) {
+      if (!db.vulnerabilities) db.vulnerabilities = [];
+      if (!db._counters.vulnerabilities) db._counters.vulnerabilities = 0;
+      const vuln = {
+        id: params[0] || ++db._counters.vulnerabilities,
+        title: params[1],
+        source: params[2],
+        source_id: params[3] || null,
+        owasp_category: params[4] || null,
+        cwe: params[5] || null,
+        cvss_vector: params[6] || null,
+        cvss_score: params[7] || null,
+        severity: params[8],
+        affected_component: params[9] || null,
+        description: params[10],
+        status: params[11] || 'open',
+        assigned_to: params[12] || null,
+        priority: params[13] || 3,
+        remediation_plan: params[14] || null,
+        remediation_deadline: params[15] || null,
+        created_at: params[16] || new Date().toISOString(),
+        updated_at: params[17] || new Date().toISOString(),
+        resolved_at: null,
+        resolved_by: null,
+        resolution_notes: null
+      };
+      db.vulnerabilities.push(vuln);
+      if (vuln.id > db._counters.vulnerabilities) db._counters.vulnerabilities = vuln.id;
+      return { lastID: vuln.id, changes: 1 };
+    }
+
+    if (sql.includes('INTO vm_status_history')) {
+      if (!db.vm_status_history) db.vm_status_history = [];
+      if (!db._counters.vm_status_history) db._counters.vm_status_history = 0;
+      const entry = {
+        id: ++db._counters.vm_status_history,
+        vuln_id: params[0],
+        changed_by: params[1],
+        old_status: params[2],
+        new_status: params[3],
+        note: params[4] || null,
+        changed_at: new Date().toISOString()
+      };
+      db.vm_status_history.push(entry);
+      return { lastID: entry.id, changes: 1 };
+    }
+
+    if (sql.includes('INTO vm_comments')) {
+      if (!db.vm_comments) db.vm_comments = [];
+      if (!db._counters.vm_comments) db._counters.vm_comments = 0;
+      const comment = {
+        id: ++db._counters.vm_comments,
+        vuln_id: params[0],
+        user_id: params[1],
+        username: params[2],
+        body: params[3],
+        created_at: new Date().toISOString()
+      };
+      db.vm_comments.push(comment);
+      return { lastID: comment.id, changes: 1 };
+    }
+
+    // --- Pentest ---
+    if (sql.includes('INTO pentest_engagements')) {
+      if (!db.pentest_engagements) db.pentest_engagements = [];
+      if (!db._counters.pentest_engagements) db._counters.pentest_engagements = 0;
+      const engagement = {
+        id: ++db._counters.pentest_engagements,
+        student_id: params[0],
+        title: params[1],
+        status: params[2] || 'in_progress',
+        phase_current: params[3] || 'recon',
+        started_at: new Date().toISOString(),
+        submitted_at: null,
+        instructor_grade: null,
+        instructor_feedback: null
+      };
+      db.pentest_engagements.push(engagement);
+      return { lastID: engagement.id, changes: 1 };
+    }
+
+    if (sql.includes('INTO pentest_findings')) {
+      if (!db.pentest_findings) db.pentest_findings = [];
+      if (!db._counters.pentest_findings) db._counters.pentest_findings = 0;
+      const finding = {
+        id: ++db._counters.pentest_findings,
+        engagement_id: params[0],
+        phase: params[1],
+        title: params[2],
+        severity: params[3],
+        cvss_score: params[4] || null,
+        description: params[5],
+        affected_url: params[6] || null,
+        evidence: params[7] || null,
+        recommendation: params[8] || null,
+        created_at: new Date().toISOString()
+      };
+      db.pentest_findings.push(finding);
+      return { lastID: finding.id, changes: 1 };
+    }
+
+    if (sql.includes('INTO pentest_phase_notes')) {
+      if (!db.pentest_phase_notes) db.pentest_phase_notes = [];
+      if (!db._counters.pentest_phase_notes) db._counters.pentest_phase_notes = 0;
+      const notes = {
+        id: ++db._counters.pentest_phase_notes,
+        engagement_id: params[0],
+        phase: params[1],
+        notes: params[2] || '',
+        tools_used: params[3] || '',
+        updated_at: new Date().toISOString()
+      };
+      db.pentest_phase_notes.push(notes);
+      return { lastID: notes.id, changes: 1 };
+    }
   }
 
   // UPDATE queries
@@ -412,7 +774,6 @@ function executeSQL(sql, params = []) {
       const requestId = params[params.length - 1];
       const request = db.deletion_requests.find(dr => dr.id === requestId);
       if (request) {
-        // Update status (approve or reject)
         if (sql.includes('status')) {
           request.status = params[0];
           request.reviewed_by = params[1];
@@ -424,6 +785,121 @@ function executeSQL(sql, params = []) {
       }
       return { changes: request ? 1 : 0 };
     }
+
+    // --- SCA ---
+    if (sql.includes('UPDATE sca_student_reviews')) {
+      if (!db.sca_student_reviews) db.sca_student_reviews = [];
+      const reviewId = params[params.length - 1];
+      const review = db.sca_student_reviews.find(r => r.id === reviewId);
+      if (review) {
+        if (sql.includes('classification')) review.classification = params[0];
+        if (sql.includes('student_notes')) review.student_notes = params[1] !== undefined ? params[1] : review.student_notes;
+        if (sql.includes('remediation_notes')) review.remediation_notes = params[2] !== undefined ? params[2] : review.remediation_notes;
+        if (sql.includes('status')) review.status = params[3] !== undefined ? params[3] : review.status;
+        if (sql.includes('submitted_at')) review.submitted_at = params[4] !== undefined ? params[4] : review.submitted_at;
+        review.updated_at = new Date().toISOString();
+      }
+      return { changes: review ? 1 : 0 };
+    }
+
+    // --- DAST ---
+    if (sql.includes('UPDATE dast_student_findings')) {
+      if (!db.dast_student_findings) db.dast_student_findings = [];
+      const findingId = params[params.length - 1];
+      const finding = db.dast_student_findings.find(f => f.id === findingId);
+      if (finding) {
+        if (sql.includes('instructor_feedback')) {
+          finding.instructor_feedback = params[0];
+          finding.grade = params[1];
+        } else {
+          if (params[0] !== undefined) finding.triggered = params[0];
+          if (params[1] !== undefined) finding.trigger_evidence = params[1];
+          if (params[2] !== undefined) finding.impact_assessment = params[2];
+          if (params[3] !== undefined) finding.reproduction_steps = params[3];
+          if (params[4] !== undefined) finding.recommendation = params[4];
+          if (params[5] !== undefined) finding.severity_rating = params[5];
+          if (params[6] !== undefined) finding.submitted_at = params[6];
+        }
+        finding.updated_at = new Date().toISOString();
+      }
+      return { changes: finding ? 1 : 0 };
+    }
+
+    // --- VM ---
+    if (sql.includes('UPDATE vulnerabilities')) {
+      if (!db.vulnerabilities) db.vulnerabilities = [];
+      const vulnId = params[params.length - 1];
+      const vuln = db.vulnerabilities.find(v => v.id === parseInt(vulnId));
+      if (vuln) {
+        if (sql.includes('status')) {
+          vuln.status = params[0];
+          if (params[0] === 'resolved') {
+            vuln.resolved_at = new Date().toISOString();
+            vuln.resolved_by = params[1] || null;
+            vuln.resolution_notes = params[2] || null;
+          }
+        }
+        if (sql.includes('title')) vuln.title = params[0];
+        if (sql.includes('description') && !sql.includes('status')) vuln.description = params[0];
+        if (sql.includes('severity') && !sql.includes('status')) vuln.severity = sql.includes('title') ? params[4] : params[0];
+        if (sql.includes('assigned_to')) vuln.assigned_to = sql.includes('title') ? params[5] : params[0];
+        if (sql.includes('priority')) vuln.priority = sql.includes('title') ? params[6] : params[0];
+        if (sql.includes('remediation_plan')) vuln.remediation_plan = sql.includes('title') ? params[7] : params[0];
+        if (sql.includes('remediation_deadline')) vuln.remediation_deadline = sql.includes('title') ? params[8] : params[0];
+        vuln.updated_at = new Date().toISOString();
+      }
+      return { changes: vuln ? 1 : 0 };
+    }
+
+    // --- Pentest ---
+    if (sql.includes('UPDATE pentest_engagements')) {
+      if (!db.pentest_engagements) db.pentest_engagements = [];
+      const engId = params[params.length - 1];
+      const eng = db.pentest_engagements.find(e => e.id === parseInt(engId));
+      if (eng) {
+        if (sql.includes('phase_current')) eng.phase_current = params[0];
+        if (sql.includes('status') && !sql.includes('phase_current')) eng.status = params[0];
+        if (sql.includes('submitted_at')) eng.submitted_at = params[0] || new Date().toISOString();
+        if (sql.includes('instructor_grade')) {
+          eng.instructor_grade = params[0];
+          eng.instructor_feedback = params[1];
+          eng.status = 'graded';
+        }
+        eng.updated_at = new Date().toISOString();
+      }
+      return { changes: eng ? 1 : 0 };
+    }
+
+    if (sql.includes('UPDATE pentest_findings')) {
+      if (!db.pentest_findings) db.pentest_findings = [];
+      const findId = params[params.length - 1];
+      const find = db.pentest_findings.find(f => f.id === parseInt(findId));
+      if (find) {
+        if (params[0] !== undefined) find.title = params[0];
+        if (params[1] !== undefined) find.severity = params[1];
+        if (params[2] !== undefined) find.cvss_score = params[2];
+        if (params[3] !== undefined) find.description = params[3];
+        if (params[4] !== undefined) find.affected_url = params[4];
+        if (params[5] !== undefined) find.evidence = params[5];
+        if (params[6] !== undefined) find.recommendation = params[6];
+        find.updated_at = new Date().toISOString();
+      }
+      return { changes: find ? 1 : 0 };
+    }
+
+    if (sql.includes('UPDATE pentest_phase_notes')) {
+      if (!db.pentest_phase_notes) db.pentest_phase_notes = [];
+      // WHERE engagement_id = ? AND phase = ? → params are [...fields, engId, phase]
+      const phase = params[params.length - 1];
+      const engId = params[params.length - 2];
+      const note = db.pentest_phase_notes.find(n => n.engagement_id === parseInt(engId) && n.phase === phase);
+      if (note) {
+        note.notes = params[0];
+        note.tools_used = params[1] || note.tools_used;
+        note.updated_at = new Date().toISOString();
+      }
+      return { changes: note ? 1 : 0 };
+    }
   }
 
   // DELETE queries
@@ -433,12 +909,10 @@ function executeSQL(sql, params = []) {
       return { changes: 1 };
     }
     if (sql.includes('FROM classes')) {
-      // Support DELETE by ID (for SoD feature)
       if (sql.includes('WHERE id')) {
         const classId = params[0];
         const before = db.classes.length;
         db.classes = db.classes.filter(c => c.id !== classId);
-        // Cascade delete: remove related sessions and enrollments
         db.sessions = db.sessions.filter(s => s.class_id !== classId);
         db.enrollments = db.enrollments.filter(e => e.class_id !== classId);
         return { changes: before - db.classes.length };
@@ -447,7 +921,6 @@ function executeSQL(sql, params = []) {
       return { changes: 1 };
     }
     if (sql.includes('FROM sessions')) {
-      // Support DELETE by class_id (for cascading class deletion)
       if (sql.includes('WHERE class_id')) {
         const classId = params[0];
         const before = db.sessions.length;
@@ -458,7 +931,6 @@ function executeSQL(sql, params = []) {
       return { changes: 1 };
     }
     if (sql.includes('FROM enrollments')) {
-      // Support DELETE by class_id (for cascading class deletion)
       if (sql.includes('WHERE class_id')) {
         const classId = params[0];
         const before = db.enrollments.length;
@@ -492,6 +964,30 @@ function executeSQL(sql, params = []) {
       db.deletion_requests = [];
       return { changes: 1 };
     }
+
+    // --- VM ---
+    if (sql.includes('FROM vulnerabilities')) {
+      if (sql.includes('WHERE id')) {
+        if (!db.vulnerabilities) db.vulnerabilities = [];
+        const vulnId = parseInt(params[0]);
+        const before = db.vulnerabilities.length;
+        db.vulnerabilities = db.vulnerabilities.filter(v => v.id !== vulnId);
+        return { changes: before - db.vulnerabilities.length };
+      }
+      db.vulnerabilities = [];
+      return { changes: 1 };
+    }
+
+    // --- Pentest ---
+    if (sql.includes('FROM pentest_findings')) {
+      if (sql.includes('WHERE id')) {
+        if (!db.pentest_findings) db.pentest_findings = [];
+        const findId = parseInt(params[0]);
+        const before = db.pentest_findings.length;
+        db.pentest_findings = db.pentest_findings.filter(f => f.id !== findId);
+        return { changes: before - db.pentest_findings.length };
+      }
+    }
   }
 
   return null;
@@ -502,7 +998,6 @@ loadDatabase();
 
 // Initialize database schema
 function initializeDatabase() {
-  // Just ensure the structure exists
   if (!db.security_settings || db.security_settings.length === 0) {
     db.security_settings = [{
       id: 1,
@@ -516,6 +1011,25 @@ function initializeDatabase() {
       updated_at: new Date().toISOString()
     }];
   }
+  // Ensure new curriculum collections exist
+  const newCollections = [
+    'sca_findings', 'sca_student_reviews',
+    'dast_scenarios', 'dast_student_findings',
+    'vulnerabilities', 'vm_status_history', 'vm_comments',
+    'pentest_engagements', 'pentest_findings', 'pentest_phase_notes'
+  ];
+  newCollections.forEach(col => {
+    if (!db[col]) db[col] = [];
+  });
+  // Ensure new counter keys exist
+  const newCounters = [
+    'sca_student_reviews', 'dast_student_findings',
+    'vulnerabilities', 'vm_status_history', 'vm_comments',
+    'pentest_engagements', 'pentest_findings', 'pentest_phase_notes'
+  ];
+  newCounters.forEach(key => {
+    if (!db._counters[key]) db._counters[key] = 0;
+  });
   saveDatabase();
   console.log('Database initialized successfully');
 }
