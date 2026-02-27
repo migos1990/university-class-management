@@ -1,0 +1,160 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1 class="page-title">Dynamic Analysis Lab</h1>
+  <p class="page-subtitle">Follow each scenario step-by-step, exploit the vulnerability, then document your findings.</p>
+</div>
+
+<style>
+  .sev-Critical  { background:#ffe0e0; color:#c0392b; }
+  .sev-High      { background:#fff0e0; color:#c0732a; }
+  .sev-Medium    { background:#fffbe0; color:#9a7d0a; }
+  .sev-Low       { background:#e8f8e8; color:#1e8449; }
+  .badge-sm { display:inline-block; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:600; }
+  .scenario-card { border:1px solid #dee2e6; border-radius:8px; padding:1.25rem; margin-bottom:1rem; background:#fff; }
+  .scenario-card.done    { border-left:4px solid #28a745; }
+  .scenario-card.locked  { opacity:0.6; }
+  .precondition-box { border-radius:6px; padding:0.6rem 0.9rem; font-size:0.9rem; margin-bottom:0.75rem; }
+  .pre-met   { background:#d4edda; color:#155724; border:1px solid #c3e6cb; }
+  .pre-unmet { background:#fff3cd; color:#856404; border:1px solid #ffeeba; }
+</style>
+
+<% scenarios.forEach(s => {
+  const finding = findingMap[s.id];
+  const isDone = finding && finding.submitted_at;
+  let steps = [];
+  try { steps = JSON.parse(s.steps); } catch(e) {}
+%>
+<div class="scenario-card <%= isDone ? 'done' : '' %>" id="scenario-<%= s.id %>">
+  <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+    <div style="flex:1;">
+      <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem; flex-wrap:wrap;">
+        <span class="badge-sm sev-<%= s.severity %>"><%= s.severity %></span>
+        <span class="badge-sm" style="background:#e8f0ff; color:#1a5276;"><%= s.vulnerability_type %></span>
+        <% if (s.precondition !== 'none') { %>
+          <span class="badge-sm" style="background:#f0e8ff; color:#5b2c8c;">Requires: <%= s.precondition.replace('_disabled',' OFF') %></span>
+        <% } %>
+        <% if (isDone) { %>
+          <span class="badge-sm" style="background:#d4edda; color:#155724;">✓ Submitted</span>
+        <% } else if (finding) { %>
+          <span class="badge-sm" style="background:#fff3cd; color:#856404;">Draft saved</span>
+        <% } %>
+      </div>
+      <a href="/dast/scenarios/<%= s.id %>" style="font-size:1.05rem; font-weight:600; color:#002855; text-decoration:none;"><%= s.title %></a>
+      <div style="font-size:0.85rem; color:#666; margin-top:2px;"><%= s.owasp_category %></div>
+    </div>
+    <button onclick="toggleScenario(<%= s.id %>)" style="background:#002855; color:#fff; border:none; border-radius:6px; padding:6px 14px; cursor:pointer; font-size:0.85rem; white-space:nowrap;">
+      <%= isDone ? 'View / Edit' : finding ? 'Continue' : 'Start' %>
+    </button>
+  </div>
+
+  <div id="detail-<%= s.id %>" style="display:none; margin-top:1rem; padding-top:1rem; border-top:1px solid #dee2e6;">
+
+    <!-- Precondition live check -->
+    <div id="pre-<%= s.id %>" class="precondition-box pre-unmet">Checking precondition…</div>
+
+    <p style="margin-bottom:0.75rem; font-size:0.9rem;"><%= s.description %></p>
+
+    <h4 style="margin-bottom:0.5rem;">Steps</h4>
+    <ol style="padding-left:1.5rem; margin-bottom:1rem; font-size:0.9rem; line-height:2;">
+      <% steps.forEach(step => { %><li><%= step %></li><% }) %>
+    </ol>
+
+    <h4 style="margin-bottom:0.75rem;">Document Your Finding</h4>
+    <form onsubmit="submitFinding(event, <%= s.id %>)">
+      <div style="margin-bottom:0.75rem;">
+        <label style="font-weight:600; display:block; margin-bottom:0.4rem;">
+          Did you successfully trigger the vulnerability?
+        </label>
+        <label style="margin-right:1.5rem;">
+          <input type="radio" name="triggered" value="1" <%= finding && finding.triggered ? 'checked':'' %>> Yes
+        </label>
+        <label>
+          <input type="radio" name="triggered" value="0" <%= finding && !finding.triggered ? 'checked':'' %>> No
+        </label>
+      </div>
+      <div style="margin-bottom:0.75rem;">
+        <label style="font-weight:600; display:block; margin-bottom:0.4rem;">Evidence / Proof (URL, response, screenshot description)</label>
+        <textarea name="trigger_evidence" rows="3" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;"><%= finding ? (finding.trigger_evidence||'') : '' %></textarea>
+      </div>
+      <div style="margin-bottom:0.75rem;">
+        <label style="font-weight:600; display:block; margin-bottom:0.4rem;">Impact Assessment</label>
+        <textarea name="impact_assessment" rows="3" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;"><%= finding ? (finding.impact_assessment||'') : '' %></textarea>
+      </div>
+      <div style="margin-bottom:0.75rem;">
+        <label style="font-weight:600; display:block; margin-bottom:0.4rem;">Reproduction Steps</label>
+        <textarea name="reproduction_steps" rows="3" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;"><%= finding ? (finding.reproduction_steps||'') : '' %></textarea>
+      </div>
+      <div style="margin-bottom:0.75rem;">
+        <label style="font-weight:600; display:block; margin-bottom:0.4rem;">Your Recommendation</label>
+        <textarea name="recommendation" rows="3" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;"><%= finding ? (finding.recommendation||'') : '' %></textarea>
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label style="font-weight:600; display:block; margin-bottom:0.4rem;">Your Severity Rating</label>
+        <select name="severity_rating" style="width:100%; max-width:200px; padding:8px; border:1px solid #ced4da; border-radius:4px;">
+          <option value="">— select —</option>
+          <% ['Critical','High','Medium','Low','Info'].forEach(sev => { %>
+            <option value="<%= sev %>" <%= finding && finding.severity_rating === sev ? 'selected':'' %>><%= sev %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div style="display:flex; gap:0.5rem;">
+        <button type="submit" name="action" value="save" style="background:#6c757d; color:#fff; border:none; border-radius:4px; padding:8px 18px; cursor:pointer;">Save Draft</button>
+        <button type="submit" name="action" value="submit" style="background:#002855; color:#fff; border:none; border-radius:4px; padding:8px 18px; cursor:pointer;">Submit</button>
+      </div>
+      <div id="msg-dast-<%= s.id %>" style="margin-top:0.5rem; font-size:0.85rem;"></div>
+    </form>
+  </div>
+</div>
+<% }) %>
+
+<script>
+async function checkPrecondition(scenarioId) {
+  try {
+    const res = await fetch(`/dast/scenarios/${scenarioId}/precondition`);
+    const data = await res.json();
+    const el = document.getElementById('pre-' + scenarioId);
+    el.className = 'precondition-box ' + (data.met ? 'pre-met' : 'pre-unmet');
+    el.textContent = data.message;
+  } catch(e) {}
+}
+
+function toggleScenario(id) {
+  const el = document.getElementById('detail-' + id);
+  const isHidden = el.style.display === 'none';
+  el.style.display = isHidden ? 'block' : 'none';
+  if (isHidden) checkPrecondition(id);
+}
+
+async function submitFinding(event, scenarioId) {
+  event.preventDefault();
+  const form = event.target;
+  const data = new FormData(form);
+  const action = event.submitter ? event.submitter.value : 'save';
+  data.set('action', action);
+  const msg = document.getElementById('msg-dast-' + scenarioId);
+  msg.textContent = 'Saving…';
+
+  try {
+    const res = await fetch(`/dast/scenarios/${scenarioId}/findings`, {
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded', 'Accept':'application/json'},
+      body: new URLSearchParams(data).toString()
+    });
+    const result = await res.json();
+    if (result.success) {
+      msg.style.color = '#155724';
+      msg.textContent = action === 'submit' ? '✓ Submitted!' : '✓ Draft saved.';
+      setTimeout(() => location.reload(), 800);
+    } else {
+      msg.style.color = '#721c24';
+      msg.textContent = result.error || 'Error saving.';
+    }
+  } catch(e) {
+    msg.style.color = '#721c24';
+    msg.textContent = 'Network error.';
+  }
+}
+</script>
+
+<%- include('../partials/footer') %>
