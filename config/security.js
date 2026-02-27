@@ -1,5 +1,12 @@
 const { db } = require('./database');
 
+// Whitelist of valid security setting column names
+const VALID_SETTINGS = [
+  'mfa_enabled', 'rbac_enabled', 'encryption_at_rest', 'field_encryption',
+  'https_enabled', 'audit_logging', 'rate_limiting', 'backup_enabled',
+  'backup_frequency', 'last_backup_time', 'segregation_of_duties'
+];
+
 /**
  * Get current security settings from database
  */
@@ -21,9 +28,12 @@ function getSecuritySettings() {
 }
 
 /**
- * Update security setting
+ * Update security setting (validates setting name against whitelist)
  */
 function updateSecuritySetting(setting, value) {
+  if (!VALID_SETTINGS.includes(setting)) {
+    throw new Error(`Invalid security setting: ${setting}`);
+  }
   const stmt = db.prepare(`UPDATE security_settings SET ${setting} = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1`);
   stmt.run(value ? 1 : 0);
 }

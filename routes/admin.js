@@ -39,7 +39,21 @@ router.post('/security/toggle/:feature', requireAuth, requireRole(['admin']), as
 
   try {
     // Handle specific feature migrations
-    if (feature === 'encryption_at_rest') {
+    if (feature === 'mfa_enabled' && !newValue) {
+      // When disabling MFA globally, clear all users' MFA secrets so they
+      // start fresh if MFA is re-enabled (prevents stale secret lockout)
+      const allUsers = db.prepare('SELECT * FROM users').all();
+      for (const user of allUsers) {
+        if (user.mfa_enabled || user.mfa_secret) {
+          db.prepare(`
+            UPDATE users
+            SET mfa_enabled = 0, mfa_secret = NULL, mfa_backup_codes = NULL
+            WHERE id = ?
+          `).run(user.id);
+        }
+      }
+      console.log('Cleared MFA secrets for all users');
+    } else if (feature === 'encryption_at_rest') {
       if (newValue) {
         // Enable: Hash all passwords
         await migratePasswordsToHashed();
@@ -226,18 +240,40 @@ router.post('/mfa-disable', requireAuth, requireRole(['admin']), (req, res) => {
 });
 
 /**
- * Helper: Migrate passwords to hashed
+ * Helper: Migrate passwords to hashed (with rollback on failure)
  */
 async function migratePasswordsToHashed() {
   const users = db.prepare('SELECT id, password FROM users WHERE password_is_hashed = 0').all();
+  if (users.length === 0) return;
 
+  // Phase 1: Compute all hashes before writing anything
+  const updates = [];
   for (const user of users) {
     const hash = await hashPassword(user.password);
-    db.prepare(`
-      UPDATE users
-      SET password_hash = ?, password_is_hashed = 1
-      WHERE id = ?
-    `).run(hash, user.id);
+    updates.push({ id: user.id, hash });
+  }
+
+  // Phase 2: Apply all updates (all hashes succeeded)
+  const applied = [];
+  try {
+    for (const update of updates) {
+      db.prepare(`
+        UPDATE users
+        SET password_hash = ?, password_is_hashed = 1
+        WHERE id = ?
+      `).run(update.hash, update.id);
+      applied.push(update.id);
+    }
+  } catch (error) {
+    // Rollback: revert any partially applied updates
+    for (const id of applied) {
+      db.prepare(`
+        UPDATE users
+        SET password_is_hashed = 0, password_hash = NULL
+        WHERE id = ?
+      `).run(id);
+    }
+    throw new Error(`Password migration failed after ${applied.length}/${updates.length} users. Rolled back. ${error.message}`);
   }
 
   console.log(`Migrated ${users.length} passwords to bcrypt hashes`);
@@ -256,42 +292,74 @@ async function migratePasswordsToPlaintext() {
 }
 
 /**
- * Helper: Encrypt sensitive fields
+ * Helper: Encrypt sensitive fields (with rollback on failure)
  */
 async function encryptSensitiveFields() {
-  // Encrypt SSNs
+  // Phase 1: Collect all records and compute encrypted values
   const users = db.prepare('SELECT id, ssn FROM users WHERE ssn IS NOT NULL AND ssn_encrypted = 0').all();
-  for (const user of users) {
-    const encrypted = encrypt(user.ssn);
-    db.prepare('UPDATE users SET ssn = ?, ssn_encrypted = 1 WHERE id = ?').run(encrypted, user.id);
-  }
-
-  // Encrypt grades
   const enrollments = db.prepare('SELECT id, grade FROM enrollments WHERE grade IS NOT NULL AND grade_encrypted = 0').all();
-  for (const enrollment of enrollments) {
-    const encrypted = encrypt(enrollment.grade);
-    db.prepare('UPDATE enrollments SET grade = ?, grade_encrypted = 1 WHERE id = ?').run(encrypted, enrollment.id);
+
+  const userUpdates = users.map(u => ({ id: u.id, original: u.ssn, encrypted: encrypt(u.ssn) }));
+  const enrollmentUpdates = enrollments.map(e => ({ id: e.id, original: e.grade, encrypted: encrypt(e.grade) }));
+
+  // Phase 2: Apply all updates
+  const appliedUsers = [];
+  const appliedEnrollments = [];
+  try {
+    for (const u of userUpdates) {
+      db.prepare('UPDATE users SET ssn = ?, ssn_encrypted = 1 WHERE id = ?').run(u.encrypted, u.id);
+      appliedUsers.push(u);
+    }
+    for (const e of enrollmentUpdates) {
+      db.prepare('UPDATE enrollments SET grade = ?, grade_encrypted = 1 WHERE id = ?').run(e.encrypted, e.id);
+      appliedEnrollments.push(e);
+    }
+  } catch (error) {
+    // Rollback all applied changes
+    for (const u of appliedUsers) {
+      db.prepare('UPDATE users SET ssn = ?, ssn_encrypted = 0 WHERE id = ?').run(u.original, u.id);
+    }
+    for (const e of appliedEnrollments) {
+      db.prepare('UPDATE enrollments SET grade = ?, grade_encrypted = 0 WHERE id = ?').run(e.original, e.id);
+    }
+    throw new Error(`Encryption migration failed. Rolled back. ${error.message}`);
   }
 
   console.log(`Encrypted ${users.length} SSNs and ${enrollments.length} grades`);
 }
 
 /**
- * Helper: Decrypt sensitive fields
+ * Helper: Decrypt sensitive fields (with rollback on failure)
  */
 async function decryptSensitiveFields() {
-  // Decrypt SSNs
+  // Phase 1: Collect all records and compute decrypted values (throws on failure)
   const users = db.prepare('SELECT id, ssn FROM users WHERE ssn IS NOT NULL AND ssn_encrypted = 1').all();
-  for (const user of users) {
-    const decrypted = decrypt(user.ssn);
-    db.prepare('UPDATE users SET ssn = ?, ssn_encrypted = 0 WHERE id = ?').run(decrypted, user.id);
-  }
-
-  // Decrypt grades
   const enrollments = db.prepare('SELECT id, grade FROM enrollments WHERE grade IS NOT NULL AND grade_encrypted = 1').all();
-  for (const enrollment of enrollments) {
-    const decrypted = decrypt(enrollment.grade);
-    db.prepare('UPDATE enrollments SET grade = ?, grade_encrypted = 0 WHERE id = ?').run(decrypted, enrollment.id);
+
+  const userUpdates = users.map(u => ({ id: u.id, original: u.ssn, decrypted: decrypt(u.ssn) }));
+  const enrollmentUpdates = enrollments.map(e => ({ id: e.id, original: e.grade, decrypted: decrypt(e.grade) }));
+
+  // Phase 2: Apply all updates
+  const appliedUsers = [];
+  const appliedEnrollments = [];
+  try {
+    for (const u of userUpdates) {
+      db.prepare('UPDATE users SET ssn = ?, ssn_encrypted = 0 WHERE id = ?').run(u.decrypted, u.id);
+      appliedUsers.push(u);
+    }
+    for (const e of enrollmentUpdates) {
+      db.prepare('UPDATE enrollments SET grade = ?, grade_encrypted = 0 WHERE id = ?').run(e.decrypted, e.id);
+      appliedEnrollments.push(e);
+    }
+  } catch (error) {
+    // Rollback all applied changes
+    for (const u of appliedUsers) {
+      db.prepare('UPDATE users SET ssn = ?, ssn_encrypted = 1 WHERE id = ?').run(u.original, u.id);
+    }
+    for (const e of appliedEnrollments) {
+      db.prepare('UPDATE enrollments SET grade = ?, grade_encrypted = 1 WHERE id = ?').run(e.original, e.id);
+    }
+    throw new Error(`Decryption migration failed. Rolled back. ${error.message}`);
   }
 
   console.log(`Decrypted ${users.length} SSNs and ${enrollments.length} grades`);
@@ -682,6 +750,29 @@ router.post('/deletion-requests/:id/reject', requireAuth, requireRole(['admin'])
     success: true,
     message: 'Deletion request rejected.'
   });
+});
+
+/**
+ * POST /admin/rate-limit/reset
+ * Clear all rate limit attempts (escape hatch if admin gets locked out)
+ */
+router.post('/rate-limit/reset', requireAuth, requireRole(['admin']), (req, res) => {
+  db.prepare('DELETE FROM rate_limit_attempts').run();
+
+  if (req.securitySettings.audit_logging) {
+    db.prepare(`
+      INSERT INTO audit_logs (user_id, username, role, action, details)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(
+      req.session.user.id,
+      req.session.user.username,
+      req.session.user.role,
+      'RATE_LIMIT_RESET',
+      JSON.stringify({ message: 'All rate limit attempts cleared' })
+    );
+  }
+
+  res.json({ success: true, message: 'Rate limit attempts cleared' });
 });
 
 module.exports = router;

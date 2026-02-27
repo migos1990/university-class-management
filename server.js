@@ -39,7 +39,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Session configuration
+// Session configuration — set secure cookie at startup if HTTPS is enabled
+const startupSecuritySettings = getSecuritySettings();
 app.use(session({
   secret: 'university-class-management-secret-key-change-in-production',
   resave: false,
@@ -47,7 +48,7 @@ app.use(session({
   cookie: {
     maxAge: 1000 * 60 * 60 * 24, // 24 hours
     httpOnly: true,
-    secure: false // Will be set to true when HTTPS is enabled
+    secure: !!startupSecuritySettings.https_enabled
   }
 }));
 
@@ -57,10 +58,15 @@ app.use(loadSecuritySettings);
 // Load language preferences and translation function
 app.use(languageMiddleware);
 
-// Make user and current path available in all views
+// Make user, current path, and helpers available in all views
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
   res.locals.currentPath = req.path;
+  res.locals.formatDate = (dateStr) => {
+    if (!dateStr) return 'Never';
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? 'Invalid date' : d.toLocaleString();
+  };
   next();
 });
 
@@ -260,12 +266,6 @@ function startServer() {
       key: fs.readFileSync(path.join(sslDir, 'server-key.pem')),
       cert: fs.readFileSync(path.join(sslDir, 'server-cert.pem'))
     };
-
-    // Update session cookie to be secure
-    app.use((req, res, next) => {
-      req.sessionOptions.cookie.secure = true;
-      next();
-    });
 
     https.createServer(sslOptions, app).listen(HTTPS_PORT, () => {
       console.log('');

@@ -57,7 +57,7 @@
             <tr>
               <td><%= login.username %></td>
               <td style="text-transform: capitalize;"><%= login.role %></td>
-              <td><%= login.last_login ? new Date(login.last_login).toLocaleString() : 'Never' %></td>
+              <td><%= formatDate(login.last_login) %></td>
             </tr>
           <% }); %>
         </tbody>

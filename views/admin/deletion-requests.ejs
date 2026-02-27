@@ -35,12 +35,12 @@
             <td style="font-weight: 600;"><%= request.code || 'N/A' %></td>
             <td><%= request.name || 'Class not found' %></td>
             <td><%= request.username || 'Unknown' %></td>
-            <td><%= new Date(request.requested_at).toLocaleString() %></td>
+            <td><%= formatDate(request.requested_at) %></td>
             <td>
               <button class="btn btn-success" onclick="approveRequest(<%= request.id %>)" style="padding: 0.4rem 0.8rem; font-size: 0.9rem;">
                 <%= typeof t !== 'undefined' ? t('sod.approve') : 'Approve' %>
               </button>
-              <button class="btn btn-danger" onclick="showRejectModal(<%= request.id %>, '<%= request.code %>')" style="padding: 0.4rem 0.8rem; font-size: 0.9rem; margin-left: 0.5rem;">
+              <button class="btn btn-danger" onclick="showRejectModal(<%= request.id %>, <%- JSON.stringify(request.code || '') %>)" style="padding: 0.4rem 0.8rem; font-size: 0.9rem; margin-left: 0.5rem;">
                 <%= typeof t !== 'undefined' ? t('sod.reject') : 'Reject' %>
               </button>
             </td>
@@ -86,7 +86,7 @@
                 <span class="badge badge-danger"><%= typeof t !== 'undefined' ? t('sod.rejected') : 'Rejected' %></span>
               <% } %>
             </td>
-            <td><%= new Date(request.reviewed_at).toLocaleString() %></td>
+            <td><%= formatDate(request.reviewed_at) %></td>
             <td>
               <% if (request.status === 'rejected' && request.rejection_reason) { %>
                 <button class="btn btn-secondary" onclick="showReason('<%= request.rejection_reason.replace(/'/g, "\\'") %>')" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">

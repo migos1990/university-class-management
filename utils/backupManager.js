@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { db } = require('../config/database');
+const { db, loadDatabase } = require('../config/database');
 
 const BACKUP_DIR = process.env.BACKUP_DIR || path.join(__dirname, '..', 'backups');
 let backupInterval = null;
@@ -121,6 +121,9 @@ function restoreBackup(filename) {
 
     // Restore
     fs.writeFileSync(dbPath, backupData, 'utf8');
+
+    // Reload in-memory database so changes take effect immediately
+    loadDatabase();
 
     console.log(`✓ Database restored from: ${filename}`);
 

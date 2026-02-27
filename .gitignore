@@ -15,6 +15,9 @@ backups/*
 # Encryption Keys (BYOK - never commit)
 keys/
 
+# Generated test reports
+test-report.html
+
 # Logs
 *.log
 npm-debug.log*
