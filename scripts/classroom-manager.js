@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
  * classroom-manager.js
- * Launches one app instance per team and serves a management dashboard.
+ * Launches one app instance per team and serves an instructor dashboard.
  *
  * Usage:
- *   npm run classroom          (reads classroom.config.json)
- *   node scripts/classroom-manager.js
+ *   npm start                  (reads classroom.config.json)
+ *   TEAM_COUNT=4 npm start     (override number of teams)
  *
  * Dashboard:  http://localhost:<dashboardPort>
  * Team URLs:  http://<hostAddress>:<basePort + i>
@@ -29,14 +29,33 @@ if (!fs.existsSync(CONFIG_PATH)) {
   process.exit(1);
 }
 const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
-const { teams, basePort, dashboardPort, hostAddress, autoResetOnStart } = config;
+const { basePort, dashboardPort, hostAddress, autoResetOnStart } = config;
+
+// ─── Configurable team count (TEAM_COUNT env var) ───────────────────────────
+const teamCount = Math.min(
+  parseInt(process.env.TEAM_COUNT, 10) || config.teams.length,
+  config.teams.length
+);
+const teams = config.teams.slice(0, teamCount);
+
+// ─── Codespaces URL detection ───────────────────────────────────────────────
+const CODESPACE_NAME = process.env.CODESPACE_NAME;
+const CS_DOMAIN      = process.env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN;
+const IS_CODESPACES  = !!CODESPACE_NAME;
+
+function getExternalUrl(port) {
+  if (IS_CODESPACES && CS_DOMAIN) {
+    return `https://${CODESPACE_NAME}-${port}.${CS_DOMAIN}`;
+  }
+  return `http://${hostAddress === '0.0.0.0' ? 'localhost' : hostAddress}:${port}`;
+}
 
 // ─── Instance state ─────────────────────────────────────────────────────────
 const instances = teams.map((team, i) => ({
   index:  i,
   team,
   port:   basePort + i,
-  url:    `http://${hostAddress}:${basePort + i}`,
+  url:    getExternalUrl(basePort + i),
   slot:   `team-${i + 1}`,
   pid:    null,
   proc:   null,
@@ -434,7 +453,7 @@ function dashboardHTML() {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Classroom Manager</title>
+  <title>Instructor Dashboard</title>
   <style>
     * { box-sizing:border-box; margin:0; padding:0; }
     body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:#f0f2f5; color:#333; }
@@ -523,8 +542,8 @@ function dashboardHTML() {
 <body>
 <header>
   <div>
-    <h1>Classroom Manager</h1>
-    <small>${teams.length} instances &nbsp;·&nbsp; Dashboard port ${dashboardPort}</small>
+    <h1>Instructor Dashboard</h1>
+    <small>${teams.length} team${teams.length !== 1 ? 's' : ''} &nbsp;·&nbsp; Port ${dashboardPort}</small>
   </div>
   <div style="font-size:0.82rem;opacity:0.75">Health: 30s &nbsp;|&nbsp; Summary: 60s</div>
 </header>
@@ -572,7 +591,7 @@ function dashboardHTML() {
 
 </div>
 <script>
-const HOST = location.hostname;
+const TEAM_URLS = ${JSON.stringify(instances.map(inst => inst.url))};
 const FEATURES = [
   ['mfa_enabled','MFA'],['rbac_enabled','RBAC'],
   ['encryption_at_rest','Pwd Encryption'],['field_encryption','Field Encryption'],
@@ -630,12 +649,13 @@ function renderHealthGridDOM(data) {
     const uptime = s ? fmtUptime(s.uptime) : '';
     const users  = s ? \`\${s.users.students} student\${s.users.students !== 1 ? 's' : ''}\` : '';
     const meta   = [uptime, users].filter(Boolean).join(' · ');
+    const teamUrl = TEAM_URLS[t.index] || \`http://localhost:\${t.port}\`;
     return \`<div class="health-card \${t.status}">
-      <div class="hcard-name"><a href="http://\${HOST}:\${t.port}" target="_blank">\${t.team}</a></div>
+      <div class="hcard-name"><a href="\${teamUrl}" target="_blank">\${t.team}</a></div>
       <div class="hcard-status"><span class="dot dot-\${t.status}"></span>\${t.status}</div>
       <div class="hcard-meta">\${meta}</div>
       <div class="hcard-actions">
-        <a href="http://\${HOST}:\${t.port}" target="_blank" class="btn-sm">Open</a>
+        <a href="\${teamUrl}" target="_blank" class="btn-sm">Open</a>
         <button class="btn-sm danger" onclick="resetOne(\${t.index})">Reset</button>
       </div>
     </div>\`;
@@ -904,11 +924,12 @@ const dashboard = http.createServer(async (req, res) => {
 async function main() {
   console.log('');
   console.log('='.repeat(60));
-  console.log(' Classroom Manager');
+  console.log(' University Class Management System');
   console.log('='.repeat(60));
-  console.log(`  Teams:     ${teams.length}`);
+  console.log(`  Teams:     ${teams.length}${teamCount < config.teams.length ? ` (of ${config.teams.length}, set via TEAM_COUNT)` : ''}`);
   console.log(`  Ports:     ${basePort} – ${basePort + teams.length - 1}`);
-  console.log(`  Dashboard: http://${hostAddress}:${dashboardPort}`);
+  console.log(`  Dashboard: ${getExternalUrl(dashboardPort)}`);
+  if (IS_CODESPACES) console.log(`  Mode:      GitHub Codespaces`);
   console.log('');
 
   if (autoResetOnStart) {
@@ -925,7 +946,7 @@ async function main() {
 
   // Start dashboard
   dashboard.listen(dashboardPort, () => {
-    console.log(`  Dashboard listening on http://${hostAddress}:${dashboardPort}`);
+    console.log(`  Dashboard listening on ${getExternalUrl(dashboardPort)}`);
     console.log('');
   });
 

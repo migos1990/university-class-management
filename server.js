@@ -259,6 +259,8 @@ const HTTPS_PORT = 3443;
 function startServer() {
   const securitySettings = getSecuritySettings();
 
+  const isChild = !!process.env.TEAM_NAME;
+
   if (securitySettings.https_enabled) {
     // Start HTTPS server
     const sslDir = process.env.SSL_DIR || path.join(__dirname, 'ssl');
@@ -267,25 +269,12 @@ function startServer() {
       cert: fs.readFileSync(path.join(sslDir, 'server-cert.pem'))
     };
 
-    https.createServer(sslOptions, app).listen(HTTPS_PORT, () => {
-      console.log('');
-      console.log('='.repeat(60));
-      console.log('🔒 University Class Management System');
-      console.log('='.repeat(60));
-      console.log('');
-      console.log(`HTTPS Server running on: https://localhost:${HTTPS_PORT}`);
-      console.log('');
-      console.log('Security Status:');
-      console.log('  ✓ HTTPS: ENABLED');
-      console.log('  ✓ Secure cookies: ENABLED');
-      console.log('');
-      console.log('Default login:');
-      console.log('  Admin:     admin / admin123');
-      console.log('  Professor: prof_jones / prof123');
-      console.log('  Student:   alice_student / student123');
-      console.log('');
-      console.log('='.repeat(60));
-      console.log('');
+    https.createServer(sslOptions, app).listen(HTTPS_PORT, '0.0.0.0', () => {
+      if (isChild) {
+        console.log(`[${process.env.TEAM_NAME}] HTTPS on port ${HTTPS_PORT}`);
+      } else {
+        console.log(`HTTPS Server running on: https://localhost:${HTTPS_PORT}`);
+      }
     });
 
     // Also start HTTP server to redirect to HTTPS
@@ -294,34 +283,20 @@ function startServer() {
         Location: `https://${req.headers.host.replace(HTTP_PORT, HTTPS_PORT)}${req.url}`
       });
       res.end();
-    }).listen(HTTP_PORT, () => {
-      console.log(`HTTP redirect server running on: http://localhost:${HTTP_PORT}`);
-      console.log(`(All HTTP requests will be redirected to HTTPS)`);
-      console.log('');
+    }).listen(HTTP_PORT, '0.0.0.0', () => {
+      if (!isChild) {
+        console.log(`HTTP redirect server running on: http://localhost:${HTTP_PORT}`);
+      }
     });
 
   } else {
     // Start HTTP server only
-    http.createServer(app).listen(HTTP_PORT, () => {
-      console.log('');
-      console.log('='.repeat(60));
-      console.log('🎓 University Class Management System');
-      console.log('='.repeat(60));
-      console.log('');
-      console.log(`HTTP Server running on: http://localhost:${HTTP_PORT}`);
-      console.log('');
-      console.log('⚠️  Security Status:');
-      console.log('  ✗ HTTPS: DISABLED (running on HTTP)');
-      console.log('');
-      console.log('Default login:');
-      console.log('  Admin:     admin / admin123');
-      console.log('  Professor: prof_jones / prof123');
-      console.log('  Student:   alice_student / student123');
-      console.log('');
-      console.log('💡 Tip: Login as admin to toggle security features');
-      console.log('');
-      console.log('='.repeat(60));
-      console.log('');
+    http.createServer(app).listen(HTTP_PORT, '0.0.0.0', () => {
+      if (isChild) {
+        console.log(`[${process.env.TEAM_NAME}] HTTP on port ${HTTP_PORT}`);
+      } else {
+        console.log(`HTTP Server running on: http://localhost:${HTTP_PORT}`);
+      }
     });
   }
 }

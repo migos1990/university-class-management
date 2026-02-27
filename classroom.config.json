@@ -1,5 +1,5 @@
 {
-  "hostAddress": "localhost",
+  "hostAddress": "0.0.0.0",
   "basePort": 3001,
   "dashboardPort": 3000,
   "instanceCount": 12,

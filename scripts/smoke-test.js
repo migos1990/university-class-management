@@ -14,7 +14,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Configuration
-const BASE_URL = process.env.TEST_URL || 'http://localhost:3000';
+const BASE_URL = process.env.TEST_URL || 'http://localhost:3001';
 const REPORT_PATH = path.join(__dirname, '..', 'test-report.html');
 
 // Test accounts

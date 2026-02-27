@@ -2,7 +2,7 @@
 /**
  * classroom-stop.js
  * Gracefully stop all classroom instances.
- * Usage: npm run classroom:stop
+ * Usage: npm stop
  *        node scripts/classroom-stop.js
  * Optionally reads instances from the manager's PID file.
  */

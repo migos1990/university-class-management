@@ -5,51 +5,43 @@ This application helps students learn about application security through hands-o
 
 ---
 
-## Quick Start
-
-Choose **one** of the two options below depending on your setup.
-
-### Option A: Run Locally on Your Laptop
-
-**Prerequisites:** [Node.js](https://nodejs.org) LTS (v18 or newer) must be installed.
-
-```bash
-# 1. Install dependencies
-npm install
-
-# 2. Initialize the database, seed sample data, and generate SSL certificates
-npm run setup
-
-# 3. Start the application
-npm start
-```
-
-Open your browser to **http://localhost:3000** and log in with one of the [default accounts](#default-login-accounts) below.
-
-> **Windows tips**
-> - The commands above work the same in Command Prompt, PowerShell, and Git Bash.
-> - If `npm` is not recognized, restart your terminal after installing Node.js.
-> - If port 3000 is in use, close other applications using that port or set a custom port: `PORT=3001 npm start`
-> - If you see permission errors, try running the terminal as Administrator.
-
-### Option B: Run in GitHub Codespaces (No Local Install)
+## Quick Start (GitHub Codespaces)
 
 GitHub Codespaces gives you a full development environment in the cloud — no need to install Node.js or anything else on your machine.
 
 1. From the GitHub repository page, click the green **Code** button, then select the **Codespaces** tab.
 2. Click **Create codespace on main** (or your branch of choice).
-3. Wait for the container to build. The `postCreateCommand` automatically runs `npm install` and `npm run setup` for you.
-4. Once the terminal is ready, start the app:
-   ```bash
-   npm start
-   ```
-5. When the server starts, Codespaces detects port **3000** and shows a notification. Click **Open in Browser** (or find the forwarded port in the **Ports** tab) to access the app.
+3. Wait for the container to build. The setup runs automatically (`npm install`, database seeding, SSL certificate generation).
+4. The app starts automatically. When port **3000** is detected, click **Open in Browser** to access the **Instructor Dashboard**.
+5. From the dashboard you can see all team instances, monitor progress, and broadcast messages.
 
 > **Codespaces notes**
-> - The devcontainer pre-forwards ports 3000–3012 so both the single-instance app and classroom mode work out of the box.
-> - Port 3000 is labelled "Classroom Dashboard" and opens automatically when forwarded.
-> - Each team port (3001–3012) is labelled with the team name (Alpha through Lima).
-> - To share your running app with others, right-click a port in the **Ports** tab and set visibility to **Public**.
+> - The app auto-starts on every Codespace launch via `postStartCommand`.
+> - Port 3000 is the **Instructor Dashboard** and opens automatically.
+> - Team ports (3001–3012) are labelled with team names (Alpha through Lima) in the **Ports** tab.
+> - To share a team instance with students, right-click a port in the **Ports** tab and set visibility to **Public**.
+> - To run fewer teams (saves memory): stop the app, then `TEAM_COUNT=4 npm start`.
+
+### Running Locally (Alternative)
+
+**Prerequisites:** [Node.js](https://nodejs.org) LTS (v18 or newer).
+
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Initialize database, seed sample data, generate SSL certificates
+npm run setup
+
+# 3. Start the application (launches instructor dashboard + all team instances)
+npm start
+```
+
+The Instructor Dashboard opens at **http://localhost:3000**. Team instances run on ports 3001–3012.
+
+> **Windows tips**
+> - If `npm` is not recognized, restart your terminal after installing Node.js.
+> - If you see permission errors, try running the terminal as Administrator.
 
 ---
 
@@ -114,48 +106,32 @@ Each engagement tracks phase-specific notes, findings, and reports. Instructors 
 
 ---
 
-## Classroom Mode
+## How It Works
 
-Launch multiple isolated instances for team-based classroom exercises:
+When you run `npm start`, the system launches:
+- **Instructor Dashboard** on port 3000 — monitor all teams, security configs, lab progress, broadcast messages
+- **Team instances** on ports 3001–3012 — each team gets its own isolated database and app instance
 
+### Configuring Teams
+
+Edit `classroom.config.json` to customize team names, ports, and other settings.
+
+To run fewer teams (useful for smaller classes or limited resources):
 ```bash
-# Start all team instances (default: 12 teams)
-npm run classroom
-
-# Setup helper for classroom configuration
-npm run classroom:setup
-
-# Stop all running instances
-npm run classroom:stop
+TEAM_COUNT=4 npm start   # Only launches teams 1–4
 ```
 
-- **Dashboard:** http://localhost:3000
-- **Team instances:** http://localhost:3001 through http://localhost:3012
-- Each team gets its own isolated database and port
-- Configuration: `classroom.config.json`
+### Stopping the App
+
+```bash
+npm stop    # Gracefully stops all team instances
+```
 
 ---
 
 ## Inspecting the Database
 
-The application uses a JSON-based database stored in `database/data.json`.
-
-### Viewing the Database:
-
-**Option 1: VS Code (Recommended)**
-1. Open the project folder in VS Code
-2. Navigate to `database/data.json`
-3. Use "Format Document" (Shift+Alt+F on Windows/Linux, Shift+Option+F on Mac) for better readability
-
-**Option 2: Web Browser**
-1. Open Chrome, Firefox, or Edge
-2. Press Ctrl+O (or Cmd+O on Mac) and select `database/data.json`
-3. Install a JSON viewer extension for better formatting
-
-**Option 3: Command Line**
-- **Windows:** `type database\data.json | more`
-- **Mac/Linux:** `cat database/data.json | jq .` (if jq is installed)
-- **Without jq:** `cat database/data.json | more`
+The application uses a JSON-based database. Each team instance stores its data in `instances/team-N/database/`.
 
 ### What to Look For:
 - `users` array: See password encryption (plaintext vs bcrypt hashes)
@@ -167,18 +143,16 @@ The application uses a JSON-based database stored in `database/data.json`.
 
 ## Troubleshooting
 
-**Port already in use?**
-- Close other applications using port 3000
-- Or change the port in `server.js`
+**App doesn't start?**
+- Make sure you ran `npm run setup` first (done automatically in Codespaces)
+- Check if ports 3000–3012 are available
 
 **Can't login after enabling MFA?**
 - Make sure you've completed the MFA setup first
 - Use Google Authenticator app to get the 6-digit code
 
-**Database issues?**
-- Close any programs that might be accessing `database/data.json`
-- Restart the application
-- If the database becomes corrupted, delete `database/data.json` and run `npm run setup` again
+**Need to reset a team?**
+- Use the "Reset" button on the Instructor Dashboard, or delete the team's `instances/team-N/database/` folder and restart
 
 ---
 
@@ -188,12 +162,10 @@ The application uses a JSON-based database stored in `database/data.json`.
 |---------|-------------|
 | `npm install` | Install all dependencies |
 | `npm run setup` | Initialize database, seed sample data, and generate SSL certificates |
-| `npm start` | Start the application on http://localhost:3000 |
-| `npm test` | Run smoke tests and generate an HTML report (`test-report.html`) |
+| `npm start` | Start the instructor dashboard + all team instances |
+| `npm stop` | Stop all running instances |
+| `npm test` | Run smoke tests against Team Alpha (port 3001) |
 | `npm run test:open` | Run smoke tests and automatically open the report in a browser |
-| `npm run classroom` | Launch multiple team instances for classroom use |
-| `npm run classroom:setup` | Interactive classroom configuration helper |
-| `npm run classroom:stop` | Stop all running classroom instances |
 
 ---
 
@@ -237,6 +209,16 @@ The redesigned Security Panel (Admin → Security) shows each feature as a card 
 ---
 
 ## Version History
+
+### Version 3.0 (2026-02-27)
+**Codespaces-First Simplification:**
+
+- **Classroom mode is now the default** — `npm start` launches the instructor dashboard + all team instances
+- **Auto-start in Codespaces** — the app launches automatically when the Codespace starts
+- **Configurable team count** — use `TEAM_COUNT` env var to run fewer instances
+- **Codespaces URL detection** — dashboard links work correctly in Codespaces (auto-detects forwarded port URLs)
+- **Simplified npm scripts** — removed redundant `classroom:*` scripts; `npm stop` replaces `npm run classroom:stop`
+- **Bind to 0.0.0.0** — ensures Codespaces port forwarding works correctly
 
 ### Version 2.0 (2026-02-02)
 **Major UI Redesign & HEC Montréal Branding:**
