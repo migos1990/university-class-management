@@ -477,6 +477,26 @@
           </a>
         </div>
         <% } %>
+
+        <div class="nav-section">
+          <div class="nav-section-title">Security Labs</div>
+          <a href="/sca" class="nav-link <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/sca') ? 'active' : '' %>">
+            <span class="nav-icon">🔍</span>
+            <span>Static Analysis</span>
+          </a>
+          <a href="/dast" class="nav-link <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/dast') ? 'active' : '' %>">
+            <span class="nav-icon">⚡</span>
+            <span>Dynamic Analysis</span>
+          </a>
+          <a href="/vm" class="nav-link <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/vm') ? 'active' : '' %>">
+            <span class="nav-icon">📊</span>
+            <span>Vuln Management</span>
+          </a>
+          <a href="/pentest" class="nav-link <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/pentest') ? 'active' : '' %>">
+            <span class="nav-icon">🎯</span>
+            <span>Pentest Lab</span>
+          </a>
+        </div>
       </nav>
 
       <div class="sidebar-footer">

@@ -57,9 +57,10 @@ app.use(loadSecuritySettings);
 // Load language preferences and translation function
 app.use(languageMiddleware);
 
-// Make user available in all views
+// Make user and current path available in all views
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
+  res.locals.currentPath = req.path;
   next();
 });
 
@@ -69,12 +70,31 @@ const dashboardRoutes = require('./routes/dashboard');
 const classRoutes = require('./routes/classes');
 const sessionRoutes = require('./routes/sessions');
 const adminRoutes = require('./routes/admin');
+const { router: scaRoutes } = require('./routes/sca');
+const { router: dastRoutes } = require('./routes/dast');
+const { router: vmRoutes } = require('./routes/vm');
+const { router: pentestRoutes } = require('./routes/pentest');
 
 app.use('/auth', authRoutes);
 app.use('/dashboard', dashboardRoutes);
 app.use('/classes', classRoutes);
 app.use('/sessions', sessionRoutes);
 app.use('/admin', adminRoutes);
+app.use('/sca', scaRoutes);
+app.use('/dast', dastRoutes);
+app.use('/vm', vmRoutes);
+app.use('/pentest', pentestRoutes);
+
+// Health check endpoint (used by classroom manager)
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    team: process.env.TEAM_NAME || 'default',
+    port: process.env.PORT || 3000,
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Home page route
 app.get('/', (req, res) => {
@@ -114,9 +134,10 @@ function startServer() {
 
   if (securitySettings.https_enabled) {
     // Start HTTPS server
+    const sslDir = process.env.SSL_DIR || path.join(__dirname, 'ssl');
     const sslOptions = {
-      key: fs.readFileSync(path.join(__dirname, 'ssl', 'server-key.pem')),
-      cert: fs.readFileSync(path.join(__dirname, 'ssl', 'server-cert.pem'))
+      key: fs.readFileSync(path.join(sslDir, 'server-key.pem')),
+      cert: fs.readFileSync(path.join(sslDir, 'server-cert.pem'))
     };
 
     // Update session cookie to be secure
