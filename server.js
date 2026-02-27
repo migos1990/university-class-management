@@ -7,7 +7,7 @@ const https = require('https');
 const fs = require('fs');
 
 // Initialize database
-const { initializeDatabase, isDatabaseSeeded } = require('./config/database');
+const { db, initializeDatabase, isDatabaseSeeded } = require('./config/database');
 const { seedDatabase } = require('./utils/seedData');
 const { loadSecuritySettings, getSecuritySettings } = require('./config/security');
 const { languageMiddleware } = require('./utils/i18n');
@@ -94,6 +94,127 @@ app.get('/health', (req, res) => {
     uptime: process.uptime(),
     timestamp: new Date().toISOString()
   });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CLASSROOM INTERNAL ENDPOINTS
+// NOTE: No authentication — accessible only on the isolated classroom network
+//       (localhost ports 3001-3012). Do not expose these ports publicly.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// In-memory broadcast message store (ephemeral; resets on restart)
+let _instructorMessage = null;
+
+// GET /api/instructor-message — student browsers poll this for instructor toasts
+app.get('/api/instructor-message', (req, res) => {
+  res.json({ message: _instructorMessage });
+});
+
+// POST /api/instructor-message — called by classroom-manager broadcast fan-out
+app.post('/api/instructor-message', (req, res) => {
+  _instructorMessage = req.body.message || null;
+  res.json({ success: true });
+});
+
+// GET /api/summary — full classroom-visible snapshot of this instance
+app.get('/api/summary', (req, res) => {
+  try {
+    // Security config
+    const settings = db.prepare('SELECT * FROM security_settings').get();
+    const security = {
+      mfa_enabled:         !!(settings && settings.mfa_enabled),
+      rbac_enabled:        !!(settings && settings.rbac_enabled),
+      encryption_at_rest:  !!(settings && settings.encryption_at_rest),
+      field_encryption:    !!(settings && settings.field_encryption),
+      https_enabled:       !!(settings && settings.https_enabled),
+      audit_logging:       !!(settings && settings.audit_logging),
+      rate_limiting:       !!(settings && settings.rate_limiting)
+    };
+
+    // User counts
+    const allUsers   = db.prepare('SELECT * FROM users').all();
+    const students   = (allUsers || []).filter(u => u.role === 'student');
+    const professors = (allUsers || []).filter(u => u.role === 'professor');
+    const users = {
+      total:      (allUsers || []).length,
+      students:   students.length,
+      professors: professors.length
+    };
+
+    // VM stats
+    const vulns = db.prepare('SELECT * FROM vulnerabilities').all() || [];
+    const vm = {
+      total:       vulns.length,
+      open:        vulns.filter(v => v.status === 'open').length,
+      in_progress: vulns.filter(v => v.status === 'in_progress').length,
+      resolved:    vulns.filter(v => v.status === 'resolved').length,
+      wont_fix:    vulns.filter(v => v.status === 'wont_fix').length,
+      critical:    vulns.filter(v => v.severity === 'Critical').length,
+      high:        vulns.filter(v => v.severity === 'High').length,
+      medium:      vulns.filter(v => v.severity === 'Medium').length,
+      low:         vulns.filter(v => v.severity === 'Low').length
+    };
+
+    // SCA progress
+    const scaFindings = db.prepare('SELECT * FROM sca_findings').all() || [];
+    const scaReviews  = db.prepare('SELECT * FROM sca_student_reviews').all() || [];
+    const scaTotal    = scaFindings.length;
+    const scaPerStudent = students.map(s => ({
+      username:        s.username,
+      submitted_count: scaReviews.filter(r => r.student_id === s.id && r.status === 'submitted').length
+    }));
+    const scaAvgPct = scaTotal === 0 || students.length === 0 ? 0 : Math.round(
+      scaPerStudent.reduce((a, s) => a + s.submitted_count, 0) / (students.length * scaTotal) * 100
+    );
+    const sca = { total_findings: scaTotal, avg_completion_pct: scaAvgPct, per_student: scaPerStudent };
+
+    // DAST progress
+    const dastScenarios = db.prepare('SELECT * FROM dast_scenarios').all() || [];
+    const dastFindings  = db.prepare('SELECT * FROM dast_student_findings').all() || [];
+    const dastTotal     = dastScenarios.length;
+    const dastPerStudent = students.map(s => {
+      const mine = dastFindings.filter(f => f.student_id === s.id);
+      return {
+        username:  s.username,
+        submitted: mine.filter(f => f.submitted_at !== null).length,
+        triggered: mine.filter(f => f.triggered === 1).length
+      };
+    });
+    const dastAvgPct = dastTotal === 0 || students.length === 0 ? 0 : Math.round(
+      dastPerStudent.reduce((a, s) => a + s.submitted, 0) / (students.length * dastTotal) * 100
+    );
+    const dast = { total_scenarios: dastTotal, avg_completion_pct: dastAvgPct, per_student: dastPerStudent };
+
+    // Pentest progress
+    const engagements = db.prepare('SELECT * FROM pentest_engagements').all() || [];
+    const PHASES = ['recon', 'enumeration', 'vuln_id', 'exploitation', 'reporting'];
+    const phaseDist = {};
+    PHASES.forEach(p => { phaseDist[p] = 0; });
+    engagements.forEach(e => { if (phaseDist[e.phase_current] !== undefined) phaseDist[e.phase_current]++; });
+    const pentest = {
+      total_students: students.length,
+      in_progress:    engagements.filter(e => e.status === 'in_progress').length,
+      submitted:      engagements.filter(e => e.status === 'submitted').length,
+      graded:         engagements.filter(e => e.status === 'graded').length,
+      phase_distribution: phaseDist
+    };
+
+    res.json({
+      team:      process.env.TEAM_NAME || 'default',
+      port:      process.env.PORT || 3000,
+      uptime:    process.uptime(),
+      security,
+      users,
+      vm,
+      sca,
+      dast,
+      pentest,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('[/api/summary] Error:', err);
+    res.status(500).json({ error: 'Summary unavailable', detail: err.message });
+  }
 });
 
 // Home page route

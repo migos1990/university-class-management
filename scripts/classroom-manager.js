@@ -46,6 +46,12 @@ const instances = teams.map((team, i) => ({
   lastStatus: null
 }));
 
+// ─── Summary cache (per-instance, updated every 60s) ────────────────────────
+const summaryCache = new Array(teams.length).fill(null);
+
+// ─── Broadcast message store (ephemeral) ────────────────────────────────────
+let broadcastMessage = null;
+
 // ─── Spawn / respawn a single instance ──────────────────────────────────────
 function spawnInstance(inst) {
   const slotDir = path.join(INSTANCES, inst.slot);
@@ -128,26 +134,76 @@ function healthCheck(inst) {
   });
 }
 
+// ─── Fetch /api/summary from a single instance ───────────────────────────────
+function fetchSummary(inst) {
+  return new Promise(resolve => {
+    const opts = {
+      hostname: 'localhost',
+      port: inst.port,
+      path: '/api/summary',
+      method: 'GET',
+      timeout: 4000
+    };
+    const req = http.request(opts, res => {
+      let body = '';
+      res.on('data', d => { body += d; });
+      res.on('end', () => {
+        try {
+          summaryCache[inst.index] = JSON.parse(body);
+          resolve(true);
+        } catch(e) {
+          resolve(false);
+        }
+      });
+    });
+    req.on('error',   () => resolve(false));
+    req.on('timeout', () => { req.destroy(); resolve(false); });
+    req.end();
+  });
+}
+
+// ─── Push broadcast message to one instance ──────────────────────────────────
+function broadcastToInstance(inst, message) {
+  return new Promise(resolve => {
+    const body = JSON.stringify({ message });
+    const opts = {
+      hostname: 'localhost',
+      port: inst.port,
+      path: '/api/instructor-message',
+      method: 'POST',
+      timeout: 3000,
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body)
+      }
+    };
+    const req = http.request(opts, res => {
+      res.resume();
+      res.on('end', () => resolve(true));
+    });
+    req.on('error',   () => resolve(false));
+    req.on('timeout', () => { req.destroy(); resolve(false); });
+    req.write(body);
+    req.end();
+  });
+}
+
 // ─── Reset an instance (wipe data, restart) ─────────────────────────────────
 async function resetInstance(inst) {
-  // Kill existing process
   if (inst.proc) {
     inst.proc.kill('SIGTERM');
     await new Promise(r => setTimeout(r, 2000));
   }
 
-  // Wipe database
   const dbFile = path.join(INSTANCES, inst.slot, 'database', 'data.json');
   if (fs.existsSync(dbFile)) {
     fs.unlinkSync(dbFile);
     console.log(`[${inst.team}] Database wiped`);
   }
 
-  // Respawn
   spawnInstance(inst);
   console.log(`[${inst.team}] Restarted on port ${inst.port}`);
 
-  // Wait until healthy (up to 30s)
   for (let i = 0; i < 30; i++) {
     await new Promise(r => setTimeout(r, 1000));
     const ok = await healthCheck(inst);
@@ -163,23 +219,216 @@ function savePIDs() {
   fs.writeFileSync(PID_FILE, JSON.stringify(data, null, 2));
 }
 
-// ─── Simple inline HTML dashboard ───────────────────────────────────────────
-function dashboardHTML() {
-  const rows = instances.map(inst => `
-    <tr id="row-${inst.index}">
-      <td>${inst.team}</td>
-      <td>${inst.port}</td>
-      <td><a href="${inst.url}" target="_blank">${inst.url}</a></td>
-      <td id="status-${inst.index}">
-        <span class="dot dot-${inst.status}"></span> ${inst.status}
-      </td>
-      <td id="pid-${inst.index}">${inst.pid || '—'}</td>
-      <td id="check-${inst.index}">${inst.lastCheck ? new Date(inst.lastCheck).toLocaleTimeString() : '—'}</td>
-      <td>
-        <button onclick="resetOne(${inst.index})">Reset</button>
-      </td>
-    </tr>`).join('');
+// ─── Dashboard section helpers ───────────────────────────────────────────────
 
+const SECURITY_FEATURES = [
+  ['mfa_enabled',        'MFA'],
+  ['rbac_enabled',       'RBAC'],
+  ['encryption_at_rest', 'Pwd Encryption'],
+  ['field_encryption',   'Field Encryption'],
+  ['https_enabled',      'HTTPS'],
+  ['audit_logging',      'Audit Logging'],
+  ['rate_limiting',      'Rate Limiting']
+];
+
+const PENTEST_PHASES = [
+  ['recon',        'Recon'],
+  ['enumeration',  'Enumeration'],
+  ['vuln_id',      'Vuln ID'],
+  ['exploitation', 'Exploitation'],
+  ['reporting',    'Reporting']
+];
+
+function fmtUptime(seconds) {
+  if (!seconds) return '';
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+function renderHealthGrid() {
+  const cards = instances.map(inst => {
+    const s     = summaryCache[inst.index];
+    const uptime = s ? fmtUptime(s.uptime) : '';
+    const users  = s ? `${s.users.students} student${s.users.students !== 1 ? 's' : ''}` : '';
+    return `<div class="health-card ${inst.status}">
+      <div class="hcard-name"><a href="${inst.url}" target="_blank">${inst.team}</a></div>
+      <div class="hcard-status"><span class="dot dot-${inst.status}"></span>${inst.status}</div>
+      <div class="hcard-meta">${uptime}${uptime && users ? ' · ' : ''}${users}</div>
+      <div class="hcard-actions">
+        <a href="${inst.url}" target="_blank" class="btn-sm">Open</a>
+        <button class="btn-sm danger" onclick="resetOne(${inst.index})">Reset</button>
+      </div>
+    </div>`;
+  }).join('');
+  return `<section class="dash-section">
+    <h2>Health Grid</h2>
+    <div class="health-grid" id="health-grid">${cards}</div>
+  </section>`;
+}
+
+function renderSecurityMatrix() {
+  const teamHeaders = instances.map(inst =>
+    `<th title="${inst.team}">T${inst.index + 1}</th>`).join('');
+
+  const rows = SECURITY_FEATURES.map(([key, label]) => {
+    const cells = instances.map(inst => {
+      const s = summaryCache[inst.index];
+      if (!s) return '<td class="mat-unknown">?</td>';
+      const on = s.security && s.security[key];
+      return `<td><span class="${on ? 'check-on' : 'check-off'}">${on ? '✓' : '✗'}</span></td>`;
+    }).join('');
+    const onCount = summaryCache.filter(s => s && s.security && s.security[key]).length;
+    const total   = summaryCache.filter(Boolean).length;
+    return `<tr><td class="mat-label">${label}</td>${cells}<td class="mat-total">${onCount}/${total}</td></tr>`;
+  }).join('');
+
+  return `<section class="dash-section">
+    <h2>Security Config Matrix</h2>
+    <div class="card scroll-x">
+      <table class="matrix-table" id="security-matrix">
+        <thead><tr><th>Feature</th>${teamHeaders}<th>On/Live</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </section>`;
+}
+
+function renderLabProgress() {
+  const teamHeaders = instances.map(inst =>
+    `<th title="${inst.team}">T${inst.index + 1}</th>`).join('');
+
+  function pctBar(pct) {
+    const cls = pct >= 80 ? 'good' : pct >= 40 ? '' : 'warn';
+    return `<div class="pb-wrap" title="${pct}%"><div class="pb-fill ${cls}" style="width:${pct}%"></div></div><div class="pb-label">${pct}%</div>`;
+  }
+
+  const modules = [
+    {
+      label: 'SCA',
+      pct: s => s && s.sca ? s.sca.avg_completion_pct : 0
+    },
+    {
+      label: 'DAST',
+      pct: s => s && s.dast ? s.dast.avg_completion_pct : 0
+    },
+    {
+      label: 'VM',
+      pct: s => {
+        if (!s || !s.vm || !s.vm.total) return 0;
+        return Math.round(((s.vm.resolved + s.vm.wont_fix) / s.vm.total) * 100);
+      }
+    },
+    {
+      label: 'Pentest',
+      pct: s => {
+        if (!s || !s.pentest || !s.pentest.total_students) return 0;
+        return Math.round(((s.pentest.submitted + s.pentest.graded) / s.pentest.total_students) * 100);
+      }
+    }
+  ];
+
+  const rows = modules.map(mod => {
+    const cells = instances.map(inst => {
+      const pct = mod.pct(summaryCache[inst.index]);
+      return `<td>${pctBar(pct)}</td>`;
+    }).join('');
+    return `<tr><td class="mat-label"><strong>${mod.label}</strong></td>${cells}</tr>`;
+  }).join('');
+
+  return `<section class="dash-section">
+    <h2>Lab Progress Tracker</h2>
+    <div class="card scroll-x">
+      <table class="matrix-table" id="lab-progress">
+        <thead><tr><th>Module</th>${teamHeaders}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </section>`;
+}
+
+function renderVMHeatmap() {
+  const teamHeaders = instances.map(inst =>
+    `<th title="${inst.team}">T${inst.index + 1}</th>`).join('');
+
+  function heatCls(val, r, o, y) {
+    if (val > r) return 'heat-red';
+    if (val > o) return 'heat-orange';
+    if (val > y) return 'heat-yellow';
+    return 'heat-green';
+  }
+
+  const openRow = instances.map(inst => {
+    const s = summaryCache[inst.index];
+    const v = s && s.vm != null ? s.vm.open : null;
+    const cls = v !== null ? heatCls(v, 10, 5, 2) : '';
+    return `<td><span class="heatmap-cell ${cls}">${v !== null ? v : '?'}</span></td>`;
+  }).join('');
+
+  const critRow = instances.map(inst => {
+    const s = summaryCache[inst.index];
+    const v = s && s.vm != null ? s.vm.critical : null;
+    const cls = v !== null ? heatCls(v, 3, 1, 0) : '';
+    return `<td><span class="heatmap-cell ${cls}">${v !== null ? v : '?'}</span></td>`;
+  }).join('');
+
+  return `<section class="dash-section">
+    <h2>VM Vulnerability Heatmap</h2>
+    <div class="card scroll-x">
+      <table class="matrix-table" id="vm-heatmap">
+        <thead><tr><th>Metric</th>${teamHeaders}</tr></thead>
+        <tbody>
+          <tr><td class="mat-label">Open</td>${openRow}</tr>
+          <tr><td class="mat-label">Critical</td>${critRow}</tr>
+        </tbody>
+      </table>
+    </div>
+  </section>`;
+}
+
+function renderPentestBoard() {
+  const cols = PENTEST_PHASES.map(([key, label]) => {
+    const count = summaryCache.reduce((acc, s) => {
+      return acc + (s && s.pentest && s.pentest.phase_distribution ? (s.pentest.phase_distribution[key] || 0) : 0);
+    }, 0);
+    return `<div class="kanban-col">
+      <div class="kanban-label">${label}</div>
+      <div class="kanban-count" id="phase-${key}">${count}</div>
+      <div class="kanban-sub">team(s)</div>
+    </div>`;
+  }).join('');
+
+  return `<section class="dash-section">
+    <h2>Pentest Phase Board</h2>
+    <div class="card">
+      <div class="kanban-board" id="pentest-board">${cols}</div>
+    </div>
+  </section>`;
+}
+
+function renderBroadcastBar() {
+  const current = broadcastMessage
+    ? `<span id="current-msg" style="font-size:0.82rem;color:#555">Active: "${broadcastMessage}"</span>`
+    : `<span id="current-msg" style="font-size:0.82rem;color:#aaa">No active message</span>`;
+  return `<section class="dash-section">
+    <h2>Instructor Broadcast</h2>
+    <div class="card">
+      <div class="broadcast-bar">
+        <input type="text" id="broadcast-input" placeholder="Type a message to all student instances…" maxlength="300">
+        <button onclick="sendBroadcast()">Send to All</button>
+        <button class="danger" onclick="clearBroadcast()">Clear</button>
+      </div>
+      <div style="margin-top:0.5rem;display:flex;gap:1rem;align-items:center">
+        ${current}
+        <span id="broadcast-status" style="font-size:0.82rem;color:#27ae60"></span>
+      </div>
+    </div>
+  </section>`;
+}
+
+// ─── Full dashboard HTML ─────────────────────────────────────────────────────
+function dashboardHTML() {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -189,19 +438,23 @@ function dashboardHTML() {
   <style>
     * { box-sizing:border-box; margin:0; padding:0; }
     body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:#f0f2f5; color:#333; }
-    header { background:#002855; color:#fff; padding:1rem 2rem; display:flex; align-items:center; justify-content:space-between; }
+    header { background:#002855; color:#fff; padding:1rem 2rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; }
     header h1 { font-size:1.3rem; }
     header small { font-size:0.85rem; opacity:0.7; }
-    .container { padding:1.5rem 2rem; }
-    .card { background:#fff; border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,0.08); padding:1.25rem; margin-bottom:1.25rem; }
+    .container { padding:1.5rem 2rem; max-width:1600px; margin:0 auto; }
+    .card { background:#fff; border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,0.08); padding:1.25rem; margin-bottom:0; }
+    .scroll-x { overflow-x:auto; }
     table { width:100%; border-collapse:collapse; }
-    th, td { padding:0.6rem 0.75rem; text-align:left; border-bottom:1px solid #f0f0f0; font-size:0.9rem; }
-    th { font-weight:600; color:#555; }
+    th, td { padding:0.5rem 0.6rem; text-align:left; border-bottom:1px solid #f0f0f0; font-size:0.85rem; }
+    th { font-weight:600; color:#555; background:#fafafa; }
     a { color:#002855; }
     button { background:#002855; color:#fff; border:none; border-radius:4px; padding:5px 12px; cursor:pointer; font-size:0.85rem; }
     button:hover { background:#003a80; }
     button.danger { background:#c0392b; }
     button.danger:hover { background:#a93226; }
+    .btn-sm { display:inline-block; background:#002855; color:#fff; border:none; border-radius:3px;
+              padding:3px 8px; cursor:pointer; font-size:0.75rem; text-decoration:none; }
+    .btn-sm.danger { background:#c0392b; }
     .dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:4px; vertical-align:middle; }
     .dot-online   { background:#27ae60; }
     .dot-offline  { background:#e74c3c; }
@@ -209,6 +462,62 @@ function dashboardHTML() {
     .dot-stopped  { background:#bdc3c7; }
     .footer-bar { display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap; }
     #msg { font-size:0.9rem; color:#1e8449; }
+
+    /* ── Dash sections ── */
+    .dash-section { margin-bottom:1.75rem; }
+    .dash-section h2 { font-size:0.95rem; font-weight:700; color:#002855; text-transform:uppercase;
+                        letter-spacing:0.05em; margin-bottom:0.75rem;
+                        border-bottom:2px solid #002855; padding-bottom:0.3rem; }
+
+    /* ── Health grid ── */
+    .health-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:0.65rem; }
+    .health-card { border-radius:6px; padding:0.75rem; border-left:4px solid #bdc3c7; background:#fff;
+                   box-shadow:0 1px 3px rgba(0,0,0,0.07); }
+    .health-card.online  { border-color:#27ae60; }
+    .health-card.offline { border-color:#e74c3c; background:#fff9f9; }
+    .health-card.starting{ border-color:#f39c12; }
+    .health-card.stopped { border-color:#bdc3c7; }
+    .hcard-name { font-size:0.82rem; font-weight:600; color:#002855; margin-bottom:0.25rem; }
+    .hcard-name a { text-decoration:none; }
+    .hcard-status { font-size:0.78rem; margin-bottom:0.25rem; }
+    .hcard-meta { font-size:0.72rem; color:#888; margin-bottom:0.4rem; min-height:1em; }
+    .hcard-actions { display:flex; gap:4px; }
+
+    /* ── Matrix tables (security, progress, heatmap) ── */
+    .matrix-table th, .matrix-table td { text-align:center; font-size:0.78rem; padding:0.35rem 0.45rem; }
+    .matrix-table th:first-child, .matrix-table td:first-child { text-align:left; }
+    .mat-label { font-weight:600; color:#444; white-space:nowrap; }
+    .mat-total { font-weight:700; color:#002855; }
+    .mat-unknown { color:#bbb; }
+    .check-on  { color:#27ae60; font-weight:bold; }
+    .check-off { color:#e74c3c; }
+
+    /* ── Progress bars ── */
+    .pb-wrap { background:#eee; border-radius:3px; height:10px; width:100%; min-width:40px; }
+    .pb-fill { height:10px; border-radius:3px; background:#002855; transition:width 0.3s; }
+    .pb-fill.warn { background:#e67e22; }
+    .pb-fill.good { background:#27ae60; }
+    .pb-label { font-size:0.7rem; text-align:center; color:#666; margin-top:1px; }
+
+    /* ── VM heatmap ── */
+    .heatmap-cell { display:inline-block; border-radius:3px; padding:2px 6px;
+                    font-size:0.8rem; font-weight:700; min-width:28px; text-align:center; }
+    .heat-red    { background:#fad7d2; color:#c0392b; }
+    .heat-orange { background:#fde8d0; color:#d35400; }
+    .heat-yellow { background:#fef5d4; color:#b7950b; }
+    .heat-green  { background:#d5f5e3; color:#1e8449; }
+
+    /* ── Pentest Kanban ── */
+    .kanban-board { display:flex; gap:0.75rem; }
+    .kanban-col { flex:1; background:#f8f9fa; border-radius:6px; padding:0.75rem; text-align:center; }
+    .kanban-label { font-size:0.75rem; color:#555; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:0.4rem; }
+    .kanban-count { font-size:2rem; font-weight:800; color:#002855; line-height:1; }
+    .kanban-sub { font-size:0.7rem; color:#888; margin-top:0.2rem; }
+
+    /* ── Broadcast ── */
+    .broadcast-bar { display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; }
+    .broadcast-bar input[type=text] { flex:1; padding:6px 10px; border:1px solid #ccc; border-radius:4px;
+                                       font-size:0.88rem; min-width:220px; }
   </style>
 </head>
 <body>
@@ -217,43 +526,236 @@ function dashboardHTML() {
     <h1>Classroom Manager</h1>
     <small>${teams.length} instances &nbsp;·&nbsp; Dashboard port ${dashboardPort}</small>
   </div>
-  <div id="refresh-status" style="font-size:0.85rem; opacity:0.7;">Auto-refresh every 30s</div>
+  <div style="font-size:0.82rem;opacity:0.75">Health: 30s &nbsp;|&nbsp; Summary: 60s</div>
 </header>
 <div class="container">
-  <div class="card">
-    <table>
-      <thead>
-        <tr>
-          <th>Team</th><th>Port</th><th>URL</th><th>Status</th><th>PID</th><th>Last Check</th><th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-  </div>
 
-  <div class="card footer-bar">
-    <button onclick="resetAll()">Reset All Instances</button>
-    <button class="danger" onclick="stopAll()">Stop All</button>
-    <span id="msg"></span>
-  </div>
+  ${renderHealthGrid()}
+  ${renderSecurityMatrix()}
+  ${renderLabProgress()}
+  ${renderVMHeatmap()}
+  ${renderPentestBoard()}
+  ${renderBroadcastBar()}
+
+  <section class="dash-section">
+    <h2>Instance Control</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Team</th><th>Port</th><th>URL</th><th>Status</th>
+            <th>PID</th><th>Last Check</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="instance-tbody">
+          ${instances.map(inst => `
+          <tr id="row-${inst.index}">
+            <td>${inst.team}</td>
+            <td>${inst.port}</td>
+            <td><a href="${inst.url}" target="_blank">${inst.url}</a></td>
+            <td id="status-${inst.index}"><span class="dot dot-${inst.status}"></span> ${inst.status}</td>
+            <td id="pid-${inst.index}">${inst.pid || '—'}</td>
+            <td id="check-${inst.index}">${inst.lastCheck ? new Date(inst.lastCheck).toLocaleTimeString() : '—'}</td>
+            <td><button onclick="resetOne(${inst.index})">Reset</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="card" style="margin-top:0.75rem">
+      <div class="footer-bar">
+        <button onclick="resetAll()">Reset All Instances</button>
+        <button class="danger" onclick="stopAll()">Stop All</button>
+        <span id="msg"></span>
+      </div>
+    </div>
+  </section>
+
 </div>
-
 <script>
 const HOST = location.hostname;
+const FEATURES = [
+  ['mfa_enabled','MFA'],['rbac_enabled','RBAC'],
+  ['encryption_at_rest','Pwd Encryption'],['field_encryption','Field Encryption'],
+  ['https_enabled','HTTPS'],['audit_logging','Audit Logging'],['rate_limiting','Rate Limiting']
+];
+const PT_PHASES = [
+  ['recon','Recon'],['enumeration','Enumeration'],['vuln_id','Vuln ID'],
+  ['exploitation','Exploitation'],['reporting','Reporting']
+];
 
+// ── Health polling (30s) ──────────────────────────────────────────────────────
 async function fetchStatus() {
-  const res = await fetch('/api/instances');
-  const data = await res.json();
-  data.forEach(inst => {
-    const statusEl = document.getElementById('status-' + inst.index);
-    const pidEl    = document.getElementById('pid-'    + inst.index);
-    const checkEl  = document.getElementById('check-'  + inst.index);
-    if (statusEl) statusEl.innerHTML = \`<span class="dot dot-\${inst.status}"></span> \${inst.status}\`;
-    if (pidEl)    pidEl.textContent  = inst.pid || '—';
-    if (checkEl)  checkEl.textContent = inst.lastCheck ? new Date(inst.lastCheck).toLocaleTimeString() : '—';
-  });
+  try {
+    const res  = await fetch('/api/instances');
+    const data = await res.json();
+    data.forEach(inst => {
+      const sEl = document.getElementById('status-' + inst.index);
+      const pEl = document.getElementById('pid-'    + inst.index);
+      const cEl = document.getElementById('check-'  + inst.index);
+      if (sEl) sEl.innerHTML = \`<span class="dot dot-\${inst.status}"></span> \${inst.status}\`;
+      if (pEl) pEl.textContent = inst.pid || '—';
+      if (cEl) cEl.textContent = inst.lastCheck ? new Date(inst.lastCheck).toLocaleTimeString() : '—';
+    });
+  } catch(e) { console.warn('fetchStatus failed', e); }
 }
 
+// ── Summary polling (60s) ─────────────────────────────────────────────────────
+async function fetchOverview() {
+  try {
+    const res  = await fetch('/api/class-overview');
+    const data = await res.json();
+    renderAllSections(data);
+  } catch(e) { console.warn('fetchOverview failed', e); }
+}
+
+function renderAllSections(data) {
+  renderHealthGridDOM(data);
+  renderSecurityMatrixDOM(data);
+  renderLabProgressDOM(data);
+  renderVMHeatmapDOM(data);
+  renderPentestBoardDOM(data);
+}
+
+// ── Health grid update ────────────────────────────────────────────────────────
+function fmtUptime(s) {
+  if (!s) return '';
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+  return h > 0 ? \`\${h}h \${m}m\` : \`\${m}m\`;
+}
+function renderHealthGridDOM(data) {
+  const grid = document.getElementById('health-grid');
+  if (!grid || !data.per_team) return;
+  grid.innerHTML = data.per_team.map(t => {
+    const s = t.summary;
+    const uptime = s ? fmtUptime(s.uptime) : '';
+    const users  = s ? \`\${s.users.students} student\${s.users.students !== 1 ? 's' : ''}\` : '';
+    const meta   = [uptime, users].filter(Boolean).join(' · ');
+    return \`<div class="health-card \${t.status}">
+      <div class="hcard-name"><a href="http://\${HOST}:\${t.port}" target="_blank">\${t.team}</a></div>
+      <div class="hcard-status"><span class="dot dot-\${t.status}"></span>\${t.status}</div>
+      <div class="hcard-meta">\${meta}</div>
+      <div class="hcard-actions">
+        <a href="http://\${HOST}:\${t.port}" target="_blank" class="btn-sm">Open</a>
+        <button class="btn-sm danger" onclick="resetOne(\${t.index})">Reset</button>
+      </div>
+    </div>\`;
+  }).join('');
+}
+
+// ── Security matrix update ────────────────────────────────────────────────────
+function renderSecurityMatrixDOM(data) {
+  const tbl = document.getElementById('security-matrix');
+  if (!tbl || !data.per_team) return;
+  const heads = \`<th>Feature</th>\${data.per_team.map(t => \`<th title="\${t.team}">T\${t.index+1}</th>\`).join('')}<th>On/Live</th>\`;
+  const tbody = FEATURES.map(([key, label]) => {
+    const cells = data.per_team.map(t => {
+      const s = t.summary;
+      if (!s) return '<td class="mat-unknown">?</td>';
+      const on = s.security && s.security[key];
+      return \`<td><span class="\${on ? 'check-on' : 'check-off'}">\${on ? '✓' : '✗'}</span></td>\`;
+    }).join('');
+    const onCount = data.per_team.filter(t => t.summary && t.summary.security && t.summary.security[key]).length;
+    const total   = data.per_team.filter(t => t.summary).length;
+    return \`<tr><td class="mat-label">\${label}</td>\${cells}<td class="mat-total">\${onCount}/\${total}</td></tr>\`;
+  }).join('');
+  tbl.innerHTML = \`<thead><tr>\${heads}</tr></thead><tbody>\${tbody}</tbody>\`;
+}
+
+// ── Lab progress update ───────────────────────────────────────────────────────
+function pctBar(pct) {
+  const cls = pct >= 80 ? 'good' : pct >= 40 ? '' : 'warn';
+  return \`<div class="pb-wrap" title="\${pct}%"><div class="pb-fill \${cls}" style="width:\${pct}%"></div></div><div class="pb-label">\${pct}%</div>\`;
+}
+const MODS = [
+  { label:'SCA',     pct: t => t.summary?.sca?.avg_completion_pct  || 0 },
+  { label:'DAST',    pct: t => t.summary?.dast?.avg_completion_pct || 0 },
+  { label:'VM',      pct: t => {
+    const vm = t.summary?.vm;
+    if (!vm || !vm.total) return 0;
+    return Math.round(((vm.resolved + vm.wont_fix) / vm.total) * 100);
+  }},
+  { label:'Pentest', pct: t => {
+    const p = t.summary?.pentest;
+    if (!p || !p.total_students) return 0;
+    return Math.round(((p.submitted + p.graded) / p.total_students) * 100);
+  }}
+];
+function renderLabProgressDOM(data) {
+  const tbl = document.getElementById('lab-progress');
+  if (!tbl || !data.per_team) return;
+  const heads = \`<th>Module</th>\${data.per_team.map(t => \`<th title="\${t.team}">T\${t.index+1}</th>\`).join('')}\`;
+  const tbody = MODS.map(mod => {
+    const cells = data.per_team.map(t => \`<td>\${pctBar(mod.pct(t))}</td>\`).join('');
+    return \`<tr><td class="mat-label"><strong>\${mod.label}</strong></td>\${cells}</tr>\`;
+  }).join('');
+  tbl.innerHTML = \`<thead><tr>\${heads}</tr></thead><tbody>\${tbody}</tbody>\`;
+}
+
+// ── VM heatmap update ─────────────────────────────────────────────────────────
+function heatCls(v, r, o, y) {
+  if (v > r) return 'heat-red';
+  if (v > o) return 'heat-orange';
+  if (v > y) return 'heat-yellow';
+  return 'heat-green';
+}
+function renderVMHeatmapDOM(data) {
+  const tbl = document.getElementById('vm-heatmap');
+  if (!tbl || !data.per_team) return;
+  const heads = \`<th>Metric</th>\${data.per_team.map(t => \`<th title="\${t.team}">T\${t.index+1}</th>\`).join('')}\`;
+  function vmRow(metricKey, thresholds) {
+    const cells = data.per_team.map(t => {
+      const v = t.summary?.vm?.[metricKey];
+      if (v == null) return '<td><span class="heatmap-cell">?</span></td>';
+      const cls = heatCls(v, ...thresholds);
+      return \`<td><span class="heatmap-cell \${cls}">\${v}</span></td>\`;
+    }).join('');
+    return cells;
+  }
+  tbl.innerHTML = \`<thead><tr>\${heads}</tr></thead><tbody>
+    <tr><td class="mat-label">Open</td>\${vmRow('open',[10,5,2])}</tr>
+    <tr><td class="mat-label">Critical</td>\${vmRow('critical',[3,1,0])}</tr>
+  </tbody>\`;
+}
+
+// ── Pentest board update ──────────────────────────────────────────────────────
+function renderPentestBoardDOM(data) {
+  const board = document.getElementById('pentest-board');
+  if (!board || !data.pentest_phases) return;
+  board.innerHTML = PT_PHASES.map(([key, label]) => \`
+    <div class="kanban-col">
+      <div class="kanban-label">\${label}</div>
+      <div class="kanban-count">\${data.pentest_phases[key] || 0}</div>
+      <div class="kanban-sub">team(s)</div>
+    </div>\`).join('');
+}
+
+// ── Broadcast ─────────────────────────────────────────────────────────────────
+async function sendBroadcast() {
+  const msg = document.getElementById('broadcast-input').value.trim();
+  if (!msg) return;
+  const r = await fetch('/api/broadcast', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: msg })
+  });
+  const d = await r.json();
+  document.getElementById('broadcast-status').textContent = \`Delivered to \${d.delivered} instance(s)\`;
+  document.getElementById('current-msg').textContent = \`Active: "\${msg}"\`;
+  document.getElementById('current-msg').style.color = '#555';
+}
+async function clearBroadcast() {
+  await fetch('/api/broadcast', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: null })
+  });
+  document.getElementById('broadcast-input').value = '';
+  document.getElementById('broadcast-status').textContent = 'Cleared';
+  document.getElementById('current-msg').textContent = 'No active message';
+  document.getElementById('current-msg').style.color = '#aaa';
+}
+
+// ── Instance control ──────────────────────────────────────────────────────────
 async function resetOne(index) {
   if (!confirm('Reset this instance? All its data will be wiped.')) return;
   setMsg('Resetting…');
@@ -261,7 +763,6 @@ async function resetOne(index) {
   setMsg('Reset complete. Refreshing…');
   setTimeout(fetchStatus, 2000);
 }
-
 async function resetAll() {
   if (!confirm('Reset ALL instances? This will wipe all team data.')) return;
   if (!confirm('Are you sure? This cannot be undone.')) return;
@@ -270,17 +771,18 @@ async function resetAll() {
   setMsg('All reset. Refreshing…');
   setTimeout(fetchStatus, 3000);
 }
-
 async function stopAll() {
   if (!confirm('Stop all classroom instances?')) return;
   await fetch('/api/stop-all', {method:'POST'});
   setMsg('All instances stopped.');
 }
-
 function setMsg(txt) { document.getElementById('msg').textContent = txt; }
 
+// ── Boot ──────────────────────────────────────────────────────────────────────
 fetchStatus();
-setInterval(fetchStatus, 30000);
+fetchOverview();
+setInterval(fetchStatus,   30000);
+setInterval(fetchOverview, 60000);
 </script>
 </body>
 </html>`;
@@ -307,6 +809,65 @@ const dashboard = http.createServer(async (req, res) => {
       startedAt: i.startedAt,
       lastCheck: i.lastCheck
     }))));
+  }
+
+  if (req.method === 'GET' && url === '/api/class-overview') {
+    const live = summaryCache.filter(Boolean);
+    const total = instances.length;
+
+    const secAdoption = {};
+    SECURITY_FEATURES.forEach(([key]) => {
+      secAdoption[key] = live.filter(s => s.security && s.security[key]).length;
+    });
+
+    const phaseDist = {};
+    PENTEST_PHASES.forEach(([key]) => { phaseDist[key] = 0; });
+    live.forEach(s => {
+      if (s.pentest && s.pentest.phase_distribution) {
+        PENTEST_PHASES.forEach(([key]) => { phaseDist[key] += s.pentest.phase_distribution[key] || 0; });
+      }
+    });
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({
+      teams_online:  instances.filter(i => i.status === 'online').length,
+      teams_total:   total,
+      security:      secAdoption,
+      sca_avg_pct:   live.length === 0 ? 0 : Math.round(live.reduce((a, s) => a + (s.sca ? s.sca.avg_completion_pct : 0), 0) / live.length),
+      dast_avg_pct:  live.length === 0 ? 0 : Math.round(live.reduce((a, s) => a + (s.dast ? s.dast.avg_completion_pct : 0), 0) / live.length),
+      pentest_phases: phaseDist,
+      per_team:      instances.map((inst, i) => ({
+        index:   inst.index,
+        team:    inst.team,
+        port:    inst.port,
+        status:  inst.status,
+        summary: summaryCache[i]
+      })),
+      timestamp: new Date().toISOString()
+    }));
+  }
+
+  if (req.method === 'POST' && url === '/api/broadcast') {
+    let body = '';
+    req.on('data', d => { body += d; });
+    req.on('end', async () => {
+      try {
+        const parsed = JSON.parse(body);
+        broadcastMessage = parsed.message || null;
+        const results = await Promise.allSettled(
+          instances
+            .filter(inst => inst.status === 'online')
+            .map(inst => broadcastToInstance(inst, broadcastMessage))
+        );
+        const delivered = results.filter(r => r.status === 'fulfilled' && r.value === true).length;
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, message: broadcastMessage, delivered }));
+      } catch(e) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: 'Invalid JSON' }));
+      }
+    });
+    return;
   }
 
   const resetOneMatch = url.match(/^\/api\/instances\/(\d+)\/reset$/);
@@ -350,7 +911,6 @@ async function main() {
   console.log(`  Dashboard: http://${hostAddress}:${dashboardPort}`);
   console.log('');
 
-  // Optionally wipe all data before starting
   if (autoResetOnStart) {
     console.log('  autoResetOnStart=true: wiping all instance data…');
     instances.forEach(inst => {
@@ -375,6 +935,15 @@ async function main() {
       if (inst.proc) await healthCheck(inst);
     }
   }, 30000);
+
+  // Periodic summary fetch (every 60s — staggered 100ms per instance)
+  setInterval(() => {
+    instances.forEach((inst, i) => {
+      if (inst.status === 'online') {
+        setTimeout(() => fetchSummary(inst), i * 100);
+      }
+    });
+  }, 60000);
 
   // Graceful shutdown
   function shutdown() {
