@@ -12,6 +12,9 @@ ssl/
 backups/*
 !backups/.gitkeep
 
+# Classroom instance data (generated at runtime)
+instances/
+
 # Encryption Keys (BYOK - never commit)
 keys/
 

@@ -3,35 +3,34 @@
   "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
 
   "postCreateCommand": "npm install && node scripts/setup.js",
+  "postStartCommand": "npm start",
 
   "forwardPorts": [3000, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 3008, 3009, 3010, 3011, 3012],
 
   "portsAttributes": {
     "3000": {
-      "label": "Classroom Dashboard",
+      "label": "Instructor Dashboard",
       "onAutoForward": "openBrowser"
     },
-    "3001": { "label": "Team Alpha" },
-    "3002": { "label": "Team Bravo" },
-    "3003": { "label": "Team Charlie" },
-    "3004": { "label": "Team Delta" },
-    "3005": { "label": "Team Echo" },
-    "3006": { "label": "Team Foxtrot" },
-    "3007": { "label": "Team Golf" },
-    "3008": { "label": "Team Hotel" },
-    "3009": { "label": "Team India" },
-    "3010": { "label": "Team Juliet" },
-    "3011": { "label": "Team Kilo" },
-    "3012": { "label": "Team Lima" }
+    "3001": { "label": "Team Alpha",   "onAutoForward": "silent" },
+    "3002": { "label": "Team Bravo",   "onAutoForward": "silent" },
+    "3003": { "label": "Team Charlie", "onAutoForward": "silent" },
+    "3004": { "label": "Team Delta",   "onAutoForward": "silent" },
+    "3005": { "label": "Team Echo",    "onAutoForward": "silent" },
+    "3006": { "label": "Team Foxtrot", "onAutoForward": "silent" },
+    "3007": { "label": "Team Golf",    "onAutoForward": "silent" },
+    "3008": { "label": "Team Hotel",   "onAutoForward": "silent" },
+    "3009": { "label": "Team India",   "onAutoForward": "silent" },
+    "3010": { "label": "Team Juliet",  "onAutoForward": "silent" },
+    "3011": { "label": "Team Kilo",    "onAutoForward": "silent" },
+    "3012": { "label": "Team Lima",    "onAutoForward": "silent" }
   },
 
   "customizations": {
     "vscode": {
       "extensions": [
         "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
-        "bradlc.vscode-tailwindcss",
-        "ritwickdey.LiveServer"
+        "esbenp.prettier-vscode"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",
