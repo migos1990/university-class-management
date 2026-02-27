@@ -133,6 +133,11 @@ function getKeyInfo() {
 function encrypt(text) {
   if (!text) return text;
 
+  // Guard against double-encryption
+  if (isEncrypted(text)) {
+    return text;
+  }
+
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv(ALGORITHM, Buffer.from(currentEncryptionKey), iv);
   let encrypted = cipher.update(text, 'utf8', 'hex');
@@ -143,24 +148,33 @@ function encrypt(text) {
 }
 
 /**
- * Decrypt an encrypted string using the current encryption key
+ * Decrypt an encrypted string using the current encryption key.
+ * Throws on failure to prevent silent data corruption.
  */
 function decrypt(text) {
   if (!text || !text.includes(':')) return text;
 
+  const parts = text.split(':');
+  const iv = Buffer.from(parts[0], 'hex');
+  const encrypted = parts[1];
+
+  const decipher = crypto.createDecipheriv(ALGORITHM, Buffer.from(currentEncryptionKey), iv);
+  let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+
+  return decrypted;
+}
+
+/**
+ * Safe decrypt wrapper that returns a result object instead of throwing.
+ * Use this when you want to handle decryption failures gracefully (e.g., display).
+ */
+function safeDecrypt(text) {
   try {
-    const parts = text.split(':');
-    const iv = Buffer.from(parts[0], 'hex');
-    const encrypted = parts[1];
-
-    const decipher = crypto.createDecipheriv(ALGORITHM, Buffer.from(currentEncryptionKey), iv);
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-
-    return decrypted;
+    return { success: true, value: decrypt(text) };
   } catch (error) {
     console.error('Decryption error:', error.message);
-    return text; // Return original if decryption fails
+    return { success: false, value: text, error: error.message };
   }
 }
 
@@ -177,6 +191,7 @@ currentEncryptionKey = loadCustomKey();
 module.exports = {
   encrypt,
   decrypt,
+  safeDecrypt,
   isEncrypted,
   saveCustomKey,
   deleteCustomKey,

@@ -3,6 +3,7 @@ const fs = require('fs');
 
 const dbDir = process.env.DATA_DIR || path.join(__dirname, '..', 'database');
 const dbPath = path.join(dbDir, 'data.json');
+const dbTmpPath = path.join(dbDir, 'data.json.tmp');
 
 // Ensure database directory exists
 if (!fs.existsSync(dbDir)) {
@@ -44,23 +45,96 @@ let db = {
   }
 };
 
+// Required top-level keys for a valid database
+const REQUIRED_KEYS = ['users', 'classes', 'sessions', 'enrollments', 'security_settings'];
+
+// Validate that parsed data has the expected structure
+function isValidDatabase(data) {
+  if (!data || typeof data !== 'object') return false;
+  return REQUIRED_KEYS.every(key => Array.isArray(data[key]) || (key === '_counters' && typeof data[key] === 'object'));
+}
+
+// Attempt to recover database from the most recent backup
+function attemptRecoveryFromBackup() {
+  const backupDir = path.join(__dirname, '..', 'backups');
+  if (!fs.existsSync(backupDir)) return false;
+
+  try {
+    const backupFiles = fs.readdirSync(backupDir)
+      .filter(f => f.startsWith('backup-') && f.endsWith('.json'))
+      .sort()
+      .reverse(); // Most recent first
+
+    for (const file of backupFiles) {
+      try {
+        const backupData = fs.readFileSync(path.join(backupDir, file), 'utf8');
+        const parsed = JSON.parse(backupData);
+        if (isValidDatabase(parsed)) {
+          db = parsed;
+          // Write recovered data as the new main database
+          fs.writeFileSync(dbPath, backupData, 'utf8');
+          console.log(`✓ Database recovered from backup: ${file}`);
+          return true;
+        }
+      } catch (e) {
+        // Skip invalid backup files
+      }
+    }
+  } catch (error) {
+    console.error('Backup recovery scan failed:', error.message);
+  }
+  return false;
+}
+
 // Load database from file if exists
 function loadDatabase() {
   if (fs.existsSync(dbPath)) {
     try {
       const data = fs.readFileSync(dbPath, 'utf8');
-      db = JSON.parse(data);
-      console.log('Database loaded from file');
+      const parsed = JSON.parse(data);
+
+      if (isValidDatabase(parsed)) {
+        db = parsed;
+        console.log('Database loaded from file');
+        return;
+      }
+
+      // Parsed OK but invalid structure — try backups
+      console.warn('Warning: Database file has invalid structure, attempting recovery...');
+      if (!attemptRecoveryFromBackup()) {
+        console.warn('Warning: No valid backup found. Database will be re-initialized.');
+      }
     } catch (error) {
       console.error('Error loading database:', error.message);
+      // JSON parse failed — try recovery from temp file
+      if (fs.existsSync(dbTmpPath)) {
+        try {
+          const tmpData = fs.readFileSync(dbTmpPath, 'utf8');
+          const parsed = JSON.parse(tmpData);
+          if (isValidDatabase(parsed)) {
+            db = parsed;
+            fs.renameSync(dbTmpPath, dbPath);
+            console.log('✓ Database recovered from temp file');
+            return;
+          }
+        } catch (tmpError) {
+          // Temp file also corrupt
+        }
+      }
+      // Try backups as last resort
+      if (!attemptRecoveryFromBackup()) {
+        console.warn('Warning: All recovery attempts failed. Database will be re-initialized.');
+      }
     }
   }
 }
 
-// Save database to file
+// Save database to file using atomic write (write temp, then rename)
 function saveDatabase() {
   try {
-    fs.writeFileSync(dbPath, JSON.stringify(db, null, 2), 'utf8');
+    const data = JSON.stringify(db, null, 2);
+    fs.writeFileSync(dbTmpPath, data, 'utf8');
+    fs.renameSync(dbTmpPath, dbPath);
   } catch (error) {
     console.error('Error saving database:', error.message);
   }
@@ -462,6 +536,13 @@ function executeSQL(sql, params = []) {
         timestamp: new Date().toISOString()
       };
       db.audit_logs.push(log);
+
+      // Auto-prune: keep only the most recent 1000 entries
+      const MAX_AUDIT_ENTRIES = 1000;
+      if (db.audit_logs.length > MAX_AUDIT_ENTRIES) {
+        db.audit_logs = db.audit_logs.slice(-MAX_AUDIT_ENTRIES);
+      }
+
       return { lastID: log.id, changes: 1 };
     }
 
@@ -1042,5 +1123,6 @@ function isDatabaseSeeded() {
 module.exports = {
   db: dbInterface,
   initializeDatabase,
-  isDatabaseSeeded
+  isDatabaseSeeded,
+  loadDatabase
 };

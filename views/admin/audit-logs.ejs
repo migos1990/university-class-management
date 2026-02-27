@@ -27,7 +27,7 @@
       <tbody>
         <% logs.forEach(log => { %>
           <tr>
-            <td style="white-space: nowrap;"><%= new Date(log.timestamp).toLocaleString() %></td>
+            <td style="white-space: nowrap;"><%= formatDate(log.timestamp) %></td>
             <td><%= log.username || 'N/A' %></td>
             <td><%= log.role || 'N/A' %></td>
             <td><%= log.action %></td>

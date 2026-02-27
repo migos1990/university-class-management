@@ -1,6 +1,6 @@
 <%- include('partials/header') %>
 
-<a href="/classes/<%= session.class_id %>" style="text-decoration: none; color: #3498db;">&larr; Back to <%= session.class_code %></a>
+<a href="/classes/<%= session.class_id %>" style="text-decoration: none; color: #3498db;">&larr; Back to <%= session.class_code || 'Class' %></a>
 
 <div class="card" style="margin-top: 1rem;">
   <div style="display: flex; justify-content: space-between; align-items: start;">

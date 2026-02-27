@@ -63,7 +63,7 @@
 
       <div style="margin-top: 1rem;">
         <p><strong><%= typeof t !== 'undefined' ? t('backups.lastBackup') : 'Last Backup' %>:</strong>
-          <%= backupSettings.lastBackup ? new Date(backupSettings.lastBackup).toLocaleString() : (typeof t !== 'undefined' ? (currentLang === 'fr' ? 'Jamais' : 'Never') : 'Never') %>
+          <%= formatDate(backupSettings.lastBackup) %>
         </p>
       </div>
     <% } %>
@@ -99,7 +99,7 @@
         <% backups.forEach(backup => { %>
           <tr>
             <td style="font-family: monospace; font-size: 0.9rem;"><%= backup.filename %></td>
-            <td><%= new Date(backup.created).toLocaleString() %></td>
+            <td><%= formatDate(backup.created) %></td>
             <td><%= (backup.size / 1024).toFixed(2) %> KB</td>
             <td>
               <a href="/admin/backups/download/<%= backup.filename %>" class="btn btn-secondary" style="padding: 0.3rem 0.8rem; font-size: 0.9rem;">
@@ -182,7 +182,8 @@
     .then(res => res.json())
     .then(data => {
       if (data.success) {
-        alert('Database restored successfully! Please restart the server for changes to take effect.');
+        alert('Database restored successfully! The page will now reload.');
+        location.reload();
       } else {
         alert('Error: ' + (data.error || 'Unknown error'));
       }
