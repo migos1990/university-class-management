@@ -5,52 +5,51 @@ This application helps students learn about application security through hands-o
 
 ---
 
-## Quick Start (3 Steps!)
+## Quick Start
 
-### Step 1: Install Node.js
-Download and install Node.js from [nodejs.org](https://nodejs.org) (choose the LTS version)
+Choose **one** of the two options below depending on your setup.
 
-### Step 2: Setup the Application
-Open a terminal/command prompt in this folder and run:
+### Option A: Run Locally on Your Laptop
+
+**Prerequisites:** [Node.js](https://nodejs.org) LTS (v18 or newer) must be installed.
+
 ```bash
+# 1. Install dependencies
 npm install
-npm run setup
-```
 
-### Step 3: Start the Application
-```bash
+# 2. Initialize the database, seed sample data, and generate SSL certificates
+npm run setup
+
+# 3. Start the application
 npm start
 ```
 
-Then open your web browser and go to: **http://localhost:3000**
+Open your browser to **http://localhost:3000** and log in with one of the [default accounts](#default-login-accounts) below.
 
-### Windows-Specific Instructions
+> **Windows tips**
+> - The commands above work the same in Command Prompt, PowerShell, and Git Bash.
+> - If `npm` is not recognized, restart your terminal after installing Node.js.
+> - If port 3000 is in use, close other applications using that port or set a custom port: `PORT=3001 npm start`
+> - If you see permission errors, try running the terminal as Administrator.
 
-**If you're using Windows Command Prompt:**
-```cmd
-npm install
-npm run setup
-npm start
-```
+### Option B: Run in GitHub Codespaces (No Local Install)
 
-**If you're using PowerShell:**
-```powershell
-npm install
-npm run setup
-npm start
-```
+GitHub Codespaces gives you a full development environment in the cloud — no need to install Node.js or anything else on your machine.
 
-**If you're using Git Bash:**
-```bash
-npm install
-npm run setup
-npm start
-```
+1. From the GitHub repository page, click the green **Code** button, then select the **Codespaces** tab.
+2. Click **Create codespace on main** (or your branch of choice).
+3. Wait for the container to build. The `postCreateCommand` automatically runs `npm install` and `npm run setup` for you.
+4. Once the terminal is ready, start the app:
+   ```bash
+   npm start
+   ```
+5. When the server starts, Codespaces detects port **3000** and shows a notification. Click **Open in Browser** (or find the forwarded port in the **Ports** tab) to access the app.
 
-**Common Windows Issues:**
-- If `npm` is not recognized, restart your terminal after installing Node.js
-- If port 3000 is in use, close other applications or edit `server.js` to use a different port
-- If you see permission errors, try running the terminal as Administrator
+> **Codespaces notes**
+> - The devcontainer pre-forwards ports 3000–3012 so both the single-instance app and classroom mode work out of the box.
+> - Port 3000 is labelled "Classroom Dashboard" and opens automatically when forwarded.
+> - Each team port (3001–3012) is labelled with the team name (Alpha through Lima).
+> - To share your running app with others, right-click a port in the **Ports** tab and set visibility to **Public**.
 
 ---
 
