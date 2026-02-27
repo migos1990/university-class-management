@@ -64,7 +64,7 @@ npm start
 - Username: `prof_jones` | Password: `prof123`
 - Username: `prof_smith` | Password: `prof123`
 
-### Student Accounts (View Only)
+### Student Accounts
 - Username: `alice_student` | Password: `student123`
 - Username: `bob_student` | Password: `student123`
 - Username: `charlie_student` | Password: `student123`
@@ -80,10 +80,60 @@ Login as **admin** and visit the **Security Panel** to toggle these features:
 1. **Multi-Factor Authentication (MFA)** - Require Google Authenticator for admin login
 2. **Role-Based Access Control (RBAC)** - Restrict access based on user roles
 3. **Password Encryption** - Hash passwords with bcrypt
-4. **Data Encryption** - Encrypt sensitive data (SSN, grades)
+4. **Data Encryption** - Encrypt sensitive data (SSN, grades) with AES-256-CBC
 5. **HTTPS/TLS** - Secure communication with encryption in transit
 6. **Audit Logging** - Track all user actions
-7. **Rate Limiting** - Protect against brute force attacks
+7. **Rate Limiting** - Protect against brute force attacks (5 attempts per 15 minutes)
+8. **Segregation of Duties** - Require admin approval for class deletions by professors
+9. **Database Backups** - Automatic scheduled backups at configurable intervals
+10. **Bring Your Own Key (BYOK)** - Upload custom encryption keys for data protection
+
+---
+
+## Security Curriculum Labs
+
+The platform includes four specialized labs for hands-on security training:
+
+### Static Code Analysis (SCA)
+Instructors create code findings with CWE references and severity levels. Students classify and assess each finding. A review matrix tracks student submission progress. Findings can be imported into the Vulnerability Manager.
+
+### Dynamic Application Security Testing (DAST)
+Pre-built vulnerability scenarios with step-by-step exploitation guides. Students execute tests and submit findings with severity ratings and CVSS scores. Scenarios can be imported into the Vulnerability Manager.
+
+### Vulnerability Manager (VM)
+A central vulnerability registry that aggregates findings from SCA, DAST, and Pentest labs. Tracks vulnerability status (`open` → `in_progress` → `resolved` → `wont_fix`) with priority levels, remediation tracking, comments, and full status history.
+
+### Penetration Testing (Pentest)
+Students conduct penetration testing engagements following a 5-phase methodology:
+1. Reconnaissance
+2. Enumeration
+3. Vulnerability Identification
+4. Exploitation
+5. Reporting
+
+Each engagement tracks phase-specific notes, findings, and reports. Instructors can review and grade submitted engagements.
+
+---
+
+## Classroom Mode
+
+Launch multiple isolated instances for team-based classroom exercises:
+
+```bash
+# Start all team instances (default: 12 teams)
+npm run classroom
+
+# Setup helper for classroom configuration
+npm run classroom:setup
+
+# Stop all running instances
+npm run classroom:stop
+```
+
+- **Dashboard:** http://localhost:3000
+- **Team instances:** http://localhost:3001 through http://localhost:3012
+- Each team gets its own isolated database and port
+- Configuration: `classroom.config.json`
 
 ---
 
@@ -133,6 +183,21 @@ The application uses a JSON-based database stored in `database/data.json`.
 
 ---
 
+## Available npm Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm install` | Install all dependencies |
+| `npm run setup` | Initialize database, seed sample data, and generate SSL certificates |
+| `npm start` | Start the application on http://localhost:3000 |
+| `npm test` | Run smoke tests and generate an HTML report (`test-report.html`) |
+| `npm run test:open` | Run smoke tests and automatically open the report in a browser |
+| `npm run classroom` | Launch multiple team instances for classroom use |
+| `npm run classroom:setup` | Interactive classroom configuration helper |
+| `npm run classroom:stop` | Stop all running classroom instances |
+
+---
+
 ## For Instructors
 
 This application is designed for teaching application security concepts to non-technical students. Each security feature can be toggled ON/OFF to demonstrate the difference between secure and insecure implementations.
@@ -158,6 +223,10 @@ This generates an HTML report (`test-report.html`) showing:
 - HTTP vs HTTPS connections
 - Audit trails of user actions
 - Rate limiting in action
+- Segregation of duties workflow for class deletions
+- Backup and recovery processes
+- Custom encryption key management (BYOK)
+- Hands-on security labs: SCA, DAST, Vulnerability Management, and Penetration Testing
 
 ### Security Panel
 
@@ -165,8 +234,6 @@ The redesigned Security Panel (Admin → Security) shows each feature as a card 
 - Clear description of what the feature does
 - Visual impact indicator (e.g., "admin123" → "$2b$10$xK3...")
 - Easy toggle switch
-
-See `docs/LAB_EXERCISES.md` for structured learning activities.
 
 ---
 
