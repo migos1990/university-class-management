@@ -1,0 +1,101 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1 class="page-title">Vulnerability Manager — Registry</h1>
+  <p class="page-subtitle">Read-only view of all discovered vulnerabilities aggregated from SCA, DAST, and Pentest labs.</p>
+</div>
+
+<style>
+  .sev-Critical  { background:#ffe0e0; color:#c0392b; }
+  .sev-High      { background:#fff0e0; color:#c0732a; }
+  .sev-Medium    { background:#fffbe0; color:#9a7d0a; }
+  .sev-Low       { background:#e8f8e8; color:#1e8449; }
+  .sev-Info      { background:#e8f0ff; color:#1a5276; }
+  .badge-sm { display:inline-block; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:600; }
+  .status-open        { background:#fde8e8; color:#a93226; }
+  .status-in_progress { background:#fef9e7; color:#9a7d0a; }
+  .status-resolved    { background:#e8f8e8; color:#1e8449; }
+  .status-wont_fix    { background:#ececec; color:#555; }
+  .src-sca    { background:#e8f0ff; color:#1a5276; }
+  .src-dast   { background:#fde8f0; color:#7b1f42; }
+  .src-pentest{ background:#f0e8ff; color:#5b2c8c; }
+  .src-manual { background:#f0f0f0; color:#444; }
+</style>
+
+<!-- Stats -->
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:1rem; margin-bottom:1.5rem;">
+  <% [
+    {label:'Total', val:stats.total, cls:'#e8f0ff', col:'#1a5276'},
+    {label:'Critical', val:stats.critical, cls:'#ffe0e0', col:'#c0392b'},
+    {label:'High', val:stats.high, cls:'#fff0e0', col:'#c0732a'},
+    {label:'Open', val:stats.open, cls:'#fde8e8', col:'#a93226'},
+    {label:'Resolved', val:stats.resolved, cls:'#e8f8e8', col:'#1e8449'},
+  ].forEach(s => { %>
+  <div class="card" style="background:<%= s.cls %>; text-align:center; padding:0.75rem;">
+    <div style="font-size:1.6rem; font-weight:700; color:<%= s.col %>;"><%= s.val %></div>
+    <div style="font-size:0.8rem; color:<%= s.col %>;"><%= s.label %></div>
+  </div>
+  <% }) %>
+</div>
+
+<div class="card">
+  <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem; align-items:center;">
+    <input id="filterText" type="text" placeholder="Search…" oninput="applyFilter()"
+      style="flex:1; min-width:180px; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;">
+    <select id="filterSev" onchange="applyFilter()" style="padding:8px; border:1px solid #ced4da; border-radius:4px;">
+      <option value="">All severities</option>
+      <% ['Critical','High','Medium','Low','Info'].forEach(s => { %><option value="<%= s %>"><%= s %></option><% }) %>
+    </select>
+    <select id="filterStatus" onchange="applyFilter()" style="padding:8px; border:1px solid #ced4da; border-radius:4px;">
+      <option value="">All statuses</option>
+      <% ['open','in_progress','resolved','wont_fix'].forEach(s => { %><option value="<%= s %>"><%= s.replace('_',' ') %></option><% }) %>
+    </select>
+  </div>
+
+  <table id="vulnTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Title</th>
+        <th>Severity</th>
+        <th>Status</th>
+        <th>Source</th>
+        <th>CVSS</th>
+        <th>OWASP</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% vulns.forEach(v => { %>
+      <tr data-sev="<%= v.severity %>" data-status="<%= v.status %>" data-title="<%= v.title.toLowerCase() %>">
+        <td><%= v.id %></td>
+        <td>
+          <a href="/vm/vulns/<%= v.id %>" style="font-weight:600; color:#002855; text-decoration:none;"><%= v.title %></a>
+          <% if (v.affected_component) { %><br><small style="color:#888;"><%= v.affected_component %></small><% } %>
+        </td>
+        <td><span class="badge-sm sev-<%= v.severity %>"><%= v.severity %></span></td>
+        <td><span class="badge-sm status-<%= v.status %>"><%= v.status.replace('_',' ') %></span></td>
+        <td><span class="badge-sm src-<%= v.source %>"><%= v.source.toUpperCase() %></span></td>
+        <td style="font-size:0.85rem;"><%= v.cvss_score || '—' %></td>
+        <td style="font-size:0.8rem; max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><%= v.owasp_category || '—' %></td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<script>
+function applyFilter() {
+  const text   = document.getElementById('filterText').value.toLowerCase();
+  const sev    = document.getElementById('filterSev').value;
+  const status = document.getElementById('filterStatus').value;
+  document.querySelectorAll('#vulnTable tbody tr').forEach(row => {
+    const match =
+      (!text   || row.dataset.title.includes(text)) &&
+      (!sev    || row.dataset.sev    === sev) &&
+      (!status || row.dataset.status === status);
+    row.style.display = match ? '' : 'none';
+  });
+}
+</script>
+
+<%- include('../partials/footer') %>

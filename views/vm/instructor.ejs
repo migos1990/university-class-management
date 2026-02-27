@@ -1,0 +1,166 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
+    <div>
+      <h1 class="page-title">Vulnerability Manager</h1>
+      <p class="page-subtitle"><%= stats.total %> total &nbsp;·&nbsp; <%= stats.open %> open &nbsp;·&nbsp; <%= stats.in_progress %> in progress &nbsp;·&nbsp; <%= stats.resolved %> resolved</p>
+    </div>
+    <button onclick="document.getElementById('createModal').style.display='flex'"
+      style="background:#002855; color:#fff; border:none; border-radius:6px; padding:10px 20px; cursor:pointer; font-weight:600;">
+      + Add Vulnerability
+    </button>
+  </div>
+</div>
+
+<style>
+  .sev-Critical  { background:#ffe0e0; color:#c0392b; }
+  .sev-High      { background:#fff0e0; color:#c0732a; }
+  .sev-Medium    { background:#fffbe0; color:#9a7d0a; }
+  .sev-Low       { background:#e8f8e8; color:#1e8449; }
+  .sev-Info      { background:#e8f0ff; color:#1a5276; }
+  .badge-sm { display:inline-block; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:600; }
+  .status-open        { background:#fde8e8; color:#a93226; }
+  .status-in_progress { background:#fef9e7; color:#9a7d0a; }
+  .status-resolved    { background:#e8f8e8; color:#1e8449; }
+  .status-wont_fix    { background:#ececec; color:#555; }
+  .src-sca    { background:#e8f0ff; color:#1a5276; }
+  .src-dast   { background:#fde8f0; color:#7b1f42; }
+  .src-pentest{ background:#f0e8ff; color:#5b2c8c; }
+  .src-manual { background:#f0f0f0; color:#444; }
+  .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; }
+  .modal-box { background:#fff; border-radius:8px; padding:1.5rem; width:520px; max-width:95vw; max-height:90vh; overflow-y:auto; }
+</style>
+
+<!-- Stats row -->
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:1rem; margin-bottom:1.5rem;">
+  <% [
+    {label:'Critical', val:stats.critical, cls:'#ffe0e0', col:'#c0392b'},
+    {label:'High', val:stats.high, cls:'#fff0e0', col:'#c0732a'},
+    {label:'Open', val:stats.open, cls:'#fde8e8', col:'#a93226'},
+    {label:'In Progress', val:stats.in_progress, cls:'#fef9e7', col:'#9a7d0a'},
+    {label:'Resolved', val:stats.resolved, cls:'#e8f8e8', col:'#1e8449'},
+  ].forEach(s => { %>
+  <div class="card" style="background:<%= s.cls %>; text-align:center; padding:1rem;">
+    <div style="font-size:1.8rem; font-weight:700; color:<%= s.col %>;"><%= s.val %></div>
+    <div style="font-size:0.85rem; color:<%= s.col %>;"><%= s.label %></div>
+  </div>
+  <% }) %>
+</div>
+
+<div class="card">
+  <!-- Filters -->
+  <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-bottom:1rem; align-items:center;">
+    <input id="filterText" type="text" placeholder="Search…" oninput="applyFilter()"
+      style="flex:1; min-width:180px; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;">
+    <select id="filterSev" onchange="applyFilter()" style="padding:8px; border:1px solid #ced4da; border-radius:4px;">
+      <option value="">All severities</option>
+      <% ['Critical','High','Medium','Low','Info'].forEach(s => { %><option value="<%= s %>"><%= s %></option><% }) %>
+    </select>
+    <select id="filterStatus" onchange="applyFilter()" style="padding:8px; border:1px solid #ced4da; border-radius:4px;">
+      <option value="">All statuses</option>
+      <% ['open','in_progress','resolved','wont_fix'].forEach(s => { %><option value="<%= s %>"><%= s.replace('_',' ') %></option><% }) %>
+    </select>
+    <select id="filterSrc" onchange="applyFilter()" style="padding:8px; border:1px solid #ced4da; border-radius:4px;">
+      <option value="">All sources</option>
+      <% ['sca','dast','pentest','manual'].forEach(s => { %><option value="<%= s %>"><%= s.toUpperCase() %></option><% }) %>
+    </select>
+  </div>
+
+  <table id="vulnTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Title</th>
+        <th>Severity</th>
+        <th>Status</th>
+        <th>Source</th>
+        <th>Priority</th>
+        <th>OWASP</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% vulns.forEach(v => { %>
+      <tr data-sev="<%= v.severity %>" data-status="<%= v.status %>" data-src="<%= v.source %>" data-title="<%= v.title.toLowerCase() %>">
+        <td><%= v.id %></td>
+        <td>
+          <a href="/vm/vulns/<%= v.id %>" style="font-weight:600; color:#002855; text-decoration:none;"><%= v.title %></a>
+          <% if (v.cwe) { %><br><small style="color:#888;"><%= v.cwe %></small><% } %>
+        </td>
+        <td><span class="badge-sm sev-<%= v.severity %>"><%= v.severity %></span></td>
+        <td><span class="badge-sm status-<%= v.status %>"><%= v.status.replace('_',' ') %></span></td>
+        <td><span class="badge-sm src-<%= v.source %>"><%= v.source.toUpperCase() %></span></td>
+        <td style="text-align:center;"><%= v.priority %></td>
+        <td style="font-size:0.8rem; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><%= v.owasp_category || '—' %></td>
+        <td>
+          <a href="/vm/vulns/<%= v.id %>" style="font-size:0.8rem; color:#002855;">View →</a>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<!-- Create vulnerability modal -->
+<div id="createModal" class="modal">
+  <div class="modal-box">
+    <h3 style="margin-bottom:1rem;">Add Vulnerability (Manual)</h3>
+    <form method="POST" action="/vm/vulns">
+      <div style="margin-bottom:0.75rem;">
+        <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Title *</label>
+        <input type="text" name="title" required style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px;">
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
+        <div>
+          <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Severity *</label>
+          <select name="severity" required style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px;">
+            <% ['Critical','High','Medium','Low','Info'].forEach(s => { %><option value="<%= s %>"><%= s %></option><% }) %>
+          </select>
+        </div>
+        <div>
+          <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Priority (1=highest)</label>
+          <select name="priority" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px;">
+            <% [1,2,3,4].forEach(p => { %><option value="<%= p %>" <%= p===3?'selected':'' %>><%= p %></option><% }) %>
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:0.75rem;">
+        <label style="display:block; font-weight:600; margin-bottom:0.4rem;">CWE</label>
+        <input type="text" name="cwe" placeholder="e.g. CWE-79" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px;">
+      </div>
+      <div style="margin-bottom:0.75rem;">
+        <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Affected Component</label>
+        <input type="text" name="affected_component" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px;">
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Description</label>
+        <textarea name="description" rows="3" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px;"></textarea>
+      </div>
+      <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+        <button type="button" onclick="document.getElementById('createModal').style.display='none'"
+          style="border:1px solid #dee2e6;background:none;border-radius:4px;padding:8px 14px;cursor:pointer;">Cancel</button>
+        <button type="submit" style="background:#002855; color:#fff; border:none; border-radius:4px; padding:8px 18px; cursor:pointer;">Create</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function applyFilter() {
+  const text   = document.getElementById('filterText').value.toLowerCase();
+  const sev    = document.getElementById('filterSev').value;
+  const status = document.getElementById('filterStatus').value;
+  const src    = document.getElementById('filterSrc').value;
+  document.querySelectorAll('#vulnTable tbody tr').forEach(row => {
+    const match =
+      (!text   || row.dataset.title.includes(text)) &&
+      (!sev    || row.dataset.sev   === sev) &&
+      (!status || row.dataset.status === status) &&
+      (!src    || row.dataset.src    === src);
+    row.style.display = match ? '' : 'none';
+  });
+}
+</script>
+
+<%- include('../partials/footer') %>
