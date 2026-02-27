@@ -7,7 +7,10 @@
     "start": "node server.js",
     "setup": "node scripts/setup.js",
     "test": "node scripts/smoke-test.js",
-    "test:open": "node scripts/smoke-test.js --open"
+    "test:open": "node scripts/smoke-test.js --open",
+    "classroom": "node scripts/classroom-manager.js",
+    "classroom:setup": "node scripts/classroom-setup.js",
+    "classroom:stop": "node scripts/classroom-stop.js"
   },
   "keywords": [
     "education",

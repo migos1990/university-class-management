@@ -1,0 +1,16 @@
+{
+  "hostAddress": "localhost",
+  "basePort": 3001,
+  "dashboardPort": 3000,
+  "instanceCount": 12,
+  "teams": [
+    "Team Alpha",   "Team Bravo",   "Team Charlie", "Team Delta",
+    "Team Echo",    "Team Foxtrot", "Team Golf",    "Team Hotel",
+    "Team India",   "Team Juliet",  "Team Kilo",    "Team Lima"
+  ],
+  "autoResetOnStart": false,
+  "cloud": {
+    "provider": null,
+    "autoStop": false
+  }
+}
