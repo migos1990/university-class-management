@@ -409,6 +409,37 @@
   </style>
 </head>
 <body>
+  <%# Instructor broadcast banner — polls /api/instructor-message every 30s %>
+  <div id="instructor-banner" style="display:none;position:sticky;top:0;z-index:9999;background:#002855;color:#fff;padding:0.6rem 1.5rem;font-size:0.9rem;display:none;align-items:center;justify-content:space-between;gap:1rem;">
+    <span id="instructor-banner-text"></span>
+    <button onclick="document.getElementById('instructor-banner').style.display='none'" style="background:transparent;border:1px solid rgba(255,255,255,0.5);color:#fff;border-radius:3px;padding:2px 10px;cursor:pointer;font-size:0.8rem;flex-shrink:0;">Dismiss</button>
+  </div>
+  <script>
+    (function() {
+      let _dismissed = null;
+      function checkBroadcast() {
+        fetch('/api/instructor-message')
+          .then(r => r.json())
+          .then(d => {
+            const banner = document.getElementById('instructor-banner');
+            const text   = document.getElementById('instructor-banner-text');
+            if (d.message && d.message !== _dismissed) {
+              text.textContent = '\u{1F4E2} ' + d.message;
+              banner.style.display = 'flex';
+            } else if (!d.message) {
+              banner.style.display = 'none';
+            }
+          })
+          .catch(() => {});
+      }
+      document.getElementById('instructor-banner').querySelector('button').addEventListener('click', function() {
+        const text = document.getElementById('instructor-banner-text').textContent;
+        _dismissed = text.replace('\u{1F4E2} ', '');
+      });
+      checkBroadcast();
+      setInterval(checkBroadcast, 30000);
+    })();
+  </script>
   <% if (typeof user !== 'undefined' && user) { %>
   <div class="app-layout">
     <!-- Sidebar -->
@@ -477,6 +508,26 @@
           </a>
         </div>
         <% } %>
+
+        <div class="nav-section">
+          <div class="nav-section-title">Security Labs</div>
+          <a href="/sca" class="nav-link <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/sca') ? 'active' : '' %>">
+            <span class="nav-icon">🔍</span>
+            <span>Static Analysis</span>
+          </a>
+          <a href="/dast" class="nav-link <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/dast') ? 'active' : '' %>">
+            <span class="nav-icon">⚡</span>
+            <span>Dynamic Analysis</span>
+          </a>
+          <a href="/vm" class="nav-link <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/vm') ? 'active' : '' %>">
+            <span class="nav-icon">📊</span>
+            <span>Vuln Management</span>
+          </a>
+          <a href="/pentest" class="nav-link <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/pentest') ? 'active' : '' %>">
+            <span class="nav-icon">🎯</span>
+            <span>Pentest Lab</span>
+          </a>
+        </div>
       </nav>
 
       <div class="sidebar-footer">

@@ -1,0 +1,181 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1 class="page-title">Dynamic Analysis — Instructor Dashboard</h1>
+  <p class="page-subtitle"><%= scenarios.length %> scenarios &nbsp;|&nbsp; <%= students.length %> students</p>
+</div>
+
+<style>
+  .sev-Critical  { background:#ffe0e0; color:#c0392b; }
+  .sev-High      { background:#fff0e0; color:#c0732a; }
+  .sev-Medium    { background:#fffbe0; color:#9a7d0a; }
+  .sev-Low       { background:#e8f8e8; color:#1e8449; }
+  .badge-sm { display:inline-block; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:600; }
+  .pre-badge { background:#e8f0ff; color:#1a5276; font-size:0.75rem; padding:2px 8px; border-radius:4px; font-weight:600; }
+  .action-btn { padding:4px 10px; border:none; border-radius:4px; cursor:pointer; font-size:0.8rem; }
+  .btn-import   { background:#002855; color:#fff; }
+  .btn-imported { background:#e9ecef; color:#6c757d; cursor:default; }
+  .progress-bar-wrap { background:#e9ecef; border-radius:4px; height:6px; margin-top:4px; }
+  .progress-bar-fill { height:6px; border-radius:4px; background:#002855; }
+</style>
+
+<div class="card">
+  <h2 style="margin-bottom:1rem;">Scenarios</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Scenario</th>
+        <th>Type</th>
+        <th>Sev.</th>
+        <th>Precondition</th>
+        <th>Submissions</th>
+        <th>VM</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% scenarios.forEach(s => {
+        const findings = countMap[s.id] || [];
+        const submitted = findings.filter(f => f.submitted_at).length;
+        const pct = students.length ? Math.round(submitted/students.length*100) : 0;
+        const inVM = importedIds.has(s.id);
+      %>
+      <tr>
+        <td><%= s.id %></td>
+        <td>
+          <a href="/dast/scenarios/<%= s.id %>" style="font-weight:600; color:#002855; text-decoration:none;">
+            <%= s.title %>
+          </a><br>
+          <small style="color:#666;"><%= s.owasp_category %></small>
+        </td>
+        <td style="font-size:0.85rem;"><%= s.vulnerability_type %></td>
+        <td><span class="badge-sm sev-<%= s.severity %>"><%= s.severity %></span></td>
+        <td>
+          <% if (s.precondition === 'none') { %>
+            <span style="color:#999; font-size:0.85rem;">Always on</span>
+          <% } else { %>
+            <span class="pre-badge"><%= s.precondition.replace('_disabled',' OFF') %></span>
+          <% } %>
+        </td>
+        <td style="min-width:120px;">
+          <div style="font-size:0.8rem; color:#666;"><%= submitted %>/<%= students.length %></div>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:<%= pct %>%;"></div></div>
+        </td>
+        <td>
+          <% if (inVM) { %>
+            <button class="action-btn btn-imported" disabled>In VM</button>
+          <% } else { %>
+            <button class="action-btn btn-import" onclick="importToVM(<%= s.id %>, this)">Push to VM</button>
+          <% } %>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<% scenarios.forEach(s => {
+  const findings = countMap[s.id] || [];
+  if (!findings.length) return;
+%>
+<div class="card" style="margin-top:1rem;">
+  <h3 style="margin-bottom:0.75rem;">
+    <%= s.title %> — Student Submissions (<%= findings.length %>)
+  </h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Student ID</th>
+        <th>Triggered?</th>
+        <th>Severity</th>
+        <th>Submitted</th>
+        <th>Grade</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% findings.forEach(f => { %>
+      <tr>
+        <td>#<%= f.student_id %></td>
+        <td>
+          <% if (f.triggered) { %>
+            <span class="badge-sm" style="background:#d4edda;color:#155724;">✓ Triggered</span>
+          <% } else { %>
+            <span class="badge-sm" style="background:#f8d7da;color:#721c24;">Not triggered</span>
+          <% } %>
+        </td>
+        <td><%= f.severity_rating || '—' %></td>
+        <td style="font-size:0.85rem;"><%= f.submitted_at ? new Date(f.submitted_at).toLocaleDateString() : 'Draft' %></td>
+        <td><%= f.grade || '—' %></td>
+        <td>
+          <button onclick="openFeedback(<%= f.id %>, '<%= (f.instructor_feedback||'').replace(/'/g,'') %>', '<%= f.grade||'' %>')"
+                  style="background:#002855;color:#fff;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;font-size:0.8rem;">
+            Grade
+          </button>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<% }) %>
+
+<!-- Feedback modal -->
+<div id="feedbackModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:8px; padding:1.5rem; width:500px; max-width:95vw;">
+    <h3 style="margin-bottom:1rem;">Grade / Feedback</h3>
+    <input type="hidden" id="feedbackFindingId">
+    <div style="margin-bottom:0.75rem;">
+      <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Grade</label>
+      <input type="text" id="gradeInput" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px;" placeholder="e.g. A, B+, 85">
+    </div>
+    <div style="margin-bottom:1rem;">
+      <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Instructor Feedback</label>
+      <textarea id="feedbackInput" rows="4" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px;"></textarea>
+    </div>
+    <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+      <button onclick="closeFeedback()" style="border:1px solid #dee2e6;background:none;border-radius:4px;padding:8px 14px;cursor:pointer;">Cancel</button>
+      <button onclick="saveFeedback()" style="background:#002855;color:#fff;border:none;border-radius:4px;padding:8px 16px;cursor:pointer;">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function openFeedback(id, feedback, grade) {
+  document.getElementById('feedbackFindingId').value = id;
+  document.getElementById('feedbackInput').value = feedback;
+  document.getElementById('gradeInput').value = grade;
+  const modal = document.getElementById('feedbackModal');
+  modal.style.display = 'flex';
+}
+function closeFeedback() {
+  document.getElementById('feedbackModal').style.display = 'none';
+}
+async function saveFeedback() {
+  const id = document.getElementById('feedbackFindingId').value;
+  const feedback = document.getElementById('feedbackInput').value;
+  const grade = document.getElementById('gradeInput').value;
+  try {
+    const res = await fetch(`/dast/findings/${id}/feedback`, {
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body: `instructor_feedback=${encodeURIComponent(feedback)}&grade=${encodeURIComponent(grade)}`
+    });
+    const data = await res.json();
+    if (data.success) { closeFeedback(); location.reload(); }
+    else alert(data.error);
+  } catch(e) { alert('Network error'); }
+}
+async function importToVM(scenarioId, btn) {
+  if (!confirm('Push this scenario to the Vulnerability Manager?')) return;
+  btn.disabled = true; btn.textContent = 'Importing…';
+  try {
+    const res = await fetch(`/dast/import-to-vm/${scenarioId}`, {method:'POST'});
+    const data = await res.json();
+    if (data.success) { btn.textContent = 'In VM'; btn.className = 'action-btn btn-imported'; }
+    else { btn.disabled = false; btn.textContent = 'Push to VM'; alert(data.error); }
+  } catch(e) { btn.disabled = false; btn.textContent = 'Push to VM'; alert('Network error'); }
+}
+</script>
+
+<%- include('../partials/footer') %>
