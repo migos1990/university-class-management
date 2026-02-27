@@ -1,0 +1,145 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1 class="page-title">Static Code Analysis Lab</h1>
+  <p class="page-subtitle">Review each finding, classify it, and document your reasoning — then submit when ready.</p>
+</div>
+
+<style>
+  .sev-Critical  { background:#ffe0e0; color:#c0392b; }
+  .sev-High      { background:#fff0e0; color:#c0732a; }
+  .sev-Medium    { background:#fffbe0; color:#9a7d0a; }
+  .sev-Low       { background:#e8f8e8; color:#1e8449; }
+  .badge-sm { display:inline-block; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:600; }
+  .cls-confirmed      { background:#d4edda; color:#155724; }
+  .cls-false_positive { background:#f8d7da; color:#721c24; }
+  .cls-needs          { background:#fff3cd; color:#856404; }
+  .cls-none           { background:#e9ecef; color:#6c757d; }
+  .progress-outer { background:#e9ecef; border-radius:8px; height:12px; }
+  .progress-inner { height:12px; border-radius:8px; background:#002855; transition:width 0.3s; }
+  .finding-card { border:1px solid #dee2e6; border-radius:8px; padding:1rem 1.25rem; margin-bottom:1rem; background:#fff; }
+  .finding-card.done { border-left:4px solid #28a745; }
+  .finding-card.pending { border-left:4px solid #ffc107; }
+</style>
+
+<div class="card" style="margin-bottom:1.5rem;">
+  <div style="display:flex; align-items:center; gap:1.5rem; flex-wrap:wrap;">
+    <div>
+      <div style="font-size:2rem; font-weight:700; color:#002855;"><%= submitted %>/<%= total %></div>
+      <div style="color:#666; font-size:0.9rem;">findings submitted</div>
+    </div>
+    <div style="flex:1; min-width:200px;">
+      <div class="progress-outer">
+        <div class="progress-inner" style="width:<%= total ? Math.round(submitted/total*100) : 0 %>%;"></div>
+      </div>
+      <div style="font-size:0.8rem; color:#666; margin-top:4px;">
+        <%= total ? Math.round(submitted/total*100) : 0 %>% complete
+      </div>
+    </div>
+  </div>
+</div>
+
+<% findings.forEach(f => {
+  const review = reviewMap[f.id];
+  const isDone = review && review.status === 'submitted';
+  const hasDraft = review && review.status !== 'submitted';
+%>
+<div class="finding-card <%= isDone ? 'done' : hasDraft ? 'pending' : '' %>" id="finding-<%= f.id %>">
+  <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+    <div style="flex:1;">
+      <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem;">
+        <span class="badge-sm sev-<%= f.severity %>"><%= f.severity %></span>
+        <span class="badge-sm" style="background:#e8f0ff; color:#1a5276;"><%= f.cwe %></span>
+        <% if (isDone) { %>
+          <span class="badge-sm" style="background:#d4edda; color:#155724;">✓ Submitted</span>
+        <% } else if (hasDraft) { %>
+          <span class="badge-sm" style="background:#fff3cd; color:#856404;">Draft saved</span>
+        <% } %>
+      </div>
+      <a href="/sca/findings/<%= f.id %>" style="font-size:1.05rem; font-weight:600; color:#002855; text-decoration:none;">
+        <%= f.title %>
+      </a>
+      <div style="font-size:0.85rem; color:#666; margin-top:2px;">
+        <code><%= f.file_path %>:<%= f.line_number %></code>
+      </div>
+    </div>
+    <button onclick="toggleForm(<%= f.id %>)" style="background:#002855; color:#fff; border:none; border-radius:6px; padding:6px 14px; cursor:pointer; font-size:0.85rem; white-space:nowrap;">
+      <%= isDone ? 'View / Edit' : review ? 'Continue' : 'Start Review' %>
+    </button>
+  </div>
+
+  <!-- Inline review form (hidden by default) -->
+  <div id="form-<%= f.id %>" style="display:none; margin-top:1rem; padding-top:1rem; border-top:1px solid #dee2e6;">
+    <div style="background:#f8f9fa; border-radius:6px; padding:0.75rem; margin-bottom:1rem;">
+      <strong>Code snippet:</strong>
+      <pre style="margin:0.5rem 0 0; font-size:0.85rem; overflow-x:auto; white-space:pre-wrap; word-break:break-word;"><%= f.code_snippet %></pre>
+    </div>
+    <p style="margin-bottom:0.75rem; font-size:0.9rem;"><%= f.description %></p>
+    <form onsubmit="saveReview(event, <%= f.id %>)">
+      <div style="margin-bottom:0.75rem;">
+        <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Classification</label>
+        <select name="classification" required style="width:100%; max-width:320px; padding:8px; border:1px solid #ced4da; border-radius:4px;">
+          <option value="">— select —</option>
+          <option value="confirmed"           <%= review && review.classification==='confirmed'           ? 'selected':'' %>>True Positive (confirmed vulnerability)</option>
+          <option value="false_positive"      <%= review && review.classification==='false_positive'      ? 'selected':'' %>>False Positive</option>
+          <option value="needs_investigation" <%= review && review.classification==='needs_investigation' ? 'selected':'' %>>Needs Further Investigation</option>
+        </select>
+      </div>
+      <div style="margin-bottom:0.75rem;">
+        <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Your Analysis Notes</label>
+        <textarea name="student_notes" rows="3" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;" placeholder="Explain why you classified it this way…"><%= review ? (review.student_notes || '') : '' %></textarea>
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Proposed Remediation</label>
+        <textarea name="remediation_notes" rows="3" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;" placeholder="How would you fix this?"><%= review ? (review.remediation_notes || '') : '' %></textarea>
+      </div>
+      <div style="display:flex; gap:0.5rem;">
+        <button type="submit" name="action" value="save" style="background:#6c757d; color:#fff; border:none; border-radius:4px; padding:8px 18px; cursor:pointer;">Save Draft</button>
+        <button type="submit" name="action" value="submit" style="background:#002855; color:#fff; border:none; border-radius:4px; padding:8px 18px; cursor:pointer;">Submit</button>
+        <button type="button" onclick="toggleForm(<%= f.id %>)" style="background:none; border:1px solid #dee2e6; border-radius:4px; padding:8px 14px; cursor:pointer; color:#666;">Cancel</button>
+      </div>
+      <div id="msg-<%= f.id %>" style="margin-top:0.5rem; font-size:0.85rem;"></div>
+    </form>
+  </div>
+</div>
+<% }) %>
+
+<script>
+function toggleForm(id) {
+  const el = document.getElementById('form-' + id);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+async function saveReview(event, findingId) {
+  event.preventDefault();
+  const form = event.target;
+  const data = new FormData(form);
+  const action = event.submitter ? event.submitter.value : 'save';
+  data.set('action', action);
+
+  const msg = document.getElementById('msg-' + findingId);
+  msg.textContent = 'Saving…';
+
+  try {
+    const res = await fetch(`/sca/findings/${findingId}/review`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+      body: new URLSearchParams(data).toString()
+    });
+    const result = await res.json();
+    if (result.success) {
+      msg.style.color = '#155724';
+      msg.textContent = action === 'submit' ? '✓ Submitted!' : '✓ Draft saved.';
+      setTimeout(() => location.reload(), 800);
+    } else {
+      msg.style.color = '#721c24';
+      msg.textContent = result.error || 'Error saving review.';
+    }
+  } catch(e) {
+    msg.style.color = '#721c24';
+    msg.textContent = 'Network error — please try again.';
+  }
+}
+</script>
+
+<%- include('../partials/footer') %>

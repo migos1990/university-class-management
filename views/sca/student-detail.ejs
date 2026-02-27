@@ -1,0 +1,79 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+    <a href="/sca" style="color:#666; text-decoration:none; font-size:0.9rem;">← SCA Dashboard</a>
+    <h1 class="page-title" style="margin:0;">SCA Reviews: <%= student.username %></h1>
+  </div>
+</div>
+
+<style>
+  .sev-Critical  { background:#ffe0e0; color:#c0392b; }
+  .sev-High      { background:#fff0e0; color:#c0732a; }
+  .sev-Medium    { background:#fffbe0; color:#9a7d0a; }
+  .sev-Low       { background:#e8f8e8; color:#1e8449; }
+  .badge-sm { display:inline-block; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:600; }
+  .cls-confirmed      { background:#d4edda; color:#155724; }
+  .cls-false_positive { background:#f8d7da; color:#721c24; }
+  .cls-needs          { background:#fff3cd; color:#856404; }
+  .cls-none           { background:#e9ecef; color:#6c757d; }
+</style>
+
+<div class="card" style="margin-bottom:1rem;">
+  <div style="display:flex; gap:2rem; flex-wrap:wrap;">
+    <div><strong>Student:</strong> <%= student.username %></div>
+    <div><strong>Reviews submitted:</strong> <%= reviews.filter(r=>r.status==='submitted').length %> / <%= findings.length %></div>
+  </div>
+</div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>Finding</th>
+        <th>Severity</th>
+        <th>Classification</th>
+        <th>Status</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% findings.forEach(f => {
+        const r = reviewMap[f.id];
+      %>
+      <tr>
+        <td>
+          <a href="/sca/findings/<%= f.id %>" style="font-weight:600; color:#002855; text-decoration:none;"><%= f.title %></a><br>
+          <small style="color:#666;"><%= f.file_path %>:<%= f.line_number %></small>
+        </td>
+        <td><span class="badge-sm sev-<%= f.severity %>"><%= f.severity %></span></td>
+        <td>
+          <% if (r) { %>
+            <span class="badge-sm cls-<%= r.classification === 'needs_investigation' ? 'needs' : r.classification %>">
+              <%= r.classification.replace(/_/g,' ') %>
+            </span>
+          <% } else { %>
+            <span class="badge-sm cls-none">Not started</span>
+          <% } %>
+        </td>
+        <td>
+          <% if (r) { %>
+            <span style="font-size:0.85rem;"><%= r.status %></span>
+          <% } else { %>
+            <span style="color:#999; font-size:0.85rem;">—</span>
+          <% } %>
+        </td>
+        <td style="font-size:0.85rem; max-width:250px;">
+          <% if (r && r.student_notes) { %>
+            <details><summary>View</summary><p style="margin-top:0.5rem;"><%= r.student_notes %></p></details>
+          <% } else { %>
+            <span style="color:#999;">—</span>
+          <% } %>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('../partials/footer') %>
