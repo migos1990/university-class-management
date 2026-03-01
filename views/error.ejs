@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= typeof currentLang !== 'undefined' ? currentLang : 'en' %>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Error - University Class Management</title>
+  <title><%= t('errors.serverError') %></title>
   <style>
     * {
       margin: 0;
@@ -106,12 +106,12 @@
 
     <% if (error && error.stack && process.env.NODE_ENV === 'development') { %>
       <div class="error-details">
-        <strong>Stack Trace (Development Mode):</strong><br>
+        <strong><%= t('errors.stackTrace') %>:</strong><br>
         <pre style="overflow-x: auto; white-space: pre-wrap;"><%= error.stack %></pre>
       </div>
     <% } %>
 
-    <a href="/dashboard" class="btn">← Back to Dashboard</a>
+    <a href="/dashboard" class="btn"><%= t('errors.backToDashboard') %></a>
   </div>
 </body>
 </html>

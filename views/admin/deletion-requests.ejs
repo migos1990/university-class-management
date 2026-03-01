@@ -1,31 +1,31 @@
 <%- include('../partials/header') %>
 
-<h1>🗑️ <%= typeof t !== 'undefined' ? t('sod.deletionRequests') : 'Class Deletion Requests' %></h1>
+<h1><%= t('sod.deletionRequests') %></h1>
 
 <% if (rbacBypass) { %>
   <div class="alert alert-warning">
-    ⚠️ <strong><%= typeof t !== 'undefined' ? t('common.warning') : 'Warning' %>:</strong> RBAC is currently DISABLED.
+    <%= t('security.warnings.rbacDisabled') %>
   </div>
 <% } %>
 
 <!-- Pending Requests -->
 <div class="card">
-  <h2>⏳ <%= typeof t !== 'undefined' ? t('sod.pendingRequests') : 'Pending Requests' %> (<%= pendingRequests.length %>)</h2>
+  <h2><%= t('sod.pendingRequests') %> (<%= pendingRequests.length %>)</h2>
 
   <% if (pendingRequests.length === 0) { %>
     <p style="color: #666; font-style: italic; margin-top: 1rem;">
-      <%= typeof t !== 'undefined' ? t('sod.noPendingRequests') : 'No pending deletion requests at this time.' %>
+      <%= t('sod.noPendingRequests') %>
     </p>
   <% } else { %>
     <table style="margin-top: 1rem;">
       <thead>
         <tr>
-          <th><%= typeof t !== 'undefined' ? t('sod.requestId') : 'Request ID' %></th>
-          <th><%= typeof t !== 'undefined' ? t('classes.code') : 'Class Code' %></th>
-          <th><%= typeof t !== 'undefined' ? t('classes.name') : 'Class Name' %></th>
-          <th><%= typeof t !== 'undefined' ? t('sod.requestedBy') : 'Requested By' %></th>
-          <th><%= typeof t !== 'undefined' ? t('sod.requestedOn') : 'Requested On' %></th>
-          <th><%= typeof t !== 'undefined' ? t('common.actions') : 'Actions' %></th>
+          <th><%= t('sod.requestId') %></th>
+          <th><%= t('classes.code') %></th>
+          <th><%= t('classes.name') %></th>
+          <th><%= t('sod.requestedBy') %></th>
+          <th><%= t('sod.requestedOn') %></th>
+          <th><%= t('common.actions') %></th>
         </tr>
       </thead>
       <tbody>
@@ -38,10 +38,10 @@
             <td><%= formatDate(request.requested_at) %></td>
             <td>
               <button class="btn btn-success" onclick="approveRequest(<%= request.id %>)" style="padding: 0.4rem 0.8rem; font-size: 0.9rem;">
-                <%= typeof t !== 'undefined' ? t('sod.approve') : 'Approve' %>
+                <%= t('sod.approve') %>
               </button>
               <button class="btn btn-danger" onclick="showRejectModal(<%= request.id %>, <%- JSON.stringify(request.code || '') %>)" style="padding: 0.4rem 0.8rem; font-size: 0.9rem; margin-left: 0.5rem;">
-                <%= typeof t !== 'undefined' ? t('sod.reject') : 'Reject' %>
+                <%= t('sod.reject') %>
               </button>
             </td>
           </tr>
@@ -53,23 +53,23 @@
 
 <!-- Completed Requests -->
 <div class="card" style="margin-top: 2rem;">
-  <h2>✅ <%= typeof t !== 'undefined' ? t('sod.completedRequests') : 'Completed Requests (Last 20)' %></h2>
+  <h2><%= t('sod.completedRequests') %></h2>
 
   <% if (completedRequests.length === 0) { %>
     <p style="color: #666; font-style: italic; margin-top: 1rem;">
-      <%= typeof t !== 'undefined' ? t('sod.noCompletedRequests') : 'No completed requests yet.' %>
+      <%= t('sod.noCompletedRequests') %>
     </p>
   <% } else { %>
     <table style="margin-top: 1rem;">
       <thead>
         <tr>
-          <th><%= typeof t !== 'undefined' ? t('sod.requestId') : 'Request ID' %></th>
-          <th><%= typeof t !== 'undefined' ? t('classes.code') : 'Class Code' %></th>
-          <th><%= typeof t !== 'undefined' ? t('classes.name') : 'Class Name' %></th>
-          <th><%= typeof t !== 'undefined' ? t('sod.requestedBy') : 'Requested By' %></th>
-          <th><%= typeof t !== 'undefined' ? t('common.status') : 'Status' %></th>
-          <th><%= typeof t !== 'undefined' ? t('sod.reviewedOn') : 'Reviewed On' %></th>
-          <th><%= typeof t !== 'undefined' ? t('sod.details') : 'Details' %></th>
+          <th><%= t('sod.requestId') %></th>
+          <th><%= t('classes.code') %></th>
+          <th><%= t('classes.name') %></th>
+          <th><%= t('sod.requestedBy') %></th>
+          <th><%= t('common.status') %></th>
+          <th><%= t('sod.reviewedOn') %></th>
+          <th><%= t('sod.details') %></th>
         </tr>
       </thead>
       <tbody>

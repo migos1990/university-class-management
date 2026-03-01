@@ -25,7 +25,7 @@ router.post('/login', checkRateLimit, async (req, res) => {
       if (req.securitySettings.audit_logging) {
         await logAuthAttempt(username, false, ip, 'User not found');
       }
-      return res.render('login', { error: 'Invalid username or password' });
+      return res.render('login', { error: req.t('auth.invalidCredentials') });
     }
 
     // Check password
@@ -46,7 +46,7 @@ router.post('/login', checkRateLimit, async (req, res) => {
       if (req.securitySettings.audit_logging) {
         await logAuthAttempt(username, false, ip, 'Invalid password');
       }
-      return res.render('login', { error: 'Invalid username or password' });
+      return res.render('login', { error: req.t('auth.invalidCredentials') });
     }
 
     // Record successful attempt
@@ -80,7 +80,7 @@ router.post('/login', checkRateLimit, async (req, res) => {
     res.redirect('/dashboard');
   } catch (error) {
     console.error('Login error:', error);
-    res.render('login', { error: 'An error occurred during login' });
+    res.render('login', { error: req.t('auth.loginError') });
   }
 });
 
@@ -111,7 +111,7 @@ router.post('/mfa-verify', async (req, res) => {
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.pendingMfaUserId);
 
     if (!user || !user.mfa_secret) {
-      return res.render('mfa-verify', { error: 'MFA not configured' });
+      return res.render('mfa-verify', { error: req.t('mfa.notConfigured') });
     }
 
     // Verify TOTP code
@@ -127,7 +127,7 @@ router.post('/mfa-verify', async (req, res) => {
       if (req.securitySettings.audit_logging) {
         await logAuthAttempt(user.username, false, req.ip, 'Invalid MFA code');
       }
-      return res.render('mfa-verify', { error: 'Invalid verification code' });
+      return res.render('mfa-verify', { error: req.t('auth.invalidMfaCode') });
     }
 
     // MFA successful - create session
@@ -152,7 +152,7 @@ router.post('/mfa-verify', async (req, res) => {
     res.redirect('/dashboard');
   } catch (error) {
     console.error('MFA verification error:', error);
-    res.render('mfa-verify', { error: 'An error occurred during verification' });
+    res.render('mfa-verify', { error: req.t('mfa.verificationError') });
   }
 });
 
@@ -184,7 +184,7 @@ router.post('/set-language', (req, res) => {
   const { lang } = req.body;
 
   if (!lang || !['en', 'fr'].includes(lang)) {
-    return res.status(400).json({ success: false, error: 'Invalid language' });
+    return res.status(400).json({ success: false, error: req.t('auth.invalidLanguage') });
   }
 
   req.session.language = lang;

@@ -2,8 +2,8 @@
 
 <div class="page-header">
   <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
-    <a href="/sca" style="color:#666; text-decoration:none; font-size:0.9rem;">← SCA Dashboard</a>
-    <h1 class="page-title" style="margin:0;">SCA Reviews: <%= student.username %></h1>
+    <a href="/sca" style="color:#666; text-decoration:none; font-size:0.9rem;">&larr; <%= t('labs.sca.instructorTitle') %></a>
+    <h1 class="page-title" style="margin:0;"><%= t('labs.sca.reviews') %>: <%= student.username %></h1>
   </div>
 </div>
 
@@ -21,8 +21,8 @@
 
 <div class="card" style="margin-bottom:1rem;">
   <div style="display:flex; gap:2rem; flex-wrap:wrap;">
-    <div><strong>Student:</strong> <%= student.username %></div>
-    <div><strong>Reviews submitted:</strong> <%= reviews.filter(r=>r.status==='submitted').length %> / <%= findings.length %></div>
+    <div><strong><%= t('labs.student') %>:</strong> <%= student.username %></div>
+    <div><strong><%= t('labs.reviewsSubmitted') %>:</strong> <%= reviews.filter(r=>r.status==='submitted').length %> / <%= findings.length %></div>
   </div>
 </div>
 
@@ -30,11 +30,11 @@
   <table>
     <thead>
       <tr>
-        <th>Finding</th>
-        <th>Severity</th>
-        <th>Classification</th>
-        <th>Status</th>
-        <th>Notes</th>
+        <th><%= t('labs.finding') %></th>
+        <th><%= t('labs.severity') %></th>
+        <th><%= t('labs.sca.classification') %></th>
+        <th><%= t('labs.status') %></th>
+        <th><%= t('labs.sca.notes') %></th>
       </tr>
     </thead>
     <tbody>
@@ -53,21 +53,21 @@
               <%= r.classification.replace(/_/g,' ') %>
             </span>
           <% } else { %>
-            <span class="badge-sm cls-none">Not started</span>
+            <span class="badge-sm cls-none"><%= t('labs.notStarted') %></span>
           <% } %>
         </td>
         <td>
           <% if (r) { %>
             <span style="font-size:0.85rem;"><%= r.status %></span>
           <% } else { %>
-            <span style="color:#999; font-size:0.85rem;">—</span>
+            <span style="color:#999; font-size:0.85rem;">&mdash;</span>
           <% } %>
         </td>
         <td style="font-size:0.85rem; max-width:250px;">
           <% if (r && r.student_notes) { %>
-            <details><summary>View</summary><p style="margin-top:0.5rem;"><%= r.student_notes %></p></details>
+            <details><summary><%= t('labs.view') %></summary><p style="margin-top:0.5rem;"><%= r.student_notes %></p></details>
           <% } else { %>
-            <span style="color:#999;">—</span>
+            <span style="color:#999;">&mdash;</span>
           <% } %>
         </td>
       </tr>

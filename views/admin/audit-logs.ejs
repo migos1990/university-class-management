@@ -1,27 +1,27 @@
 <%- include('../partials/header') %>
 
-<h1>📋 Audit Logs</h1>
+<h1><%= t('auditLogs.title') %></h1>
 
 <% if (rbacBypass) { %>
   <div class="alert alert-warning">
-    ⚠️ <strong>Warning:</strong> RBAC is currently DISABLED. All users can access this page.
+    <%= t('security.warnings.rbacDisabled') %>
   </div>
 <% } %>
 
 <div class="card">
   <% if (logs.length === 0) { %>
-    <p style="text-align: center; color: #999; padding: 2rem;">No audit logs available. Enable audit logging in the security panel.</p>
+    <p style="text-align: center; color: #999; padding: 2rem;"><%= t('auditLogs.noLogs') %></p>
   <% } else { %>
     <table style="font-size: 0.9rem;">
       <thead>
         <tr>
-          <th>Timestamp</th>
-          <th>User</th>
-          <th>Role</th>
-          <th>Action</th>
-          <th>Resource</th>
-          <th>IP Address</th>
-          <th>Success</th>
+          <th><%= t('auditLogs.timestamp') %></th>
+          <th><%= t('auditLogs.user') %></th>
+          <th><%= t('auditLogs.role') %></th>
+          <th><%= t('auditLogs.action') %></th>
+          <th><%= t('auditLogs.resource') %></th>
+          <th><%= t('auditLogs.ipAddress') %></th>
+          <th><%= t('auditLogs.success') %></th>
         </tr>
       </thead>
       <tbody>
@@ -41,9 +41,9 @@
             <td><%= log.ip_address || 'N/A' %></td>
             <td>
               <% if (log.success) { %>
-                <span style="color: #27ae60;">✓</span>
+                <span style="color: #27ae60;">&#10003;</span>
               <% } else { %>
-                <span style="color: #e74c3c;">✗</span>
+                <span style="color: #e74c3c;">&#10007;</span>
               <% } %>
             </td>
           </tr>
@@ -54,11 +54,11 @@
     <% if (totalPages > 1) { %>
       <div style="margin-top: 1.5rem; text-align: center;">
         <% if (currentPage > 1) { %>
-          <a href="/admin/audit-logs?page=<%= currentPage - 1 %>" class="btn btn-secondary">← Previous</a>
+          <a href="/admin/audit-logs?page=<%= currentPage - 1 %>" class="btn btn-secondary"><%= t('common.previous') %></a>
         <% } %>
-        <span style="margin: 0 1rem;">Page <%= currentPage %> of <%= totalPages %></span>
+        <span style="margin: 0 1rem;"><%= t('auditLogs.page') %> <%= currentPage %> <%= t('auditLogs.of') %> <%= totalPages %></span>
         <% if (currentPage < totalPages) { %>
-          <a href="/admin/audit-logs?page=<%= currentPage + 1 %>" class="btn btn-secondary">Next →</a>
+          <a href="/admin/audit-logs?page=<%= currentPage + 1 %>" class="btn btn-secondary"><%= t('common.next') %></a>
         <% } %>
       </div>
     <% } %>

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= typeof currentLang !== 'undefined' ? currentLang : 'en' %>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - HEC Montréal Application Security</title>
+  <title><%= t('login.pageTitle') %></title>
   <style>
     * {
       margin: 0;
@@ -146,20 +146,64 @@
       margin-top: 1.5rem;
     }
 
+    .lang-switcher {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      display: flex;
+      gap: 6px;
+    }
+
+    .lang-switcher button {
+      padding: 0.35rem 0.75rem;
+      background: rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.7);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .lang-switcher button:hover {
+      background: rgba(255,255,255,0.25);
+      color: white;
+    }
+
+    .lang-switcher button.active {
+      background: rgba(255,255,255,0.3);
+      color: white;
+      border-color: rgba(255,255,255,0.6);
+    }
+
   </style>
 </head>
 <body>
+  <div class="lang-switcher">
+    <button onclick="setLang('en')" class="<%= typeof currentLang !== 'undefined' && currentLang === 'en' ? 'active' : (typeof currentLang === 'undefined' ? 'active' : '') %>">EN</button>
+    <button onclick="setLang('fr')" class="<%= typeof currentLang !== 'undefined' && currentLang === 'fr' ? 'active' : '' %>">FR</button>
+  </div>
+  <script>
+    function setLang(lang) {
+      fetch('/auth/set-language', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lang: lang })
+      }).then(function() { location.reload(); });
+    }
+  </script>
   <div class="login-container">
     <div style="text-align: center; margin-bottom: 1.5rem;">
       <img src="/images/hec-logo.svg" alt="HEC Montréal" style="height: 80px; width: 80px; border-radius: 8px;">
     </div>
-    <h1>HEC Montréal</h1>
-    <p class="subtitle">Application Security Learning Platform</p>
+    <h1><%= t('login.title') %></h1>
+    <p class="subtitle"><%= t('login.subtitle') %></p>
 
     <% if (error) { %>
       <div class="alert-danger">
         <div class="alert-danger-text">
-          <div class="alert-danger-title">Login Failed</div>
+          <div class="alert-danger-title"><%= t('login.failed') %></div>
           <div class="alert-danger-message"><%= error %></div>
         </div>
       </div>
@@ -167,27 +211,27 @@
 
     <form action="/auth/login" method="POST">
       <div class="form-group">
-        <label for="username">Username</label>
+        <label for="username"><%= t('auth.username') %></label>
         <input type="text" id="username" name="username" required autofocus>
       </div>
 
       <div class="form-group">
-        <label for="password">Password</label>
+        <label for="password"><%= t('auth.password') %></label>
         <input type="password" id="password" name="password" required>
       </div>
 
-      <button type="submit" class="btn">Login</button>
+      <button type="submit" class="btn"><%= t('auth.loginButton') %></button>
     </form>
 
     <div class="demo-accounts">
-      <h3>Default Accounts:</h3>
-      <p><strong>Admin:</strong> admin / admin123</p>
-      <p><strong>Professor:</strong> prof_jones / prof123</p>
-      <p><strong>Student:</strong> alice_student / student123</p>
+      <h3><%= t('login.defaultAccounts') %></h3>
+      <p><strong><%= t('login.admin') %>:</strong> admin / admin123</p>
+      <p><strong><%= t('login.professor') %>:</strong> prof_jones / prof123</p>
+      <p><strong><%= t('login.student') %>:</strong> alice_student / student123</p>
     </div>
 
     <p class="info-text">
-      Educational application security demonstration platform
+      <%= t('login.infoText') %>
     </p>
   </div>
 </body>

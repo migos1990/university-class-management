@@ -77,6 +77,9 @@ function languageMiddleware(req, res, next) {
   // Make translation function available in all views
   res.locals.t = (key, params) => t(lang, key, params);
 
+  // Make translation function available in route handlers
+  req.t = res.locals.t;
+
   // Make current language available
   res.locals.currentLang = lang;
 

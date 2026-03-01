@@ -1,13 +1,13 @@
 <%- include('../partials/header') %>
 
 <div class="page-header">
-  <h1 class="page-title">Security Configuration</h1>
-  <p class="page-subtitle">Toggle security features to demonstrate secure vs insecure implementations</p>
+  <h1 class="page-title"><%= t('security.panel.title') %></h1>
+  <p class="page-subtitle"><%= t('security.panel.description') %></p>
 </div>
 
 <% if (typeof rbacBypass !== 'undefined' && rbacBypass) { %>
   <div class="alert alert-warning">
-    <strong>Warning:</strong> RBAC is currently DISABLED. All users can access this page.
+    <%= t('security.warnings.rbacDisabled') %>
   </div>
 <% } %>
 
@@ -156,9 +156,9 @@
   <div class="security-card">
     <div class="security-card-header">
       <div>
-        <div class="security-card-icon">🔐</div>
-        <div class="security-card-title">Multi-Factor Authentication</div>
-        <div class="security-card-desc">Require TOTP code for admin login via Google Authenticator</div>
+        <div class="security-card-icon">&#x1F510;</div>
+        <div class="security-card-title"><%= t('security.panel.mfa') %></div>
+        <div class="security-card-desc"><%= t('security.panel.mfaDesc') %></div>
       </div>
       <label class="toggle-switch">
         <input type="checkbox" <%= securitySettings.mfa_enabled ? 'checked' : '' %> onchange="toggleFeature('mfa_enabled')">
@@ -166,15 +166,15 @@
       </label>
     </div>
     <div class="security-card-body">
-      <div class="impact-label">Security Impact</div>
+      <div class="impact-label"><%= t('security.panel.securityImpact') %></div>
       <div class="impact-row">
-        <span class="impact-off">Password only</span>
-        <span class="impact-arrow">→</span>
-        <span class="impact-on">Password + TOTP code</span>
+        <span class="impact-off"><%= t('security.panel.mfaOff') %></span>
+        <span class="impact-arrow">&rarr;</span>
+        <span class="impact-on"><%= t('security.panel.mfaOn') %></span>
       </div>
     </div>
     <div class="security-card-action">
-      <a href="/admin/mfa-setup" class="btn btn-secondary" style="width: 100%; text-align: center;">Configure MFA</a>
+      <a href="/admin/mfa-setup" class="btn btn-secondary" style="width: 100%; text-align: center;"><%= t('dashboard.admin.configureMfa') %></a>
     </div>
   </div>
 
@@ -182,9 +182,9 @@
   <div class="security-card">
     <div class="security-card-header">
       <div>
-        <div class="security-card-icon">👥</div>
-        <div class="security-card-title">Role-Based Access Control</div>
-        <div class="security-card-desc">Restrict page access based on user roles</div>
+        <div class="security-card-icon">&#x1F465;</div>
+        <div class="security-card-title"><%= t('security.panel.rbac') %></div>
+        <div class="security-card-desc"><%= t('security.panel.rbacDesc') %></div>
       </div>
       <label class="toggle-switch">
         <input type="checkbox" <%= securitySettings.rbac_enabled ? 'checked' : '' %> onchange="toggleFeature('rbac_enabled')">
@@ -192,11 +192,11 @@
       </label>
     </div>
     <div class="security-card-body">
-      <div class="impact-label">Security Impact</div>
+      <div class="impact-label"><%= t('security.panel.securityImpact') %></div>
       <div class="impact-row">
-        <span class="impact-off">All pages accessible</span>
-        <span class="impact-arrow">→</span>
-        <span class="impact-on">Role-restricted access</span>
+        <span class="impact-off"><%= t('security.panel.rbacOff') %></span>
+        <span class="impact-arrow">&rarr;</span>
+        <span class="impact-on"><%= t('security.panel.rbacOn') %></span>
       </div>
     </div>
   </div>
@@ -205,9 +205,9 @@
   <div class="security-card">
     <div class="security-card-header">
       <div>
-        <div class="security-card-icon">🔑</div>
-        <div class="security-card-title">Password Encryption</div>
-        <div class="security-card-desc">Hash passwords with bcrypt algorithm</div>
+        <div class="security-card-icon">&#x1F511;</div>
+        <div class="security-card-title"><%= t('security.panel.passwordEncryption') %></div>
+        <div class="security-card-desc"><%= t('security.panel.passwordEncryptionDesc') %></div>
       </div>
       <label class="toggle-switch">
         <input type="checkbox" <%= securitySettings.encryption_at_rest ? 'checked' : '' %> onchange="toggleFeature('encryption_at_rest')">
@@ -215,10 +215,10 @@
       </label>
     </div>
     <div class="security-card-body">
-      <div class="impact-label">Database Storage</div>
+      <div class="impact-label"><%= t('security.panel.databaseStorage') %></div>
       <div class="impact-row">
         <span class="impact-off">admin123</span>
-        <span class="impact-arrow">→</span>
+        <span class="impact-arrow">&rarr;</span>
         <span class="impact-on">$2b$10$xK3...</span>
       </div>
     </div>
@@ -228,9 +228,9 @@
   <div class="security-card">
     <div class="security-card-header">
       <div>
-        <div class="security-card-icon">🛡️</div>
-        <div class="security-card-title">Data Encryption (AES-256)</div>
-        <div class="security-card-desc">Encrypt sensitive data like SSN and grades</div>
+        <div class="security-card-icon">&#x1F6E1;&#xFE0F;</div>
+        <div class="security-card-title"><%= t('security.panel.fieldEncryption') %></div>
+        <div class="security-card-desc"><%= t('security.panel.fieldEncryptionDesc') %></div>
       </div>
       <label class="toggle-switch">
         <input type="checkbox" <%= securitySettings.field_encryption ? 'checked' : '' %> onchange="toggleFeature('field_encryption')">
@@ -238,10 +238,10 @@
       </label>
     </div>
     <div class="security-card-body">
-      <div class="impact-label">Sensitive Data Storage</div>
+      <div class="impact-label"><%= t('security.panel.sensitiveDataStorage') %></div>
       <div class="impact-row">
         <span class="impact-off">SSN: 123-45-6789</span>
-        <span class="impact-arrow">→</span>
+        <span class="impact-arrow">&rarr;</span>
         <span class="impact-on">SSN: aGVsbG8...</span>
       </div>
     </div>
@@ -251,9 +251,9 @@
   <div class="security-card">
     <div class="security-card-header">
       <div>
-        <div class="security-card-icon">🌐</div>
-        <div class="security-card-title">HTTPS / TLS</div>
-        <div class="security-card-desc">Encrypt data in transit with TLS certificates</div>
+        <div class="security-card-icon">&#x1F310;</div>
+        <div class="security-card-title"><%= t('security.panel.https') %></div>
+        <div class="security-card-desc"><%= t('security.panel.httpsDesc') %></div>
       </div>
       <label class="toggle-switch">
         <input type="checkbox" <%= securitySettings.https_enabled ? 'checked' : '' %> onchange="toggleFeature('https_enabled')">
@@ -261,13 +261,13 @@
       </label>
     </div>
     <div class="security-card-body">
-      <div class="impact-label">Connection Security</div>
+      <div class="impact-label"><%= t('security.panel.connectionSecurity') %></div>
       <div class="impact-row">
         <span class="impact-off">http://localhost</span>
-        <span class="impact-arrow">→</span>
+        <span class="impact-arrow">&rarr;</span>
         <span class="impact-on">https://localhost</span>
       </div>
-      <p style="font-size: 0.75rem; color: #999; margin-top: 0.5rem;">Requires server restart</p>
+      <p style="font-size: 0.75rem; color: #999; margin-top: 0.5rem;"><%= t('security.panel.requiresRestart') %></p>
     </div>
   </div>
 
@@ -275,9 +275,9 @@
   <div class="security-card">
     <div class="security-card-header">
       <div>
-        <div class="security-card-icon">📋</div>
-        <div class="security-card-title">Audit Logging</div>
-        <div class="security-card-desc">Track all user actions and security events</div>
+        <div class="security-card-icon">&#x1F4CB;</div>
+        <div class="security-card-title"><%= t('security.panel.auditLogging') %></div>
+        <div class="security-card-desc"><%= t('security.panel.auditLoggingDesc') %></div>
       </div>
       <label class="toggle-switch">
         <input type="checkbox" <%= securitySettings.audit_logging ? 'checked' : '' %> onchange="toggleFeature('audit_logging')">
@@ -285,15 +285,15 @@
       </label>
     </div>
     <div class="security-card-body">
-      <div class="impact-label">Event Tracking</div>
+      <div class="impact-label"><%= t('security.panel.eventTracking') %></div>
       <div class="impact-row">
-        <span class="impact-off">No records</span>
-        <span class="impact-arrow">→</span>
-        <span class="impact-on">Login, changes logged</span>
+        <span class="impact-off"><%= t('security.panel.auditLoggingOff') %></span>
+        <span class="impact-arrow">&rarr;</span>
+        <span class="impact-on"><%= t('security.panel.auditLoggingOn') %></span>
       </div>
     </div>
     <div class="security-card-action">
-      <a href="/admin/audit-logs" class="btn btn-secondary" style="width: 100%; text-align: center;">View Audit Logs</a>
+      <a href="/admin/audit-logs" class="btn btn-secondary" style="width: 100%; text-align: center;"><%= t('dashboard.admin.viewAuditLogs') %></a>
     </div>
   </div>
 
@@ -301,9 +301,9 @@
   <div class="security-card">
     <div class="security-card-header">
       <div>
-        <div class="security-card-icon">⏱️</div>
-        <div class="security-card-title">Rate Limiting</div>
-        <div class="security-card-desc">Protect against brute force login attempts</div>
+        <div class="security-card-icon">&#x23F1;&#xFE0F;</div>
+        <div class="security-card-title"><%= t('security.panel.rateLimiting') %></div>
+        <div class="security-card-desc"><%= t('security.panel.rateLimitingDesc') %></div>
       </div>
       <label class="toggle-switch">
         <input type="checkbox" <%= securitySettings.rate_limiting ? 'checked' : '' %> onchange="toggleFeature('rate_limiting')">
@@ -311,11 +311,11 @@
       </label>
     </div>
     <div class="security-card-body">
-      <div class="impact-label">Login Protection</div>
+      <div class="impact-label"><%= t('security.panel.loginProtection') %></div>
       <div class="impact-row">
-        <span class="impact-off">Unlimited attempts</span>
-        <span class="impact-arrow">→</span>
-        <span class="impact-on">5 attempts / 15 min</span>
+        <span class="impact-off"><%= t('security.panel.rateLimitingOff') %></span>
+        <span class="impact-arrow">&rarr;</span>
+        <span class="impact-on"><%= t('security.panel.rateLimitingOn') %></span>
       </div>
     </div>
   </div>
@@ -325,9 +325,9 @@
   <div class="security-card">
     <div class="security-card-header">
       <div>
-        <div class="security-card-icon">✋</div>
-        <div class="security-card-title">Segregation of Duties</div>
-        <div class="security-card-desc">Require admin approval for class deletions</div>
+        <div class="security-card-icon">&#x270B;</div>
+        <div class="security-card-title"><%= t('security.panel.sod') %></div>
+        <div class="security-card-desc"><%= t('security.panel.sodDesc') %></div>
       </div>
       <label class="toggle-switch">
         <input type="checkbox" <%= securitySettings.segregation_of_duties ? 'checked' : '' %> onchange="toggleFeature('segregation_of_duties')">
@@ -335,11 +335,11 @@
       </label>
     </div>
     <div class="security-card-body">
-      <div class="impact-label">Deletion Workflow</div>
+      <div class="impact-label"><%= t('security.panel.deletionWorkflow') %></div>
       <div class="impact-row">
-        <span class="impact-off">Instant delete</span>
-        <span class="impact-arrow">→</span>
-        <span class="impact-on">Request → Approve</span>
+        <span class="impact-off"><%= t('security.panel.sodOff') %></span>
+        <span class="impact-arrow">&rarr;</span>
+        <span class="impact-on"><%= t('security.panel.sodOn') %></span>
       </div>
     </div>
   </div>
@@ -347,6 +347,11 @@
 </div>
 
 <script>
+  window.__i18n = {
+    errorPrefix: '<%= t("common.error").replace(/\x27/g, "\\x27") %>',
+    unknownError: '<%= t("errors.genericError").replace(/\x27/g, "\\x27") %>'
+  };
+
   function toggleFeature(feature) {
     fetch('/admin/security/toggle/' + feature, {
       method: 'POST',
@@ -360,12 +365,12 @@
         }
         location.reload();
       } else {
-        alert('Error: ' + (data.error || 'Unknown error'));
+        alert(window.__i18n.errorPrefix + ': ' + (data.error || window.__i18n.unknownError));
         location.reload();
       }
     })
     .catch(err => {
-      alert('Error: ' + err.message);
+      alert(window.__i18n.errorPrefix + ': ' + err.message);
       location.reload();
     });
   }

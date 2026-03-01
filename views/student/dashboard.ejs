@@ -1,27 +1,27 @@
 <%- include('../partials/header') %>
 
 <div class="page-header">
-  <h1 class="page-title">My Classes</h1>
-  <p class="page-subtitle">View your enrolled classes and grades</p>
+  <h1 class="page-title"><%= t('dashboard.student.enrolledClasses') %></h1>
+  <p class="page-subtitle"><%= t('dashboard.student.viewGrades') %></p>
 </div>
 
 <div class="card">
-  <h2>Enrolled Classes</h2>
+  <h2><%= t('dashboard.student.enrolledClasses') %></h2>
 
   <% if (enrollments.length === 0) { %>
     <div style="text-align: center; padding: 3rem; color: #666;">
       <div style="font-size: 3rem; margin-bottom: 1rem;">📚</div>
-      <p>You are not enrolled in any classes yet.</p>
+      <p><%= t('dashboard.student.noEnrollments') %></p>
     </div>
   <% } else { %>
     <table>
       <thead>
         <tr>
-          <th>Code</th>
-          <th>Class Name</th>
-          <th>Semester</th>
-          <th>Grade</th>
-          <th>Actions</th>
+          <th><%= t('classes.code') %></th>
+          <th><%= t('classes.name') %></th>
+          <th><%= t('classes.semester') %></th>
+          <th><%= t('dashboard.student.grade') %></th>
+          <th><%= t('common.actions') %></th>
         </tr>
       </thead>
       <tbody>
@@ -37,13 +37,13 @@
                 </span>
               <% } else { %>
                 <span style="background: #fff3cd; padding: 4px 12px; border-radius: 4px; color: #856404;">
-                  In Progress
+                  <%= t('dashboard.student.inProgress') %>
                 </span>
               <% } %>
             </td>
             <td>
               <a href="/classes/<%= enrollment.class_id %>" class="btn btn-primary" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">
-                View Details
+                <%= t('dashboard.professor.viewDetails') %>
               </a>
             </td>
           </tr>
@@ -54,11 +54,9 @@
 </div>
 
 <div class="card">
-  <h2>About This Platform</h2>
+  <h2><%= t('dashboard.student.aboutPlatform') %></h2>
   <p style="color: #666; line-height: 1.6;">
-    This platform demonstrates various application security concepts. Notice the security status bar at the top
-    showing which security features are currently enabled. Ask your instructor to toggle features to see how
-    they affect the application's behavior and data storage.
+    <%= t('dashboard.student.aboutText') %>
   </p>
 </div>
 

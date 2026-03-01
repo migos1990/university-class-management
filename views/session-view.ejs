@@ -1,6 +1,6 @@
 <%- include('partials/header') %>
 
-<a href="/classes/<%= session.class_id %>" style="text-decoration: none; color: #3498db;">&larr; Back to <%= session.class_code || 'Class' %></a>
+<a href="/classes/<%= session.class_id %>" style="text-decoration: none; color: #3498db;">&larr; <%= t('classes.backToClass') %></a>
 
 <div class="card" style="margin-top: 1rem;">
   <div style="display: flex; justify-content: space-between; align-items: start;">
@@ -11,7 +11,7 @@
       <h1><%= session.title %></h1>
     </div>
     <% if (canEdit) { %>
-      <a href="/sessions/<%= session.id %>/edit" class="btn btn-secondary">Edit Session</a>
+      <a href="/sessions/<%= session.id %>/edit" class="btn btn-secondary"><%= t('sessions.editSession') %></a>
     <% } %>
   </div>
 
@@ -24,14 +24,14 @@
 
 <% if (session.description) { %>
   <div class="card">
-    <h2>Description</h2>
+    <h2><%= t('sessions.description') %></h2>
     <p style="color: #555; line-height: 1.8;"><%= session.description %></p>
   </div>
 <% } %>
 
 <div class="card">
-  <h2>Content</h2>
-  <div style="color: #333; line-height: 1.8; white-space: pre-wrap;"><%= session.content || 'No content available yet.' %></div>
+  <h2><%= t('sessions.content') %></h2>
+  <div style="color: #333; line-height: 1.8; white-space: pre-wrap;"><%= session.content || t('sessions.noContent') %></div>
 </div>
 
 <%- include('partials/footer') %>

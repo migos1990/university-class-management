@@ -1,27 +1,27 @@
 <%- include('../partials/header') %>
 
 <div class="page-header">
-  <h1 class="page-title">My Classes</h1>
-  <p class="page-subtitle">Manage your classes and student enrollments</p>
+  <h1 class="page-title"><%= t('dashboard.professor.myClasses') %></h1>
+  <p class="page-subtitle"><%= t('dashboard.professor.manageClasses') %></p>
 </div>
 
 <div class="card">
-  <h2>All Classes</h2>
+  <h2><%= t('dashboard.professor.allClasses') %></h2>
 
   <% if (classes.length === 0) { %>
     <div style="text-align: center; padding: 3rem; color: #666;">
       <div style="font-size: 3rem; margin-bottom: 1rem;">📚</div>
-      <p>No classes available.</p>
+      <p><%= t('dashboard.professor.noClassesAvailable') %></p>
     </div>
   <% } else { %>
     <table>
       <thead>
         <tr>
-          <th>Code</th>
-          <th>Class Name</th>
-          <th>Semester</th>
-          <th>Students</th>
-          <th>Actions</th>
+          <th><%= t('classes.code') %></th>
+          <th><%= t('classes.name') %></th>
+          <th><%= t('classes.semester') %></th>
+          <th><%= t('classes.students') %></th>
+          <th><%= t('common.actions') %></th>
         </tr>
       </thead>
       <tbody>
@@ -32,12 +32,12 @@
             <td><%= classItem.semester %></td>
             <td>
               <span style="background: #e3f2fd; padding: 4px 12px; border-radius: 4px; color: #1565c0;">
-                <%= classItem.enrolled_count %> enrolled
+                <%= classItem.enrolled_count %> <%= t('dashboard.professor.enrolled') %>
               </span>
             </td>
             <td>
               <a href="/classes/<%= classItem.id %>" class="btn btn-primary" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">
-                View Details
+                <%= t('dashboard.professor.viewDetails') %>
               </a>
             </td>
           </tr>

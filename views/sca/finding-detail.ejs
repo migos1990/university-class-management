@@ -1,8 +1,17 @@
 <%- include('../partials/header') %>
 
+<script>
+  window.__i18n = {
+    confirmPushToVM: '<%= t("labs.sca.confirmPushToVM").replace(/\x27/g, "\\x27") %>',
+    importedToVM: '<%= t("labs.importedToVM").replace(/\x27/g, "\\x27") %>',
+    importFailed: '<%= t("labs.importFailed").replace(/\x27/g, "\\x27") %>',
+    networkError: '<%= t("labs.networkError").replace(/\x27/g, "\\x27") %>'
+  };
+</script>
+
 <div class="page-header">
   <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
-    <a href="/sca" style="color:#666; text-decoration:none; font-size:0.9rem;">← SCA Lab</a>
+    <a href="/sca" style="color:#666; text-decoration:none; font-size:0.9rem;">&larr; <%= t('labs.sca.backToLab') %></a>
     <h1 class="page-title" style="margin:0;"><%= finding.title %></h1>
   </div>
 </div>
@@ -27,41 +36,41 @@
         <span class="badge-sm sev-<%= finding.severity %>"><%= finding.severity %></span>
         <span class="badge-sm" style="background:#e8f0ff;color:#1a5276;"><%= finding.cwe %></span>
         <span class="badge-sm" style="background:#f0f0f0;color:#333;"><%= finding.category %></span>
-        <span class="badge-sm" style="background:#f0f0f0;color:#333;">Tool: <%= finding.tool %></span>
+        <span class="badge-sm" style="background:#f0f0f0;color:#333;"><%= t('labs.sca.tool') %>: <%= finding.tool %></span>
       </div>
 
-      <h3 style="margin-bottom:0.5rem;">Location</h3>
+      <h3 style="margin-bottom:0.5rem;"><%= t('labs.sca.location') %></h3>
       <p style="font-family:monospace; background:#f8f9fa; padding:0.5rem; border-radius:4px; margin-bottom:1rem;">
         <%= finding.file_path %>:<%= finding.line_number %>
       </p>
 
-      <h3 style="margin-bottom:0.5rem;">Code Snippet</h3>
+      <h3 style="margin-bottom:0.5rem;"><%= t('labs.sca.codeSnippet') %></h3>
       <pre style="background:#282c34; color:#abb2bf; padding:1rem; border-radius:6px; overflow-x:auto; font-size:0.9rem; margin-bottom:1rem;"><%= finding.code_snippet %></pre>
 
-      <h3 style="margin-bottom:0.5rem;">Description</h3>
+      <h3 style="margin-bottom:0.5rem;"><%= t('labs.description') %></h3>
       <p style="margin-bottom:1rem; line-height:1.7;"><%= finding.description %></p>
 
-      <h3 style="margin-bottom:0.5rem;">Remediation Guidance</h3>
+      <h3 style="margin-bottom:0.5rem;"><%= t('labs.sca.remediationGuidance') %></h3>
       <p style="line-height:1.7;"><%= finding.remediation %></p>
     </div>
 
     <% if (user.role !== 'student' && allReviews.length > 0) { %>
     <div class="card">
-      <h3 style="margin-bottom:1rem;">Student Reviews (<%= allReviews.length %>)</h3>
+      <h3 style="margin-bottom:1rem;"><%= t('labs.sca.studentReviews') %> (<%= allReviews.length %>)</h3>
       <% allReviews.forEach(r => {
         const student = users ? users.find(u => u.id == r.student_id) : null;
       %>
       <div style="border:1px solid #dee2e6; border-radius:6px; padding:0.75rem; margin-bottom:0.75rem;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-          <strong>Student #<%= r.student_id %></strong>
+          <strong><%= t('labs.student') %> #<%= r.student_id %></strong>
           <span class="badge-sm cls-<%= r.classification === 'needs_investigation' ? 'needs' : r.classification %>">
             <%= r.classification.replace('_',' ') %>
           </span>
         </div>
-        <% if (r.student_notes) { %><p style="font-size:0.9rem; color:#444; margin-bottom:0.5rem;"><strong>Notes:</strong> <%= r.student_notes %></p><% } %>
-        <% if (r.remediation_notes) { %><p style="font-size:0.9rem; color:#444;"><strong>Remediation:</strong> <%= r.remediation_notes %></p><% } %>
+        <% if (r.student_notes) { %><p style="font-size:0.9rem; color:#444; margin-bottom:0.5rem;"><strong><%= t('labs.sca.notes') %>:</strong> <%= r.student_notes %></p><% } %>
+        <% if (r.remediation_notes) { %><p style="font-size:0.9rem; color:#444;"><strong><%= t('labs.sca.remediation') %>:</strong> <%= r.remediation_notes %></p><% } %>
         <div style="font-size:0.75rem; color:#999; margin-top:0.5rem;">
-          Status: <%= r.status %><% if (r.submitted_at) { %> · Submitted <%= new Date(r.submitted_at).toLocaleString() %><% } %>
+          <%= t('labs.status') %>: <%= r.status %><% if (r.submitted_at) { %> &middot; <%= t('labs.submittedOn') %> <%= new Date(r.submitted_at).toLocaleString() %><% } %>
         </div>
       </div>
       <% }) %>
@@ -73,33 +82,33 @@
   <div>
     <% if (user.role === 'student') { %>
     <div class="card">
-      <h3 style="margin-bottom:1rem;">Your Review</h3>
+      <h3 style="margin-bottom:1rem;"><%= t('labs.sca.yourReview') %></h3>
       <% if (myReview && myReview.status === 'submitted') { %>
         <div style="background:#d4edda; border-radius:6px; padding:0.75rem; margin-bottom:1rem; color:#155724;">
-          ✓ Submitted on <%= new Date(myReview.submitted_at).toLocaleString() %>
+          &#10003; <%= t('labs.submittedOn') %> <%= new Date(myReview.submitted_at).toLocaleString() %>
         </div>
       <% } %>
       <form method="POST" action="/sca/findings/<%= finding.id %>/review">
         <div style="margin-bottom:0.75rem;">
-          <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Classification</label>
+          <label style="display:block; font-weight:600; margin-bottom:0.4rem;"><%= t('labs.sca.classification') %></label>
           <select name="classification" required style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px;">
-            <option value="">— select —</option>
-            <option value="confirmed"           <%= myReview && myReview.classification==='confirmed'           ? 'selected':'' %>>True Positive</option>
-            <option value="false_positive"      <%= myReview && myReview.classification==='false_positive'      ? 'selected':'' %>>False Positive</option>
-            <option value="needs_investigation" <%= myReview && myReview.classification==='needs_investigation' ? 'selected':'' %>>Needs Investigation</option>
+            <option value=""><%= t('labs.select') %></option>
+            <option value="confirmed"           <%= myReview && myReview.classification==='confirmed'           ? 'selected':'' %>><%= t('labs.sca.truePositive') %></option>
+            <option value="false_positive"      <%= myReview && myReview.classification==='false_positive'      ? 'selected':'' %>><%= t('labs.sca.falsePositive') %></option>
+            <option value="needs_investigation" <%= myReview && myReview.classification==='needs_investigation' ? 'selected':'' %>><%= t('labs.sca.needsInvestigation') %></option>
           </select>
         </div>
         <div style="margin-bottom:0.75rem;">
-          <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Your Notes</label>
+          <label style="display:block; font-weight:600; margin-bottom:0.4rem;"><%= t('labs.sca.yourNotes') %></label>
           <textarea name="student_notes" rows="4" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;"><%= myReview ? (myReview.student_notes || '') : '' %></textarea>
         </div>
         <div style="margin-bottom:1rem;">
-          <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Proposed Remediation</label>
+          <label style="display:block; font-weight:600; margin-bottom:0.4rem;"><%= t('labs.sca.proposedRemediation') %></label>
           <textarea name="remediation_notes" rows="4" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;"><%= myReview ? (myReview.remediation_notes || '') : '' %></textarea>
         </div>
         <div style="display:flex; gap:0.5rem;">
-          <button type="submit" name="action" value="save" style="background:#6c757d; color:#fff; border:none; border-radius:4px; padding:8px 14px; cursor:pointer;">Save Draft</button>
-          <button type="submit" name="action" value="submit" style="background:#002855; color:#fff; border:none; border-radius:4px; padding:8px 14px; cursor:pointer;">Submit</button>
+          <button type="submit" name="action" value="save" style="background:#6c757d; color:#fff; border:none; border-radius:4px; padding:8px 14px; cursor:pointer;"><%= t('labs.saveDraft') %></button>
+          <button type="submit" name="action" value="submit" style="background:#002855; color:#fff; border:none; border-radius:4px; padding:8px 14px; cursor:pointer;"><%= t('common.submit') %></button>
         </div>
       </form>
     </div>
@@ -107,20 +116,20 @@
 
     <% if (user.role !== 'student') { %>
     <div class="card">
-      <h3 style="margin-bottom:1rem;">Vulnerability Manager</h3>
+      <h3 style="margin-bottom:1rem;"><%= t('labs.vm.managerTitle') %></h3>
       <% if (vmEntry) { %>
         <div style="background:#d4edda; border-radius:6px; padding:0.75rem; color:#155724; margin-bottom:1rem;">
-          ✓ Imported to VM as <a href="/vm/vulns/<%= vmEntry.id %>" style="color:#155724; font-weight:600;">#<%= vmEntry.id %></a>
+          &#10003; <%= t('labs.sca.importedToVmAs') %> <a href="/vm/vulns/<%= vmEntry.id %>" style="color:#155724; font-weight:600;">#<%= vmEntry.id %></a>
         </div>
       <% } else { %>
-        <p style="font-size:0.9rem; color:#666; margin-bottom:1rem;">This finding has not yet been imported into the Vulnerability Manager.</p>
-        <button onclick="importFinding()" style="background:#002855; color:#fff; border:none; border-radius:4px; padding:8px 16px; cursor:pointer;">Push to VM</button>
+        <p style="font-size:0.9rem; color:#666; margin-bottom:1rem;"><%= t('labs.sca.notImportedYet') %></p>
+        <button onclick="importFinding()" style="background:#002855; color:#fff; border:none; border-radius:4px; padding:8px 16px; cursor:pointer;"><%= t('labs.sca.pushToVm') %></button>
       <% } %>
     </div>
     <% } %>
 
     <div class="card" style="margin-top:0;">
-      <h3 style="margin-bottom:0.5rem;">References</h3>
+      <h3 style="margin-bottom:0.5rem;"><%= t('labs.references') %></h3>
       <ul style="padding-left:1.25rem; font-size:0.9rem; line-height:2;">
         <li><a href="https://cwe.mitre.org/data/definitions/<%= finding.cwe.replace('CWE-','') %>.html" target="_blank"><%= finding.cwe %> — MITRE CWE</a></li>
         <li><a href="https://owasp.org/www-project-top-ten/" target="_blank">OWASP Top 10</a></li>
@@ -132,17 +141,17 @@
 <% if (user.role !== 'student') { %>
 <script>
 async function importFinding() {
-  if (!confirm('Push "<%= finding.title %>" to the Vulnerability Manager?')) return;
+  if (!confirm(window.__i18n.confirmPushToVM)) return;
   try {
     const res = await fetch('/sca/import-to-vm/<%= finding.id %>', { method:'POST' });
     const data = await res.json();
     if (data.success) {
-      alert('Imported to VM! Reloading…');
+      alert(window.__i18n.importedToVM);
       location.reload();
     } else {
-      alert(data.error || 'Import failed');
+      alert(data.error || window.__i18n.importFailed);
     }
-  } catch(e) { alert('Network error'); }
+  } catch(e) { alert(window.__i18n.networkError); }
 }
 </script>
 <% } %>

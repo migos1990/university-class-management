@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= typeof currentLang !== 'undefined' ? currentLang : 'en' %>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MFA Verification - University Class Management</title>
+  <title><%= t('mfa.twoFactorTitle') %></title>
   <style>
     * {
       margin: 0;
@@ -106,8 +106,8 @@
 </head>
 <body>
   <div class="mfa-container">
-    <h1>🔐 Two-Factor Authentication</h1>
-    <p class="subtitle">Enter the 6-digit code from your authenticator app</p>
+    <h1><%= t('mfa.twoFactorTitle') %></h1>
+    <p class="subtitle"><%= t('mfa.enterCode') %></p>
 
     <% if (error) { %>
       <div class="alert-danger">
@@ -117,15 +117,15 @@
 
     <form action="/auth/mfa-verify" method="POST">
       <div class="form-group">
-        <label for="code">Verification Code</label>
+        <label for="code"><%= t('mfa.verificationCode') %></label>
         <input type="text" id="code" name="code" pattern="[0-9]{6}" maxlength="6" required autofocus>
       </div>
 
-      <button type="submit" class="btn">Verify</button>
+      <button type="submit" class="btn"><%= t('mfa.verify') %></button>
     </form>
 
     <p class="help-text">
-      Open Google Authenticator on your mobile device and enter the 6-digit code shown for this account.
+      <%= t('mfa.helpText') %>
     </p>
   </div>
 </body>

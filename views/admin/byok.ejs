@@ -1,21 +1,21 @@
 <%- include('../partials/header') %>
 
-<h1>🔑 <%= typeof t !== 'undefined' ? t('byok.title') : 'Bring Your Own Key (BYOK)' %></h1>
+<h1><%= t('byok.title') %></h1>
 
 <% if (rbacBypass) { %>
   <div class="alert alert-warning">
-    ⚠️ <strong><%= typeof t !== 'undefined' ? t('common.warning') : 'Warning' %>:</strong> RBAC is currently DISABLED.
+    <%= t('security.warnings.rbacDisabled') %>
   </div>
 <% } %>
 
 <!-- Current Key Status -->
 <div class="card">
-  <h2><%= typeof t !== 'undefined' ? t('byok.currentKeyStatus') : 'Current Key Status' %></h2>
+  <h2><%= t('byok.currentKeyStatus') %></h2>
 
   <div style="margin-bottom: 1.5rem;">
-    <p><strong><%= typeof t !== 'undefined' ? t('byok.keyType') : 'Key Type' %>:</strong>
+    <p><strong><%= t('byok.keyType') %>:</strong>
       <span class="badge <%= keyInfo.usingCustomKey ? 'badge-success' : 'badge-warning' %>">
-        <%= keyInfo.usingCustomKey ? (typeof t !== 'undefined' ? t('byok.custom') : 'Custom') : (typeof t !== 'undefined' ? t('byok.default') : 'Default') %>
+        <%= keyInfo.usingCustomKey ? t('byok.custom') : t('byok.default') %>
       </span>
     </p>
     <p style="color: #666; font-size: 0.9rem;"><%= keyInfo.keyPath %></p>
@@ -23,18 +23,18 @@
 
   <% if (fieldEncryptionEnabled) { %>
     <div class="alert alert-danger">
-      ⚠️ <strong><%= typeof t !== 'undefined' ? t('byok.encryptionWarning') : 'Warning' %>:</strong>
-      <%= typeof t !== 'undefined' ? t('byok.encryptionWarningText') : 'Field encryption is currently ENABLED. You must disable field encryption in the Security Panel before uploading or deleting encryption keys to prevent data loss.' %>
+      <strong><%= t('byok.encryptionWarning') %>:</strong>
+      <%= t('byok.encryptionWarningText') %>
     </div>
   <% } %>
 </div>
 
 <!-- Key Generation Instructions -->
 <div class="card" style="margin-top: 2rem;">
-  <h2><%= typeof t !== 'undefined' ? t('byok.generateKey') : 'Generate Your Own Key' %></h2>
+  <h2><%= t('byok.generateKey') %></h2>
 
   <p style="margin-bottom: 1rem;">
-    <%= typeof t !== 'undefined' ? t('byok.instructions') : 'Use OpenSSL to generate a secure 256-bit encryption key. Run the following command in your terminal:' %>
+    <%= t('byok.instructions') %>
   </p>
 
   <div style="margin-bottom: 1.5rem;">
@@ -46,19 +46,19 @@
   </div>
 
   <div class="alert alert-info">
-    ℹ️ <strong><%= typeof t !== 'undefined' ? t('byok.note') : 'Note' %>:</strong>
-    <%= typeof t !== 'undefined' ? t('byok.noteText') : 'This will generate a random 32-byte key encoded in base64 format. Copy the entire output (e.g., "1vX9K7kJ2mN5pQ8rT3uV6wY0zA4bC7dE9fG2hI5jL8m=").' %>
+    <strong><%= t('byok.note') %>:</strong>
+    <%= t('byok.noteText') %>
   </div>
 </div>
 
 <!-- Upload Custom Key -->
 <div class="card" style="margin-top: 2rem;">
-  <h2><%= typeof t !== 'undefined' ? t('byok.uploadKey') : 'Upload Custom Encryption Key' %></h2>
+  <h2><%= t('byok.uploadKey') %></h2>
 
   <form id="upload-key-form" style="margin-top: 1rem;">
     <div style="margin-bottom: 1rem;">
       <label for="custom-key" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
-        <%= typeof t !== 'undefined' ? t('byok.pasteKey') : 'Paste your base64-encoded key here:' %>
+        <%= t('byok.pasteKey') %>
       </label>
       <textarea
         id="custom-key"
@@ -75,7 +75,7 @@
       class="btn btn-primary"
       <%= fieldEncryptionEnabled ? 'disabled' : '' %>
     >
-      <%= typeof t !== 'undefined' ? t('byok.uploadButton') : 'Upload Custom Key' %>
+      <%= t('byok.uploadButton') %>
     </button>
 
     <% if (keyInfo.usingCustomKey) { %>
@@ -86,7 +86,7 @@
         style="margin-left: 1rem;"
         <%= fieldEncryptionEnabled ? 'disabled' : '' %>
       >
-        <%= typeof t !== 'undefined' ? t('byok.deleteButton') : 'Delete Custom Key (Revert to Default)' %>
+        <%= t('byok.deleteButton') %>
       </button>
     <% } %>
   </form>
@@ -94,26 +94,38 @@
 
 <!-- Security Best Practices -->
 <div class="card" style="margin-top: 2rem;">
-  <h2><%= typeof t !== 'undefined' ? t('byok.bestPractices') : 'Security Best Practices' %></h2>
+  <h2><%= t('byok.bestPractices') %></h2>
 
   <ul style="margin-left: 1.5rem; color: #555;">
     <li style="margin-bottom: 0.5rem;">
-      <%= typeof t !== 'undefined' ? t('byok.practice1') : '🔒 Always DISABLE field encryption before changing or deleting encryption keys' %>
+      <%= t('byok.practice1') %>
     </li>
     <li style="margin-bottom: 0.5rem;">
-      <%= typeof t !== 'undefined' ? t('byok.practice2') : '💾 Keep a secure backup of your custom key - if you lose it, encrypted data cannot be recovered' %>
+      <%= t('byok.practice2') %>
     </li>
     <li style="margin-bottom: 0.5rem;">
-      <%= typeof t !== 'undefined' ? t('byok.practice3') : '🔄 After uploading a new key, existing encrypted data remains encrypted with the OLD key until you decrypt and re-encrypt it' %>
+      <%= t('byok.practice3') %>
     </li>
     <li style="margin-bottom: 0.5rem;">
-      <%= typeof t !== 'undefined' ? t('byok.practice4') : '⚠️ Changing keys while data is encrypted will make that data permanently unrecoverable' %>
+      <%= t('byok.practice4') %>
     </li>
     <li style="margin-bottom: 0.5rem;">
-      <%= typeof t !== 'undefined' ? t('byok.practice5') : '📝 Document your key management procedures and keep keys in a secure location' %>
+      <%= t('byok.practice5') %>
     </li>
   </ul>
 </div>
+
+<script>
+  window.__i18n = {
+    enterKey: '<%= t("byok.enterKey").replace(/\x27/g, "\\x27") %>',
+    keyTooShort: '<%= t("byok.keyTooShort").replace(/\x27/g, "\\x27") %>',
+    confirmUpload: '<%= t("byok.confirmUpload").replace(/\x27/g, "\\x27") %>',
+    uploadSuccess: '<%= t("byok.uploadSuccess").replace(/\x27/g, "\\x27") %>',
+    confirmDelete: '<%= t("byok.confirmDelete").replace(/\x27/g, "\\x27") %>',
+    deleteSuccess: '<%= t("byok.deleteSuccess").replace(/\x27/g, "\\x27") %>',
+    genericError: '<%= t("errors.genericError").replace(/\x27/g, "\\x27") %>'
+  };
+</script>
 
 <script>
   document.getElementById('upload-key-form').addEventListener('submit', function(e) {
@@ -122,16 +134,16 @@
     const keyData = document.getElementById('custom-key').value.trim();
 
     if (!keyData) {
-      alert('Please enter a key');
+      alert(window.__i18n.enterKey);
       return;
     }
 
     if (keyData.length < 16) {
-      alert('Key must be at least 16 characters long');
+      alert(window.__i18n.keyTooShort);
       return;
     }
 
-    if (!confirm('⚠️ Are you sure you want to upload this custom encryption key? Make sure field encryption is disabled first!')) {
+    if (!confirm(window.__i18n.confirmUpload)) {
       return;
     }
 
@@ -143,17 +155,17 @@
     .then(res => res.json())
     .then(data => {
       if (data.success) {
-        alert('Custom encryption key uploaded successfully!');
+        alert(window.__i18n.uploadSuccess);
         location.reload();
       } else {
-        alert('Error: ' + (data.error || 'Unknown error'));
+        alert(window.__i18n.genericError + ': ' + (data.error || ''));
       }
     })
-    .catch(err => alert('Error: ' + err.message));
+    .catch(err => alert(window.__i18n.genericError + ': ' + err.message));
   });
 
   function deleteCustomKey() {
-    if (!confirm('⚠️ Are you sure you want to delete the custom key and revert to the default key? Make sure field encryption is disabled first!')) {
+    if (!confirm(window.__i18n.confirmDelete)) {
       return;
     }
 
@@ -164,13 +176,13 @@
     .then(res => res.json())
     .then(data => {
       if (data.success) {
-        alert('Custom key deleted successfully. Reverted to default key.');
+        alert(window.__i18n.deleteSuccess);
         location.reload();
       } else {
-        alert('Error: ' + (data.error || 'Unknown error'));
+        alert(window.__i18n.genericError + ': ' + (data.error || ''));
       }
     })
-    .catch(err => alert('Error: ' + err.message));
+    .catch(err => alert(window.__i18n.genericError + ': ' + err.message));
   }
 </script>
 

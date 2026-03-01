@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= typeof currentLang !== 'undefined' ? currentLang : 'en' %>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -406,13 +406,37 @@
       font-size: 0.85rem;
       color: #666;
     }
+
+    .lang-btn {
+      flex: 1;
+      padding: 0.4rem;
+      background: rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.7);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .lang-btn:hover {
+      background: rgba(255,255,255,0.2);
+      color: white;
+    }
+
+    .lang-btn.lang-active {
+      background: rgba(255,255,255,0.25);
+      color: white;
+      border-color: rgba(255,255,255,0.5);
+    }
   </style>
 </head>
 <body>
   <%# Instructor broadcast banner — polls /api/instructor-message every 30s %>
   <div id="instructor-banner" style="display:none;position:sticky;top:0;z-index:9999;background:#002855;color:#fff;padding:0.6rem 1.5rem;font-size:0.9rem;display:none;align-items:center;justify-content:space-between;gap:1rem;">
     <span id="instructor-banner-text"></span>
-    <button onclick="document.getElementById('instructor-banner').style.display='none'" style="background:transparent;border:1px solid rgba(255,255,255,0.5);color:#fff;border-radius:3px;padding:2px 10px;cursor:pointer;font-size:0.8rem;flex-shrink:0;">Dismiss</button>
+    <button onclick="document.getElementById('instructor-banner').style.display='none'" style="background:transparent;border:1px solid rgba(255,255,255,0.5);color:#fff;border-radius:3px;padding:2px 10px;cursor:pointer;font-size:0.8rem;flex-shrink:0;"><%= typeof t !== 'undefined' ? t('header.dismiss') : 'Dismiss' %></button>
   </div>
   <script>
     (function() {
@@ -440,6 +464,15 @@
       setInterval(checkBroadcast, 30000);
     })();
   </script>
+  <script>
+    function setLang(lang) {
+      fetch('/auth/set-language', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lang: lang })
+      }).then(function() { location.reload(); });
+    }
+  </script>
   <% if (typeof user !== 'undefined' && user) { %>
   <div class="app-layout">
     <!-- Sidebar -->
@@ -448,84 +481,84 @@
         <a href="/dashboard" class="sidebar-logo">
           <img src="/images/hec-logo.svg" alt="HEC Montréal">
           <div>
-            <div class="sidebar-logo-text">HEC Montréal</div>
-            <div class="sidebar-logo-subtitle">Application Security</div>
+            <div class="sidebar-logo-text"><%= t('login.title') %></div>
+            <div class="sidebar-logo-subtitle"><%= t('header.appSecurity') %></div>
           </div>
         </a>
       </div>
 
       <nav class="sidebar-nav">
         <div class="nav-section">
-          <div class="nav-section-title">Main</div>
+          <div class="nav-section-title"><%= t('header.main') %></div>
           <a href="/dashboard" class="nav-link">
             <span class="nav-icon">📊</span>
-            <span>Dashboard</span>
+            <span><%= t('common.dashboard') %></span>
           </a>
           <a href="/classes" class="nav-link">
             <span class="nav-icon">📚</span>
-            <span>Classes</span>
+            <span><%= t('nav.classes') %></span>
           </a>
         </div>
 
         <% if (user.role === 'admin') { %>
         <div class="nav-section">
-          <div class="nav-section-title">Administration</div>
+          <div class="nav-section-title"><%= t('header.administration') %></div>
           <a href="/admin/security" class="nav-link">
             <span class="nav-icon">🔒</span>
-            <span>Security Panel</span>
+            <span><%= t('header.securityPanel') %></span>
           </a>
           <a href="/admin/audit-logs" class="nav-link">
             <span class="nav-icon">📋</span>
-            <span>Audit Logs</span>
+            <span><%= t('nav.auditLogs') %></span>
           </a>
           <a href="/admin/mfa-setup" class="nav-link">
             <span class="nav-icon">🔐</span>
-            <span>MFA Setup</span>
+            <span><%= t('header.mfaSetup') %></span>
           </a>
           <a href="/admin/backups" class="nav-link">
             <span class="nav-icon">💾</span>
-            <span>Backups</span>
+            <span><%= t('nav.backups') %></span>
           </a>
         </div>
         <% } %>
 
         <% if (user.role === 'professor') { %>
         <div class="nav-section">
-          <div class="nav-section-title">Teaching</div>
+          <div class="nav-section-title"><%= t('header.teaching') %></div>
           <a href="/dashboard" class="nav-link">
             <span class="nav-icon">📝</span>
-            <span>My Classes</span>
+            <span><%= t('header.myClasses') %></span>
           </a>
         </div>
         <% } %>
 
         <% if (user.role === 'student') { %>
         <div class="nav-section">
-          <div class="nav-section-title">Learning</div>
+          <div class="nav-section-title"><%= t('header.learning') %></div>
           <a href="/dashboard" class="nav-link">
             <span class="nav-icon">📖</span>
-            <span>My Enrollments</span>
+            <span><%= t('header.myEnrollments') %></span>
           </a>
         </div>
         <% } %>
 
         <div class="nav-section">
-          <div class="nav-section-title">Security Labs</div>
+          <div class="nav-section-title"><%= t('header.securityLabs') %></div>
           <a href="/sca" class="nav-link <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/sca') ? 'active' : '' %>">
             <span class="nav-icon">🔍</span>
-            <span>Static Analysis</span>
+            <span><%= t('header.staticAnalysis') %></span>
           </a>
           <a href="/dast" class="nav-link <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/dast') ? 'active' : '' %>">
             <span class="nav-icon">⚡</span>
-            <span>Dynamic Analysis</span>
+            <span><%= t('header.dynamicAnalysis') %></span>
           </a>
           <a href="/vm" class="nav-link <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/vm') ? 'active' : '' %>">
             <span class="nav-icon">📊</span>
-            <span>Vuln Management</span>
+            <span><%= t('header.vulnManagement') %></span>
           </a>
           <a href="/pentest" class="nav-link <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/pentest') ? 'active' : '' %>">
             <span class="nav-icon">🎯</span>
-            <span>Pentest Lab</span>
+            <span><%= t('header.pentestLab') %></span>
           </a>
         </div>
       </nav>
@@ -538,7 +571,11 @@
             <div class="user-role"><%= user.role %></div>
           </div>
         </div>
-        <a href="/auth/logout" class="logout-btn">Logout</a>
+        <div style="display:flex; gap:8px; margin-bottom:0.75rem;">
+          <button onclick="setLang('en')" class="lang-btn <%= typeof currentLang !== 'undefined' && currentLang === 'en' ? 'lang-active' : '' %>">EN</button>
+          <button onclick="setLang('fr')" class="lang-btn <%= typeof currentLang !== 'undefined' && currentLang === 'fr' ? 'lang-active' : '' %>">FR</button>
+        </div>
+        <a href="/auth/logout" class="logout-btn"><%= typeof t !== 'undefined' ? t('common.logout') : 'Logout' %></a>
       </div>
     </aside>
 
@@ -546,27 +583,27 @@
     <div class="main-content">
       <div class="security-status">
         <div class="security-badges">
-          <span class="security-label">Security Status:</span>
+          <span class="security-label"><%= t('header.securityStatus') %></span>
           <span class="badge <%= securitySettings.mfa_enabled ? 'badge-success' : 'badge-danger' %>">
-            MFA: <%= securitySettings.mfa_enabled ? 'ON' : 'OFF' %>
+            MFA: <%= securitySettings.mfa_enabled ? t('security.status.on') : t('security.status.off') %>
           </span>
           <span class="badge <%= securitySettings.rbac_enabled ? 'badge-success' : 'badge-danger' %>">
-            RBAC: <%= securitySettings.rbac_enabled ? 'ON' : 'OFF' %>
+            RBAC: <%= securitySettings.rbac_enabled ? t('security.status.on') : t('security.status.off') %>
           </span>
           <span class="badge <%= securitySettings.encryption_at_rest ? 'badge-success' : 'badge-danger' %>">
-            Passwords: <%= securitySettings.encryption_at_rest ? 'Encrypted' : 'Plaintext' %>
+            <%= securitySettings.encryption_at_rest ? t('header.encrypted') : t('header.plaintext') %>
           </span>
           <span class="badge <%= securitySettings.field_encryption ? 'badge-success' : 'badge-danger' %>">
-            Data: <%= securitySettings.field_encryption ? 'Encrypted' : 'Plaintext' %>
+            <%= securitySettings.field_encryption ? t('header.encrypted') : t('header.plaintext') %>
           </span>
           <span class="badge <%= securitySettings.https_enabled ? 'badge-success' : 'badge-danger' %>">
             <%= securitySettings.https_enabled ? 'HTTPS' : 'HTTP' %>
           </span>
           <span class="badge <%= securitySettings.audit_logging ? 'badge-success' : 'badge-danger' %>">
-            Logging: <%= securitySettings.audit_logging ? 'ON' : 'OFF' %>
+            Logging: <%= securitySettings.audit_logging ? t('security.status.on') : t('security.status.off') %>
           </span>
           <span class="badge <%= securitySettings.rate_limiting ? 'badge-success' : 'badge-danger' %>">
-            Rate Limit: <%= securitySettings.rate_limiting ? 'ON' : 'OFF' %>
+            Rate Limit: <%= securitySettings.rate_limiting ? t('security.status.on') : t('security.status.off') %>
           </span>
         </div>
       </div>

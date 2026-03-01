@@ -1,8 +1,19 @@
 <%- include('../partials/header') %>
 
+<script>
+  window.__i18n = {
+    saving: '<%= t("labs.saving").replace(/\x27/g, "\\x27") %>',
+    submitSuccess: '<%= t("labs.submitSuccess").replace(/\x27/g, "\\x27") %>',
+    draftSuccess: '<%= t("labs.draftSuccess").replace(/\x27/g, "\\x27") %>',
+    errorSaving: '<%= t("labs.errorSaving").replace(/\x27/g, "\\x27") %>',
+    networkError: '<%= t("labs.networkError").replace(/\x27/g, "\\x27") %>',
+    checkingPrecondition: '<%= t("labs.dast.checkingPrecondition").replace(/\x27/g, "\\x27") %>'
+  };
+</script>
+
 <div class="page-header">
-  <h1 class="page-title">Dynamic Analysis Lab</h1>
-  <p class="page-subtitle">Follow each scenario step-by-step, exploit the vulnerability, then document your findings.</p>
+  <h1 class="page-title"><%= t('labs.dast.labTitle') %></h1>
+  <p class="page-subtitle"><%= t('labs.dast.labSubtitle') %></p>
 </div>
 
 <style>
@@ -32,75 +43,75 @@
         <span class="badge-sm sev-<%= s.severity %>"><%= s.severity %></span>
         <span class="badge-sm" style="background:#e8f0ff; color:#1a5276;"><%= s.vulnerability_type %></span>
         <% if (s.precondition !== 'none') { %>
-          <span class="badge-sm" style="background:#f0e8ff; color:#5b2c8c;">Requires: <%= s.precondition.replace('_disabled',' OFF') %></span>
+          <span class="badge-sm" style="background:#f0e8ff; color:#5b2c8c;"><%= t('labs.dast.requires') %> <%= s.precondition.replace('_disabled',' OFF') %></span>
         <% } %>
         <% if (isDone) { %>
-          <span class="badge-sm" style="background:#d4edda; color:#155724;">✓ Submitted</span>
+          <span class="badge-sm" style="background:#d4edda; color:#155724;">&#10003; <%= t('labs.submitted') %></span>
         <% } else if (finding) { %>
-          <span class="badge-sm" style="background:#fff3cd; color:#856404;">Draft saved</span>
+          <span class="badge-sm" style="background:#fff3cd; color:#856404;"><%= t('labs.draftSaved') %></span>
         <% } %>
       </div>
       <a href="/dast/scenarios/<%= s.id %>" style="font-size:1.05rem; font-weight:600; color:#002855; text-decoration:none;"><%= s.title %></a>
       <div style="font-size:0.85rem; color:#666; margin-top:2px;"><%= s.owasp_category %></div>
     </div>
     <button onclick="toggleScenario(<%= s.id %>)" style="background:#002855; color:#fff; border:none; border-radius:6px; padding:6px 14px; cursor:pointer; font-size:0.85rem; white-space:nowrap;">
-      <%= isDone ? 'View / Edit' : finding ? 'Continue' : 'Start' %>
+      <%= isDone ? t('labs.viewEdit') : finding ? t('labs.continue') : t('labs.start') %>
     </button>
   </div>
 
   <div id="detail-<%= s.id %>" style="display:none; margin-top:1rem; padding-top:1rem; border-top:1px solid #dee2e6;">
 
     <!-- Precondition live check -->
-    <div id="pre-<%= s.id %>" class="precondition-box pre-unmet">Checking precondition…</div>
+    <div id="pre-<%= s.id %>" class="precondition-box pre-unmet"><%= t('labs.dast.checkingPrecondition') %></div>
 
     <p style="margin-bottom:0.75rem; font-size:0.9rem;"><%= s.description %></p>
 
-    <h4 style="margin-bottom:0.5rem;">Steps</h4>
+    <h4 style="margin-bottom:0.5rem;"><%= t('labs.dast.steps') %></h4>
     <ol style="padding-left:1.5rem; margin-bottom:1rem; font-size:0.9rem; line-height:2;">
       <% steps.forEach(step => { %><li><%= step %></li><% }) %>
     </ol>
 
-    <h4 style="margin-bottom:0.75rem;">Document Your Finding</h4>
+    <h4 style="margin-bottom:0.75rem;"><%= t('labs.dast.documentFinding') %></h4>
     <form onsubmit="submitFinding(event, <%= s.id %>)">
       <div style="margin-bottom:0.75rem;">
         <label style="font-weight:600; display:block; margin-bottom:0.4rem;">
-          Did you successfully trigger the vulnerability?
+          <%= t('labs.dast.triggeredQuestion') %>
         </label>
         <label style="margin-right:1.5rem;">
-          <input type="radio" name="triggered" value="1" <%= finding && finding.triggered ? 'checked':'' %>> Yes
+          <input type="radio" name="triggered" value="1" <%= finding && finding.triggered ? 'checked':'' %>> <%= t('labs.yes') %>
         </label>
         <label>
-          <input type="radio" name="triggered" value="0" <%= finding && !finding.triggered ? 'checked':'' %>> No
+          <input type="radio" name="triggered" value="0" <%= finding && !finding.triggered ? 'checked':'' %>> <%= t('labs.no') %>
         </label>
       </div>
       <div style="margin-bottom:0.75rem;">
-        <label style="font-weight:600; display:block; margin-bottom:0.4rem;">Evidence / Proof (URL, response, screenshot description)</label>
+        <label style="font-weight:600; display:block; margin-bottom:0.4rem;"><%= t('labs.dast.evidence') %></label>
         <textarea name="trigger_evidence" rows="3" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;"><%= finding ? (finding.trigger_evidence||'') : '' %></textarea>
       </div>
       <div style="margin-bottom:0.75rem;">
-        <label style="font-weight:600; display:block; margin-bottom:0.4rem;">Impact Assessment</label>
+        <label style="font-weight:600; display:block; margin-bottom:0.4rem;"><%= t('labs.dast.impactAssessment') %></label>
         <textarea name="impact_assessment" rows="3" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;"><%= finding ? (finding.impact_assessment||'') : '' %></textarea>
       </div>
       <div style="margin-bottom:0.75rem;">
-        <label style="font-weight:600; display:block; margin-bottom:0.4rem;">Reproduction Steps</label>
+        <label style="font-weight:600; display:block; margin-bottom:0.4rem;"><%= t('labs.dast.reproductionSteps') %></label>
         <textarea name="reproduction_steps" rows="3" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;"><%= finding ? (finding.reproduction_steps||'') : '' %></textarea>
       </div>
       <div style="margin-bottom:0.75rem;">
-        <label style="font-weight:600; display:block; margin-bottom:0.4rem;">Your Recommendation</label>
+        <label style="font-weight:600; display:block; margin-bottom:0.4rem;"><%= t('labs.dast.yourRecommendation') %></label>
         <textarea name="recommendation" rows="3" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;"><%= finding ? (finding.recommendation||'') : '' %></textarea>
       </div>
       <div style="margin-bottom:1rem;">
-        <label style="font-weight:600; display:block; margin-bottom:0.4rem;">Your Severity Rating</label>
+        <label style="font-weight:600; display:block; margin-bottom:0.4rem;"><%= t('labs.dast.severityRating') %></label>
         <select name="severity_rating" style="width:100%; max-width:200px; padding:8px; border:1px solid #ced4da; border-radius:4px;">
-          <option value="">— select —</option>
+          <option value=""><%= t('labs.select') %></option>
           <% ['Critical','High','Medium','Low','Info'].forEach(sev => { %>
             <option value="<%= sev %>" <%= finding && finding.severity_rating === sev ? 'selected':'' %>><%= sev %></option>
           <% }) %>
         </select>
       </div>
       <div style="display:flex; gap:0.5rem;">
-        <button type="submit" name="action" value="save" style="background:#6c757d; color:#fff; border:none; border-radius:4px; padding:8px 18px; cursor:pointer;">Save Draft</button>
-        <button type="submit" name="action" value="submit" style="background:#002855; color:#fff; border:none; border-radius:4px; padding:8px 18px; cursor:pointer;">Submit</button>
+        <button type="submit" name="action" value="save" style="background:#6c757d; color:#fff; border:none; border-radius:4px; padding:8px 18px; cursor:pointer;"><%= t('labs.saveDraft') %></button>
+        <button type="submit" name="action" value="submit" style="background:#002855; color:#fff; border:none; border-radius:4px; padding:8px 18px; cursor:pointer;"><%= t('common.submit') %></button>
       </div>
       <div id="msg-dast-<%= s.id %>" style="margin-top:0.5rem; font-size:0.85rem;"></div>
     </form>
@@ -133,7 +144,7 @@ async function submitFinding(event, scenarioId) {
   const action = event.submitter ? event.submitter.value : 'save';
   data.set('action', action);
   const msg = document.getElementById('msg-dast-' + scenarioId);
-  msg.textContent = 'Saving…';
+  msg.textContent = window.__i18n.saving;
 
   try {
     const res = await fetch(`/dast/scenarios/${scenarioId}/findings`, {
@@ -144,15 +155,15 @@ async function submitFinding(event, scenarioId) {
     const result = await res.json();
     if (result.success) {
       msg.style.color = '#155724';
-      msg.textContent = action === 'submit' ? '✓ Submitted!' : '✓ Draft saved.';
+      msg.textContent = action === 'submit' ? window.__i18n.submitSuccess : window.__i18n.draftSuccess;
       setTimeout(() => location.reload(), 800);
     } else {
       msg.style.color = '#721c24';
-      msg.textContent = result.error || 'Error saving.';
+      msg.textContent = result.error || window.__i18n.errorSaving;
     }
   } catch(e) {
     msg.style.color = '#721c24';
-    msg.textContent = 'Network error.';
+    msg.textContent = window.__i18n.networkError;
   }
 }
 </script>

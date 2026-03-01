@@ -24,7 +24,7 @@ router.get('/:id', requireAuth, auditLog('VIEW_CLASS', 'class'), (req, res) => {
 
   if (!classData) {
     return res.status(404).render('error', {
-      message: 'Class not found',
+      message: req.t('classes.notFound'),
       error: { status: 404 }
     });
   }
@@ -38,10 +38,10 @@ router.get('/:id', requireAuth, auditLog('VIEW_CLASS', 'class'), (req, res) => {
 
     if (!enrollment && req.securitySettings.rbac_enabled) {
       return res.status(403).render('error', {
-        message: 'Access Denied',
+        message: req.t('errors.accessDenied'),
         error: {
           status: 403,
-          details: 'You are not enrolled in this class'
+          details: req.t('sessions.notEnrolled')
         }
       });
     }
@@ -83,7 +83,7 @@ router.post('/create', requireAuth, requireRole(['professor', 'admin']), auditLo
   if (!code || !name || !semester) {
     return res.status(400).json({
       success: false,
-      error: 'Code, name, and semester are required'
+      error: req.t('classes.codeNameSemesterRequired')
     });
   }
 
@@ -92,7 +92,7 @@ router.post('/create', requireAuth, requireRole(['professor', 'admin']), auditLo
   if (existing) {
     return res.status(400).json({
       success: false,
-      error: 'Class code already exists'
+      error: req.t('classes.codeAlreadyExists')
     });
   }
 
@@ -105,7 +105,7 @@ router.post('/create', requireAuth, requireRole(['professor', 'admin']), auditLo
   res.json({
     success: true,
     classId: result.lastID,
-    message: 'Class created successfully'
+    message: req.t('classes.createdSuccessfully')
   });
 });
 
@@ -122,14 +122,14 @@ router.put('/:id', requireAuth, requireRole(['professor', 'admin']), auditLog('U
   // Get current class
   const classData = db.prepare('SELECT * FROM classes WHERE id = ?').get(classId);
   if (!classData) {
-    return res.status(404).json({ success: false, error: 'Class not found' });
+    return res.status(404).json({ success: false, error: req.t('classes.notFound') });
   }
 
   // Check ownership (professor can only update their own classes, admin can update any)
   if (userRole === 'professor' && classData.professor_id !== userId) {
     return res.status(403).json({
       success: false,
-      error: 'You can only update your own classes'
+      error: req.t('classes.onlyUpdateOwn')
     });
   }
 
@@ -137,7 +137,7 @@ router.put('/:id', requireAuth, requireRole(['professor', 'admin']), auditLog('U
   if (!code || !name || !semester) {
     return res.status(400).json({
       success: false,
-      error: 'Code, name, and semester are required'
+      error: req.t('classes.codeNameSemesterRequired')
     });
   }
 
@@ -147,7 +147,7 @@ router.put('/:id', requireAuth, requireRole(['professor', 'admin']), auditLog('U
     if (existing) {
       return res.status(400).json({
         success: false,
-        error: 'Class code already exists'
+        error: req.t('classes.codeAlreadyExists')
       });
     }
   }
@@ -159,7 +159,7 @@ router.put('/:id', requireAuth, requireRole(['professor', 'admin']), auditLog('U
     WHERE id = ?
   `).run(code, name, description || '', semester, classId);
 
-  res.json({ success: true, message: 'Class updated successfully' });
+  res.json({ success: true, message: req.t('classes.updatedSuccessfully') });
 });
 
 /**
@@ -174,14 +174,14 @@ router.delete('/:id', requireAuth, requireRole(['professor', 'admin']), auditLog
   // Get current class
   const classData = db.prepare('SELECT * FROM classes WHERE id = ?').get(classId);
   if (!classData) {
-    return res.status(404).json({ success: false, error: 'Class not found' });
+    return res.status(404).json({ success: false, error: req.t('classes.notFound') });
   }
 
   // Check ownership (professor can only delete their own classes, admin can delete any)
   if (userRole === 'professor' && classData.professor_id !== userId) {
     return res.status(403).json({
       success: false,
-      error: 'You can only delete your own classes'
+      error: req.t('classes.onlyDeleteOwn')
     });
   }
 
@@ -191,7 +191,7 @@ router.delete('/:id', requireAuth, requireRole(['professor', 'admin']), auditLog
   if (sodEnabled && userRole === 'professor') {
     return res.status(403).json({
       success: false,
-      error: 'Segregation of Duties is enabled. You must submit a deletion request for admin approval.',
+      error: req.t('classes.sodRequired'),
       requiresRequest: true
     });
   }
@@ -201,7 +201,7 @@ router.delete('/:id', requireAuth, requireRole(['professor', 'admin']), auditLog
 
   res.json({
     success: true,
-    message: 'Class deleted successfully'
+    message: req.t('classes.deletedSuccessfully')
   });
 });
 
@@ -217,7 +217,7 @@ router.get('/:id/delete-request', requireAuth, requireRole(['professor']), (req,
   const classData = db.prepare('SELECT * FROM classes WHERE id = ?').get(classId);
   if (!classData) {
     return res.status(404).render('error', {
-      message: 'Class not found',
+      message: req.t('classes.notFound'),
       error: { status: 404 }
     });
   }
@@ -225,10 +225,10 @@ router.get('/:id/delete-request', requireAuth, requireRole(['professor']), (req,
   // Check ownership
   if (classData.professor_id !== userId) {
     return res.status(403).render('error', {
-      message: 'Access Denied',
+      message: req.t('errors.accessDenied'),
       error: {
         status: 403,
-        details: 'You can only request deletion of your own classes'
+        details: req.t('classes.onlyRequestOwnDeletion')
       }
     });
   }
@@ -261,14 +261,14 @@ router.post('/:id/delete-request', requireAuth, requireRole(['professor']), audi
   // Get class details
   const classData = db.prepare('SELECT * FROM classes WHERE id = ?').get(classId);
   if (!classData) {
-    return res.status(404).json({ success: false, error: 'Class not found' });
+    return res.status(404).json({ success: false, error: req.t('classes.notFound') });
   }
 
   // Check ownership
   if (classData.professor_id !== userId) {
     return res.status(403).json({
       success: false,
-      error: 'You can only request deletion of your own classes'
+      error: req.t('classes.onlyRequestOwnDeletion')
     });
   }
 
@@ -276,7 +276,7 @@ router.post('/:id/delete-request', requireAuth, requireRole(['professor']), audi
   if (!req.securitySettings.segregation_of_duties) {
     return res.status(400).json({
       success: false,
-      error: 'Segregation of Duties is not enabled'
+      error: req.t('classes.sodNotEnabled')
     });
   }
 
@@ -289,7 +289,7 @@ router.post('/:id/delete-request', requireAuth, requireRole(['professor']), audi
   if (existingRequest) {
     return res.status(400).json({
       success: false,
-      error: 'A deletion request for this class is already pending'
+      error: req.t('classes.requestAlreadyPending')
     });
   }
 
@@ -302,7 +302,7 @@ router.post('/:id/delete-request', requireAuth, requireRole(['professor']), audi
   res.json({
     success: true,
     requestId: result.lastID,
-    message: 'Deletion request submitted successfully. An administrator will review your request.'
+    message: req.t('classes.requestSubmittedMessage')
   });
 });
 
