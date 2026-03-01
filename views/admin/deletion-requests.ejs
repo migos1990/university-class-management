@@ -81,16 +81,16 @@
             <td><%= request.username || 'Unknown' %></td>
             <td>
               <% if (request.status === 'approved') { %>
-                <span class="badge badge-success"><%= typeof t !== 'undefined' ? t('sod.approved') : 'Approved' %></span>
+                <span class="badge badge-success"><%= t('sod.approved') %></span>
               <% } else { %>
-                <span class="badge badge-danger"><%= typeof t !== 'undefined' ? t('sod.rejected') : 'Rejected' %></span>
+                <span class="badge badge-danger"><%= t('sod.rejected') %></span>
               <% } %>
             </td>
             <td><%= formatDate(request.reviewed_at) %></td>
             <td>
               <% if (request.status === 'rejected' && request.rejection_reason) { %>
                 <button class="btn btn-secondary" onclick="showReason('<%= request.rejection_reason.replace(/'/g, "\\'") %>')" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">
-                  <%= typeof t !== 'undefined' ? t('sod.viewReason') : 'View Reason' %>
+                  <%= t('sod.viewReason') %>
                 </button>
               <% } else { %>
                 <span style="color: #999;">-</span>
@@ -106,29 +106,40 @@
 <!-- Reject Modal (Hidden) -->
 <div id="reject-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
   <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 500px; width: 90%;">
-    <h3 style="margin-bottom: 1rem;"><%= typeof t !== 'undefined' ? t('sod.rejectRequest') : 'Reject Deletion Request' %></h3>
+    <h3 style="margin-bottom: 1rem;"><%= t('sod.rejectRequest') %></h3>
     <p style="margin-bottom: 1rem; color: #666;">
-      <%= typeof t !== 'undefined' ? t('sod.rejectPrompt') : 'Please provide a reason for rejecting this deletion request. The professor will see this reason.' %>
+      <%= t('sod.rejectPrompt') %>
     </p>
-    <p style="margin-bottom: 1rem;"><strong><%= typeof t !== 'undefined' ? t('classes.code') : 'Class Code' %>:</strong> <span id="reject-class-code"></span></p>
+    <p style="margin-bottom: 1rem;"><strong><%= t('classes.code') %>:</strong> <span id="reject-class-code"></span></p>
     <textarea
       id="reject-reason"
       rows="4"
       style="width: 100%; padding: 0.75rem; border: 2px solid #ddd; border-radius: 4px; margin-bottom: 1rem; font-family: inherit;"
-      placeholder="<%= typeof t !== 'undefined' ? t('sod.reasonPlaceholder') : 'Example: This class is still active and has enrolled students. Please wait until the semester ends.' %>"
+      placeholder="<%= t('sod.reasonPlaceholder') %>"
     ></textarea>
     <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-      <button class="btn btn-secondary" onclick="closeRejectModal()"><%= typeof t !== 'undefined' ? t('common.cancel') : 'Cancel' %></button>
-      <button class="btn btn-danger" onclick="submitRejection()"><%= typeof t !== 'undefined' ? t('sod.reject') : 'Reject Request' %></button>
+      <button class="btn btn-secondary" onclick="closeRejectModal()"><%= t('common.cancel') %></button>
+      <button class="btn btn-danger" onclick="submitRejection()"><%= t('sod.reject') %></button>
     </div>
   </div>
 </div>
 
 <script>
+  window.__i18n = {
+    confirmApprove: '<%= t("sod.confirmApprove").replace(/\x27/g, "\\x27") %>',
+    approveSuccess: '<%= t("sod.approveSuccess").replace(/\x27/g, "\\x27") %>',
+    provideReason: '<%= t("sod.provideReason").replace(/\x27/g, "\\x27") %>',
+    rejectSuccess: '<%= t("sod.rejectSuccess").replace(/\x27/g, "\\x27") %>',
+    rejectionReasonLabel: '<%= t("sod.rejectionReasonLabel").replace(/\x27/g, "\\x27") %>',
+    genericError: '<%= t("errors.genericError").replace(/\x27/g, "\\x27") %>'
+  };
+</script>
+
+<script>
   let currentRejectId = null;
 
   function approveRequest(requestId) {
-    if (!confirm('Are you sure you want to APPROVE this deletion request? The class and all related data will be permanently deleted.')) {
+    if (!confirm(window.__i18n.confirmApprove)) {
       return;
     }
 
@@ -139,13 +150,13 @@
     .then(res => res.json())
     .then(data => {
       if (data.success) {
-        alert('Deletion request approved. Class has been deleted.');
+        alert(window.__i18n.approveSuccess);
         location.reload();
       } else {
-        alert('Error: ' + (data.error || 'Unknown error'));
+        alert(window.__i18n.genericError + ': ' + (data.error || ''));
       }
     })
-    .catch(err => alert('Error: ' + err.message));
+    .catch(err => alert(window.__i18n.genericError + ': ' + err.message));
   }
 
   function showRejectModal(requestId, classCode) {
@@ -163,7 +174,7 @@
   function submitRejection() {
     const reason = document.getElementById('reject-reason').value.trim();
     if (!reason) {
-      alert('Please provide a reason for rejection.');
+      alert(window.__i18n.provideReason);
       return;
     }
 
@@ -175,17 +186,17 @@
     .then(res => res.json())
     .then(data => {
       if (data.success) {
-        alert('Deletion request rejected.');
+        alert(window.__i18n.rejectSuccess);
         location.reload();
       } else {
-        alert('Error: ' + (data.error || 'Unknown error'));
+        alert(window.__i18n.genericError + ': ' + (data.error || ''));
       }
     })
-    .catch(err => alert('Error: ' + err.message));
+    .catch(err => alert(window.__i18n.genericError + ': ' + err.message));
   }
 
   function showReason(reason) {
-    alert('Rejection Reason:\n\n' + reason);
+    alert(window.__i18n.rejectionReasonLabel + '\n\n' + reason);
   }
 
   document.addEventListener('keydown', (e) => {

@@ -1,8 +1,19 @@
 <%- include('../partials/header') %>
 
+<script>
+  window.__i18n = {
+    confirmPushToVM: '<%= t("labs.dast.confirmPushToVM").replace(/\x27/g, "\\x27") %>',
+    importing: '<%= t("labs.importing").replace(/\x27/g, "\\x27") %>',
+    importFailed: '<%= t("labs.importFailed").replace(/\x27/g, "\\x27") %>',
+    networkError: '<%= t("labs.networkError").replace(/\x27/g, "\\x27") %>',
+    inVm: '<%= t("labs.sca.inVm").replace(/\x27/g, "\\x27") %>',
+    pushToVm: '<%= t("labs.sca.pushToVm").replace(/\x27/g, "\\x27") %>'
+  };
+</script>
+
 <div class="page-header">
-  <h1 class="page-title">Dynamic Analysis — Instructor Dashboard</h1>
-  <p class="page-subtitle"><%= scenarios.length %> scenarios &nbsp;|&nbsp; <%= students.length %> students</p>
+  <h1 class="page-title"><%= t('labs.dast.instructorTitle') %></h1>
+  <p class="page-subtitle"><%= scenarios.length %> <%= t('labs.dast.scenarios') %> &nbsp;|&nbsp; <%= students.length %> <%= t('labs.students') %></p>
 </div>
 
 <style>
@@ -20,17 +31,17 @@
 </style>
 
 <div class="card">
-  <h2 style="margin-bottom:1rem;">Scenarios</h2>
+  <h2 style="margin-bottom:1rem;"><%= t('labs.dast.scenarios') %></h2>
   <table>
     <thead>
       <tr>
         <th>#</th>
-        <th>Scenario</th>
-        <th>Type</th>
-        <th>Sev.</th>
-        <th>Precondition</th>
-        <th>Submissions</th>
-        <th>VM</th>
+        <th><%= t('labs.dast.scenario') %></th>
+        <th><%= t('labs.dast.type') %></th>
+        <th><%= t('labs.dast.sev') %></th>
+        <th><%= t('labs.dast.precondition') %></th>
+        <th><%= t('labs.dast.submissions') %></th>
+        <th><%= t('labs.sca.vm') %></th>
       </tr>
     </thead>
     <tbody>
@@ -52,7 +63,7 @@
         <td><span class="badge-sm sev-<%= s.severity %>"><%= s.severity %></span></td>
         <td>
           <% if (s.precondition === 'none') { %>
-            <span style="color:#999; font-size:0.85rem;">Always on</span>
+            <span style="color:#999; font-size:0.85rem;"><%= t('labs.dast.alwaysOn') %></span>
           <% } else { %>
             <span class="pre-badge"><%= s.precondition.replace('_disabled',' OFF') %></span>
           <% } %>
@@ -63,9 +74,9 @@
         </td>
         <td>
           <% if (inVM) { %>
-            <button class="action-btn btn-imported" disabled>In VM</button>
+            <button class="action-btn btn-imported" disabled><%= t('labs.sca.inVm') %></button>
           <% } else { %>
-            <button class="action-btn btn-import" onclick="importToVM(<%= s.id %>, this)">Push to VM</button>
+            <button class="action-btn btn-import" onclick="importToVM(<%= s.id %>, this)"><%= t('labs.sca.pushToVm') %></button>
           <% } %>
         </td>
       </tr>
@@ -80,17 +91,17 @@
 %>
 <div class="card" style="margin-top:1rem;">
   <h3 style="margin-bottom:0.75rem;">
-    <%= s.title %> — Student Submissions (<%= findings.length %>)
+    <%= s.title %> — <%= t('labs.dast.studentSubmissions') %> (<%= findings.length %>)
   </h3>
   <table>
     <thead>
       <tr>
-        <th>Student ID</th>
-        <th>Triggered?</th>
-        <th>Severity</th>
-        <th>Submitted</th>
-        <th>Grade</th>
-        <th>Actions</th>
+        <th><%= t('labs.dast.studentId') %></th>
+        <th><%= t('labs.dast.triggered') %></th>
+        <th><%= t('labs.severity') %></th>
+        <th><%= t('labs.submitted') %></th>
+        <th><%= t('labs.grade') %></th>
+        <th><%= t('labs.actions') %></th>
       </tr>
     </thead>
     <tbody>
@@ -99,18 +110,18 @@
         <td>#<%= f.student_id %></td>
         <td>
           <% if (f.triggered) { %>
-            <span class="badge-sm" style="background:#d4edda;color:#155724;">✓ Triggered</span>
+            <span class="badge-sm" style="background:#d4edda;color:#155724;">&#10003; <%= t('labs.dast.triggered') %></span>
           <% } else { %>
-            <span class="badge-sm" style="background:#f8d7da;color:#721c24;">Not triggered</span>
+            <span class="badge-sm" style="background:#f8d7da;color:#721c24;"><%= t('labs.dast.notTriggered') %></span>
           <% } %>
         </td>
-        <td><%= f.severity_rating || '—' %></td>
-        <td style="font-size:0.85rem;"><%= f.submitted_at ? new Date(f.submitted_at).toLocaleDateString() : 'Draft' %></td>
-        <td><%= f.grade || '—' %></td>
+        <td><%= f.severity_rating || '&mdash;' %></td>
+        <td style="font-size:0.85rem;"><%= f.submitted_at ? new Date(f.submitted_at).toLocaleDateString() : t('labs.draft') %></td>
+        <td><%= f.grade || '&mdash;' %></td>
         <td>
           <button onclick="openFeedback(<%= f.id %>, '<%= (f.instructor_feedback||'').replace(/'/g,'') %>', '<%= f.grade||'' %>')"
                   style="background:#002855;color:#fff;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;font-size:0.8rem;">
-            Grade
+            <%= t('labs.grade') %>
           </button>
         </td>
       </tr>
@@ -123,19 +134,19 @@
 <!-- Feedback modal -->
 <div id="feedbackModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
   <div style="background:#fff; border-radius:8px; padding:1.5rem; width:500px; max-width:95vw;">
-    <h3 style="margin-bottom:1rem;">Grade / Feedback</h3>
+    <h3 style="margin-bottom:1rem;"><%= t('labs.gradeFeedback') %></h3>
     <input type="hidden" id="feedbackFindingId">
     <div style="margin-bottom:0.75rem;">
-      <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Grade</label>
-      <input type="text" id="gradeInput" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px;" placeholder="e.g. A, B+, 85">
+      <label style="display:block; font-weight:600; margin-bottom:0.4rem;"><%= t('labs.grade') %></label>
+      <input type="text" id="gradeInput" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px;" placeholder="<%= t('labs.gradePlaceholder') %>">
     </div>
     <div style="margin-bottom:1rem;">
-      <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Instructor Feedback</label>
+      <label style="display:block; font-weight:600; margin-bottom:0.4rem;"><%= t('labs.instructorFeedback') %></label>
       <textarea id="feedbackInput" rows="4" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px;"></textarea>
     </div>
     <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
-      <button onclick="closeFeedback()" style="border:1px solid #dee2e6;background:none;border-radius:4px;padding:8px 14px;cursor:pointer;">Cancel</button>
-      <button onclick="saveFeedback()" style="background:#002855;color:#fff;border:none;border-radius:4px;padding:8px 16px;cursor:pointer;">Save</button>
+      <button onclick="closeFeedback()" style="border:1px solid #dee2e6;background:none;border-radius:4px;padding:8px 14px;cursor:pointer;"><%= t('common.cancel') %></button>
+      <button onclick="saveFeedback()" style="background:#002855;color:#fff;border:none;border-radius:4px;padding:8px 16px;cursor:pointer;"><%= t('common.save') %></button>
     </div>
   </div>
 </div>
@@ -164,17 +175,17 @@ async function saveFeedback() {
     const data = await res.json();
     if (data.success) { closeFeedback(); location.reload(); }
     else alert(data.error);
-  } catch(e) { alert('Network error'); }
+  } catch(e) { alert(window.__i18n.networkError); }
 }
 async function importToVM(scenarioId, btn) {
-  if (!confirm('Push this scenario to the Vulnerability Manager?')) return;
-  btn.disabled = true; btn.textContent = 'Importing…';
+  if (!confirm(window.__i18n.confirmPushToVM)) return;
+  btn.disabled = true; btn.textContent = window.__i18n.importing;
   try {
     const res = await fetch(`/dast/import-to-vm/${scenarioId}`, {method:'POST'});
     const data = await res.json();
-    if (data.success) { btn.textContent = 'In VM'; btn.className = 'action-btn btn-imported'; }
-    else { btn.disabled = false; btn.textContent = 'Push to VM'; alert(data.error); }
-  } catch(e) { btn.disabled = false; btn.textContent = 'Push to VM'; alert('Network error'); }
+    if (data.success) { btn.textContent = window.__i18n.inVm; btn.className = 'action-btn btn-imported'; }
+    else { btn.disabled = false; btn.textContent = window.__i18n.pushToVm; alert(data.error); }
+  } catch(e) { btn.disabled = false; btn.textContent = window.__i18n.pushToVm; alert(window.__i18n.networkError); }
 }
 </script>
 

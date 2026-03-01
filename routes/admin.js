@@ -93,7 +93,7 @@ router.post('/security/toggle/:feature', requireAuth, requireRole(['admin']), as
       res.json({
         success: true,
         newValue,
-        message: 'HTTPS setting changed. Please restart the server for changes to take effect.',
+        message: req.t('security.warnings.httpsRestart'),
         requiresRestart: true
       });
     } else {
@@ -160,7 +160,7 @@ router.get('/mfa-setup', requireAuth, requireRole(['admin']), (req, res) => {
   qrcode.toDataURL(secret.otpauth_url, (err, dataUrl) => {
     if (err) {
       console.error('QR code error:', err);
-      return res.status(500).render('error', { message: 'Error generating QR code', error: err });
+      return res.status(500).render('error', { message: req.t('mfa.errorGeneratingQR'), error: err });
     }
 
     res.render('admin/mfa-setup', {
@@ -181,7 +181,7 @@ router.post('/mfa-setup', requireAuth, requireRole(['admin']), async (req, res) 
   const secret = req.session.tempMfaSecret;
 
   if (!secret) {
-    return res.status(400).json({ success: false, error: 'No MFA setup in progress' });
+    return res.status(400).json({ success: false, error: req.t('mfa.noSetupInProgress') });
   }
 
   // Verify the code
@@ -193,7 +193,7 @@ router.post('/mfa-setup', requireAuth, requireRole(['admin']), async (req, res) 
   });
 
   if (!verified) {
-    return res.json({ success: false, error: 'Invalid code. Please try again.' });
+    return res.json({ success: false, error: req.t('mfa.invalidCode') });
   }
 
   // Save MFA secret to user
@@ -449,7 +449,7 @@ router.post('/backups/set-frequency', requireAuth, requireRole(['admin']), (req,
   const { frequency } = req.body;
 
   if (!frequency || ![5, 15, 30, 60, 360, 720, 1440].includes(parseInt(frequency))) {
-    return res.status(400).json({ success: false, error: 'Invalid frequency' });
+    return res.status(400).json({ success: false, error: req.t('backups.invalidFrequency') });
   }
 
   db.prepare(`
@@ -501,7 +501,7 @@ router.get('/backups/download/:filename', requireAuth, requireRole(['admin']), (
   const backup = backups.find(b => b.filename === filename);
 
   if (!backup) {
-    return res.status(404).json({ error: 'Backup not found' });
+    return res.status(404).json({ error: req.t('backups.backupNotFound') });
   }
 
   res.download(backup.filepath, filename);
@@ -643,17 +643,17 @@ router.post('/deletion-requests/:id/approve', requireAuth, requireRole(['admin']
   // Get the deletion request
   const request = db.prepare('SELECT * FROM deletion_requests WHERE id = ?').get(requestId);
   if (!request) {
-    return res.status(404).json({ success: false, error: 'Deletion request not found' });
+    return res.status(404).json({ success: false, error: req.t('errors.deletionRequestNotFound') });
   }
 
   if (request.status !== 'pending') {
-    return res.status(400).json({ success: false, error: 'Request has already been reviewed' });
+    return res.status(400).json({ success: false, error: req.t('errors.requestAlreadyReviewed') });
   }
 
   // Get class information for audit log
   const classData = db.prepare('SELECT * FROM classes WHERE id = ?').get(request.class_id);
   if (!classData) {
-    return res.status(404).json({ success: false, error: 'Class not found' });
+    return res.status(404).json({ success: false, error: req.t('classes.notFound') });
   }
 
   // Update request status
@@ -688,7 +688,7 @@ router.post('/deletion-requests/:id/approve', requireAuth, requireRole(['admin']
 
   res.json({
     success: true,
-    message: 'Deletion request approved. Class has been deleted.'
+    message: req.t('sod.approvalSuccess')
   });
 });
 
@@ -702,17 +702,17 @@ router.post('/deletion-requests/:id/reject', requireAuth, requireRole(['admin'])
   const { reason } = req.body;
 
   if (!reason || reason.trim().length === 0) {
-    return res.status(400).json({ success: false, error: 'Rejection reason is required' });
+    return res.status(400).json({ success: false, error: req.t('errors.rejectionReasonRequired') });
   }
 
   // Get the deletion request
   const request = db.prepare('SELECT * FROM deletion_requests WHERE id = ?').get(requestId);
   if (!request) {
-    return res.status(404).json({ success: false, error: 'Deletion request not found' });
+    return res.status(404).json({ success: false, error: req.t('errors.deletionRequestNotFound') });
   }
 
   if (request.status !== 'pending') {
-    return res.status(400).json({ success: false, error: 'Request has already been reviewed' });
+    return res.status(400).json({ success: false, error: req.t('errors.requestAlreadyReviewed') });
   }
 
   // Get class information for audit log
@@ -748,7 +748,7 @@ router.post('/deletion-requests/:id/reject', requireAuth, requireRole(['admin'])
 
   res.json({
     success: true,
-    message: 'Deletion request rejected.'
+    message: req.t('sod.rejectionSuccess')
   });
 });
 
@@ -772,7 +772,7 @@ router.post('/rate-limit/reset', requireAuth, requireRole(['admin']), (req, res)
     );
   }
 
-  res.json({ success: true, message: 'Rate limit attempts cleared' });
+  res.json({ success: true, message: req.t('errors.rateLimitCleared') });
 });
 
 module.exports = router;

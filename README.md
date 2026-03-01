@@ -1,3 +1,5 @@
+> **[Lire en français](README.fr.md)** | English (current)
+
 # HEC Montréal - Application Security Platform
 ## University Class Management System
 

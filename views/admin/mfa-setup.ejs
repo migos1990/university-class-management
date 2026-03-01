@@ -1,25 +1,31 @@
 <%- include('../partials/header') %>
 
-<h1>🔐 Multi-Factor Authentication Setup</h1>
+<h1><%= t('mfa.setupTitle') %></h1>
 
 <div class="card">
   <% if (alreadyEnabled) { %>
     <div class="alert alert-info">
-      ✓ MFA is already enabled for your account.
+      <%= t('mfa.alreadySetup') %>
     </div>
 
     <p style="margin-top: 1rem;">
-      When you log in, you'll be prompted to enter a 6-digit code from your Google Authenticator app.
+      <%= t('mfa.alreadySetupDesc') %>
     </p>
 
     <div style="margin-top: 2rem;">
-      <button onclick="disableMFA()" class="btn btn-danger">Disable MFA</button>
-      <a href="/admin/security" class="btn btn-secondary">Back to Security Panel</a>
+      <button onclick="disableMFA()" class="btn btn-danger"><%= t('common.disable') %> MFA</button>
+      <a href="/admin/security" class="btn btn-secondary"><%= t('header.securityPanel') %></a>
     </div>
 
     <script>
+      window.__i18n = {
+        confirmDisable: '<%= t("mfa.confirmDisable").replace(/\x27/g, "\\x27") %>',
+        disabledSuccess: '<%= t("mfa.disabledSuccess").replace(/\x27/g, "\\x27") %>',
+        genericError: '<%= t("errors.genericError").replace(/\x27/g, "\\x27") %>'
+      };
+
       function disableMFA() {
-        if (confirm('Are you sure you want to disable MFA? This will make your account less secure.')) {
+        if (confirm(window.__i18n.confirmDisable)) {
           fetch('/admin/mfa-disable', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
@@ -27,29 +33,29 @@
           .then(res => res.json())
           .then(data => {
             if (data.success) {
-              alert('MFA disabled successfully');
+              alert(window.__i18n.disabledSuccess);
               location.reload();
             } else {
-              alert('Error disabling MFA');
+              alert(window.__i18n.genericError);
             }
           })
-          .catch(err => alert('Error: ' + err.message));
+          .catch(err => alert(window.__i18n.genericError + ': ' + err.message));
         }
       }
     </script>
   <% } else { %>
-    <h2>Step 1: Install Google Authenticator</h2>
+    <h2><%= t('mfa.step1Title') %></h2>
     <p style="color: #666; margin-bottom: 1rem;">
-      Download Google Authenticator on your mobile device:
+      <%= t('mfa.step1Desc') %>
     </p>
     <ul style="margin-left: 2rem; margin-bottom: 2rem; color: #666;">
       <li><a href="https://apps.apple.com/app/google-authenticator/id388497605" target="_blank">iOS App Store</a></li>
       <li><a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" target="_blank">Google Play Store</a></li>
     </ul>
 
-    <h2>Step 2: Scan QR Code</h2>
+    <h2><%= t('mfa.step2Title') %></h2>
     <p style="color: #666; margin-bottom: 1rem;">
-      Open Google Authenticator and scan this QR code:
+      <%= t('mfa.step2Desc') %>
     </p>
 
     <div style="text-align: center; margin: 2rem 0; padding: 2rem; background: #f8f9fa; border-radius: 8px;">
@@ -57,32 +63,38 @@
     </div>
 
     <p style="color: #666; margin-bottom: 0.5rem;">
-      <strong>Manual Entry:</strong> If you can't scan the QR code, enter this secret manually:
+      <strong><%= t('mfa.manualEntry') %>:</strong> <%= t('mfa.manualEntryDesc') %>
     </p>
     <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px; font-family: monospace; word-break: break-all; margin-bottom: 2rem;">
       <%= secret %>
     </div>
 
-    <h2>Step 3: Enter Verification Code</h2>
+    <h2><%= t('mfa.step3Title') %></h2>
     <p style="color: #666; margin-bottom: 1rem;">
-      Enter the 6-digit code shown in Google Authenticator to verify setup:
+      <%= t('mfa.step3Desc') %>
     </p>
 
     <div id="error-message" style="display: none;" class="alert alert-danger"></div>
     <div id="success-message" style="display: none;" class="alert alert-info"></div>
 
     <div style="display: flex; gap: 1rem; align-items: center;">
-      <input type="text" id="mfa-code" placeholder="Enter 6-digit code" maxlength="6" pattern="[0-9]{6}"
+      <input type="text" id="mfa-code" placeholder="<%= t('mfa.enterCode') %>" maxlength="6" pattern="[0-9]{6}"
              style="width: 200px; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 1.5rem; text-align: center; letter-spacing: 0.5rem; font-family: monospace;">
-      <button onclick="verifyCode()" class="btn btn-success">Verify & Enable MFA</button>
+      <button onclick="verifyCode()" class="btn btn-success"><%= t('mfa.verifyAndEnable') %></button>
     </div>
 
     <script>
+      window.__i18n = window.__i18n || {};
+      window.__i18n.enterValidCode = '<%= t("mfa.enterValidCode").replace(/\x27/g, "\\x27") %>';
+      window.__i18n.enabledSuccess = '<%= t("mfa.enabledSuccess").replace(/\x27/g, "\\x27") %>';
+      window.__i18n.verificationFailed = '<%= t("mfa.verificationFailed").replace(/\x27/g, "\\x27") %>';
+      window.__i18n.genericError = '<%= t("errors.genericError").replace(/\x27/g, "\\x27") %>';
+
       function verifyCode() {
         const code = document.getElementById('mfa-code').value;
 
         if (code.length !== 6) {
-          showError('Please enter a 6-digit code');
+          showError(window.__i18n.enterValidCode);
           return;
         }
 
@@ -94,13 +106,13 @@
         .then(res => res.json())
         .then(data => {
           if (data.success) {
-            showSuccess('MFA enabled successfully! Redirecting...');
+            showSuccess(window.__i18n.enabledSuccess);
             setTimeout(() => location.href = '/admin/security', 2000);
           } else {
-            showError(data.error || 'Verification failed. Please try again.');
+            showError(data.error || window.__i18n.verificationFailed);
           }
         })
-        .catch(err => showError('Error: ' + err.message));
+        .catch(err => showError(window.__i18n.genericError + ': ' + err.message));
       }
 
       function showError(message) {

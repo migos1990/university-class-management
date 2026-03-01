@@ -236,7 +236,7 @@ app.use((err, req, res, next) => {
   console.error('Error:', err);
   res.status(err.status || 500);
   res.render('error', {
-    message: err.message || 'An error occurred',
+    message: err.message || (req.t ? req.t('errors.serverError') : 'An error occurred'),
     error: process.env.NODE_ENV === 'development' ? err : {}
   });
 });
@@ -244,7 +244,7 @@ app.use((err, req, res, next) => {
 // 404 handler
 app.use((req, res) => {
   res.status(404).render('error', {
-    message: 'Page not found',
+    message: req.t('errors.pageNotFound'),
     error: { status: 404 }
   });
 });

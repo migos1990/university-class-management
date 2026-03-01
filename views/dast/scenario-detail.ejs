@@ -1,8 +1,18 @@
 <%- include('../partials/header') %>
 
+<script>
+  window.__i18n = {
+    confirmPushToVM: '<%= t("labs.dast.confirmPushToVM").replace(/\x27/g, "\\x27") %>',
+    importedToVM: '<%= t("labs.importedToVM").replace(/\x27/g, "\\x27") %>',
+    importFailed: '<%= t("labs.importFailed").replace(/\x27/g, "\\x27") %>',
+    networkError: '<%= t("labs.networkError").replace(/\x27/g, "\\x27") %>',
+    checkingPrecondition: '<%= t("labs.dast.checkingPrecondition").replace(/\x27/g, "\\x27") %>'
+  };
+</script>
+
 <div class="page-header">
   <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
-    <a href="/dast" style="color:#666; text-decoration:none; font-size:0.9rem;">← DAST Lab</a>
+    <a href="/dast" style="color:#666; text-decoration:none; font-size:0.9rem;">&larr; <%= t('labs.dast.backToLab') %></a>
     <h1 class="page-title" style="margin:0;"><%= scenario.title %></h1>
   </div>
 </div>
@@ -34,10 +44,10 @@
 
       <!-- Live precondition indicator -->
       <div id="precondition-box" class="precondition-box pre-unmet" style="margin-bottom:1rem;">
-        Checking precondition…
+        <%= t('labs.dast.checkingPrecondition') %>
       </div>
 
-      <h3 style="margin-bottom:0.75rem;">Step-by-Step Instructions</h3>
+      <h3 style="margin-bottom:0.75rem;"><%= t('labs.dast.stepByStep') %></h3>
       <ol style="padding-left:1.5rem; line-height:2.2; margin-bottom:1rem;">
         <% steps.forEach((step, i) => { %>
           <li style="margin-bottom:0.25rem;"><%= step %></li>
@@ -46,18 +56,18 @@
 
       <% if (scenario.affected_file) { %>
       <div style="background:#f8f9fa; border-radius:6px; padding:0.75rem; font-size:0.9rem;">
-        <strong>Affected file:</strong> <code><%= scenario.affected_file %></code>
-        <% if (scenario.affected_lines) { %> lines <%= scenario.affected_lines %><% } %>
+        <strong><%= t('labs.dast.affectedFile') %>:</strong> <code><%= scenario.affected_file %></code>
+        <% if (scenario.affected_lines) { %> <%= t('labs.dast.lines') %> <%= scenario.affected_lines %><% } %>
       </div>
       <% } %>
     </div>
 
     <% if (user.role !== 'student' && allFindings.length > 0) { %>
     <div class="card">
-      <h3 style="margin-bottom:1rem;">Student Submissions (<%= allFindings.length %>)</h3>
+      <h3 style="margin-bottom:1rem;"><%= t('labs.dast.studentSubmissions') %> (<%= allFindings.length %>)</h3>
       <table>
         <thead>
-          <tr><th>Student</th><th>Triggered?</th><th>Severity</th><th>Status</th><th>Grade</th></tr>
+          <tr><th><%= t('labs.student') %></th><th><%= t('labs.dast.triggered') %></th><th><%= t('labs.severity') %></th><th><%= t('labs.status') %></th><th><%= t('labs.grade') %></th></tr>
         </thead>
         <tbody>
           <% allFindings.forEach(f => { %>
@@ -65,12 +75,12 @@
             <td>#<%= f.student_id %></td>
             <td>
               <span class="badge-sm" style="background:<%= f.triggered ? '#d4edda' : '#f8d7da' %>; color:<%= f.triggered ? '#155724' : '#721c24' %>;">
-                <%= f.triggered ? 'Yes' : 'No' %>
+                <%= f.triggered ? t('labs.yes') : t('labs.no') %>
               </span>
             </td>
-            <td><%= f.severity_rating || '—' %></td>
-            <td style="font-size:0.85rem;"><%= f.submitted_at ? 'Submitted' : 'Draft' %></td>
-            <td><%= f.grade || '—' %></td>
+            <td><%= f.severity_rating || '&mdash;' %></td>
+            <td style="font-size:0.85rem;"><%= f.submitted_at ? t('labs.submitted') : t('labs.draft') %></td>
+            <td><%= f.grade || '&mdash;' %></td>
           </tr>
           <% }) %>
         </tbody>
@@ -83,46 +93,46 @@
   <div>
     <% if (user.role === 'student') { %>
     <div class="card">
-      <h3 style="margin-bottom:1rem;">Your Finding</h3>
+      <h3 style="margin-bottom:1rem;"><%= t('labs.dast.yourFinding') %></h3>
       <% if (myFinding && myFinding.submitted_at) { %>
         <div style="background:#d4edda; border-radius:6px; padding:0.75rem; margin-bottom:1rem; color:#155724;">
-          ✓ Submitted on <%= new Date(myFinding.submitted_at).toLocaleString() %>
+          &#10003; <%= t('labs.submittedOn') %> <%= new Date(myFinding.submitted_at).toLocaleString() %>
         </div>
       <% } %>
       <form method="POST" action="/dast/scenarios/<%= scenario.id %>/findings">
         <div style="margin-bottom:0.75rem;">
-          <label style="font-weight:600; display:block; margin-bottom:0.4rem;">Triggered?</label>
-          <label style="margin-right:1rem;"><input type="radio" name="triggered" value="1" <%= myFinding && myFinding.triggered ? 'checked':'' %>> Yes</label>
-          <label><input type="radio" name="triggered" value="0" <%= myFinding && !myFinding.triggered ? 'checked':'' %>> No</label>
+          <label style="font-weight:600; display:block; margin-bottom:0.4rem;"><%= t('labs.dast.triggered') %>?</label>
+          <label style="margin-right:1rem;"><input type="radio" name="triggered" value="1" <%= myFinding && myFinding.triggered ? 'checked':'' %>> <%= t('labs.yes') %></label>
+          <label><input type="radio" name="triggered" value="0" <%= myFinding && !myFinding.triggered ? 'checked':'' %>> <%= t('labs.no') %></label>
         </div>
         <div style="margin-bottom:0.75rem;">
-          <label style="font-weight:600; display:block; margin-bottom:0.4rem;">Evidence</label>
+          <label style="font-weight:600; display:block; margin-bottom:0.4rem;"><%= t('labs.dast.evidence') %></label>
           <textarea name="trigger_evidence" rows="3" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;"><%= myFinding ? (myFinding.trigger_evidence||'') : '' %></textarea>
         </div>
         <div style="margin-bottom:0.75rem;">
-          <label style="font-weight:600; display:block; margin-bottom:0.4rem;">Impact Assessment</label>
+          <label style="font-weight:600; display:block; margin-bottom:0.4rem;"><%= t('labs.dast.impactAssessment') %></label>
           <textarea name="impact_assessment" rows="3" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;"><%= myFinding ? (myFinding.impact_assessment||'') : '' %></textarea>
         </div>
         <div style="margin-bottom:0.75rem;">
-          <label style="font-weight:600; display:block; margin-bottom:0.4rem;">Reproduction Steps</label>
+          <label style="font-weight:600; display:block; margin-bottom:0.4rem;"><%= t('labs.dast.reproductionSteps') %></label>
           <textarea name="reproduction_steps" rows="3" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;"><%= myFinding ? (myFinding.reproduction_steps||'') : '' %></textarea>
         </div>
         <div style="margin-bottom:0.75rem;">
-          <label style="font-weight:600; display:block; margin-bottom:0.4rem;">Recommendation</label>
+          <label style="font-weight:600; display:block; margin-bottom:0.4rem;"><%= t('labs.dast.recommendation') %></label>
           <textarea name="recommendation" rows="3" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;"><%= myFinding ? (myFinding.recommendation||'') : '' %></textarea>
         </div>
         <div style="margin-bottom:1rem;">
-          <label style="font-weight:600; display:block; margin-bottom:0.4rem;">Your Severity Rating</label>
+          <label style="font-weight:600; display:block; margin-bottom:0.4rem;"><%= t('labs.dast.severityRating') %></label>
           <select name="severity_rating" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px;">
-            <option value="">— select —</option>
+            <option value=""><%= t('labs.select') %></option>
             <% ['Critical','High','Medium','Low','Info'].forEach(sev => { %>
               <option value="<%= sev %>" <%= myFinding && myFinding.severity_rating === sev ? 'selected':'' %>><%= sev %></option>
             <% }) %>
           </select>
         </div>
         <div style="display:flex; gap:0.5rem;">
-          <button type="submit" name="action" value="save" style="background:#6c757d; color:#fff; border:none; border-radius:4px; padding:8px 14px; cursor:pointer;">Save Draft</button>
-          <button type="submit" name="action" value="submit" style="background:#002855; color:#fff; border:none; border-radius:4px; padding:8px 14px; cursor:pointer;">Submit</button>
+          <button type="submit" name="action" value="save" style="background:#6c757d; color:#fff; border:none; border-radius:4px; padding:8px 14px; cursor:pointer;"><%= t('labs.saveDraft') %></button>
+          <button type="submit" name="action" value="submit" style="background:#002855; color:#fff; border:none; border-radius:4px; padding:8px 14px; cursor:pointer;"><%= t('common.submit') %></button>
         </div>
       </form>
     </div>
@@ -130,19 +140,19 @@
 
     <% if (user.role !== 'student') { %>
     <div class="card">
-      <h3 style="margin-bottom:1rem;">Vulnerability Manager</h3>
+      <h3 style="margin-bottom:1rem;"><%= t('labs.vm.managerTitle') %></h3>
       <% if (vmEntry) { %>
         <div style="background:#d4edda; border-radius:6px; padding:0.75rem; color:#155724;">
-          ✓ Imported as <a href="/vm/vulns/<%= vmEntry.id %>" style="color:#155724; font-weight:600;">#<%= vmEntry.id %></a>
+          &#10003; <%= t('labs.sca.importedToVmAs') %> <a href="/vm/vulns/<%= vmEntry.id %>" style="color:#155724; font-weight:600;">#<%= vmEntry.id %></a>
         </div>
       <% } else { %>
-        <button onclick="importScenario()" style="background:#002855; color:#fff; border:none; border-radius:4px; padding:8px 16px; cursor:pointer;">Push to VM</button>
+        <button onclick="importScenario()" style="background:#002855; color:#fff; border:none; border-radius:4px; padding:8px 16px; cursor:pointer;"><%= t('labs.sca.pushToVm') %></button>
       <% } %>
     </div>
     <% } %>
 
     <div class="card">
-      <h3 style="margin-bottom:0.5rem;">Expected Finding</h3>
+      <h3 style="margin-bottom:0.5rem;"><%= t('labs.dast.expectedFinding') %></h3>
       <p style="font-size:0.9rem; color:#444; line-height:1.6;"><%= scenario.expected_finding %></p>
     </div>
   </div>
@@ -161,13 +171,13 @@
 
 <% if (user.role !== 'student') { %>
 async function importScenario() {
-  if (!confirm('Push this scenario to the Vulnerability Manager?')) return;
+  if (!confirm(window.__i18n.confirmPushToVM)) return;
   try {
     const res = await fetch('/dast/import-to-vm/<%= scenario.id %>', {method:'POST'});
     const data = await res.json();
-    if (data.success) { alert('Imported! Reloading…'); location.reload(); }
-    else alert(data.error);
-  } catch(e) { alert('Network error'); }
+    if (data.success) { alert(window.__i18n.importedToVM); location.reload(); }
+    else alert(data.error || window.__i18n.importFailed);
+  } catch(e) { alert(window.__i18n.networkError); }
 }
 <% } %>
 </script>

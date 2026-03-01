@@ -109,7 +109,19 @@
     "noSetupInProgress": "Aucune configuration MFA en cours",
     "errorGeneratingQR": "Erreur lors de la génération du code QR",
     "disabledSuccess": "MFA désactivé avec succès",
-    "confirmDisable": "Êtes-vous sûr de vouloir désactiver le MFA ? Cela rendra votre compte moins sécurisé."
+    "confirmDisable": "Êtes-vous sûr de vouloir désactiver le MFA ? Cela rendra votre compte moins sécurisé.",
+    "alreadySetupDesc": "Lors de votre connexion, vous serez invité à entrer un code à 6 chiffres de votre application Google Authenticator.",
+    "step1Title": "Étape 1 : Installer Google Authenticator",
+    "step1Desc": "Téléchargez Google Authenticator sur votre appareil mobile :",
+    "step2Title": "Étape 2 : Scanner le code QR",
+    "step2Desc": "Ouvrez Google Authenticator et scannez ce code QR :",
+    "manualEntryDesc": "Si vous ne pouvez pas scanner le code QR, entrez ce secret manuellement :",
+    "step3Title": "Étape 3 : Entrer le code de vérification",
+    "step3Desc": "Entrez le code à 6 chiffres affiché dans Google Authenticator pour vérifier la configuration :",
+    "verifyAndEnable": "Vérifier et activer le MFA",
+    "enterValidCode": "Veuillez entrer un code à 6 chiffres",
+    "enabledSuccess": "MFA activé avec succès ! Redirection...",
+    "verificationFailed": "La vérification a échoué. Veuillez réessayer."
   },
   "security": {
     "panel": {

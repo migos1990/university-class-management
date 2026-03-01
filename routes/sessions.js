@@ -24,7 +24,7 @@ router.get('/:id', requireAuth, auditLog('VIEW_SESSION', 'session'), (req, res) 
 
   if (!session) {
     return res.status(404).render('error', {
-      message: 'Session not found',
+      message: req.t('sessions.notFound'),
       error: { status: 404 }
     });
   }
@@ -38,10 +38,10 @@ router.get('/:id', requireAuth, auditLog('VIEW_SESSION', 'session'), (req, res) 
 
     if (!enrollment && req.securitySettings.rbac_enabled) {
       return res.status(403).render('error', {
-        message: 'Access Denied',
+        message: req.t('errors.accessDenied'),
         error: {
           status: 403,
-          details: 'You are not enrolled in this class'
+          details: req.t('sessions.notEnrolled')
         }
       });
     }
@@ -69,7 +69,7 @@ router.get('/:id/edit', requireAuth, requireRole(['professor', 'admin']), (req, 
 
   if (!session) {
     return res.status(404).render('error', {
-      message: 'Session not found',
+      message: req.t('sessions.notFound'),
       error: { status: 404 }
     });
   }
@@ -99,7 +99,7 @@ router.post('/:id/edit', requireAuth, requireRole(['professor', 'admin']), audit
   } catch (error) {
     console.error('Update session error:', error);
     res.status(500).render('error', {
-      message: 'Error updating session',
+      message: req.t('sessions.updateError'),
       error
     });
   }

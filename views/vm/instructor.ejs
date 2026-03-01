@@ -3,12 +3,12 @@
 <div class="page-header">
   <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
     <div>
-      <h1 class="page-title">Vulnerability Manager</h1>
-      <p class="page-subtitle"><%= stats.total %> total &nbsp;·&nbsp; <%= stats.open %> open &nbsp;·&nbsp; <%= stats.in_progress %> in progress &nbsp;·&nbsp; <%= stats.resolved %> resolved</p>
+      <h1 class="page-title"><%= t('labs.vm.managerTitle') %></h1>
+      <p class="page-subtitle"><%= stats.total %> <%= t('labs.vm.total').toLowerCase() %> &nbsp;&middot;&nbsp; <%= stats.open %> <%= t('labs.vm.open').toLowerCase() %> &nbsp;&middot;&nbsp; <%= stats.in_progress %> <%= t('labs.vm.inProgress').toLowerCase() %> &nbsp;&middot;&nbsp; <%= stats.resolved %> <%= t('labs.vm.resolved').toLowerCase() %></p>
     </div>
     <button onclick="document.getElementById('createModal').style.display='flex'"
       style="background:#002855; color:#fff; border:none; border-radius:6px; padding:10px 20px; cursor:pointer; font-weight:600;">
-      + Add Vulnerability
+      <%= t('labs.vm.addVulnerability') %>
     </button>
   </div>
 </div>
@@ -35,11 +35,11 @@
 <!-- Stats row -->
 <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:1rem; margin-bottom:1.5rem;">
   <% [
-    {label:'Critical', val:stats.critical, cls:'#ffe0e0', col:'#c0392b'},
-    {label:'High', val:stats.high, cls:'#fff0e0', col:'#c0732a'},
-    {label:'Open', val:stats.open, cls:'#fde8e8', col:'#a93226'},
-    {label:'In Progress', val:stats.in_progress, cls:'#fef9e7', col:'#9a7d0a'},
-    {label:'Resolved', val:stats.resolved, cls:'#e8f8e8', col:'#1e8449'},
+    {label:t('labs.vm.critical'), val:stats.critical, cls:'#ffe0e0', col:'#c0392b'},
+    {label:t('labs.vm.high'), val:stats.high, cls:'#fff0e0', col:'#c0732a'},
+    {label:t('labs.vm.open'), val:stats.open, cls:'#fde8e8', col:'#a93226'},
+    {label:t('labs.vm.inProgress'), val:stats.in_progress, cls:'#fef9e7', col:'#9a7d0a'},
+    {label:t('labs.vm.resolved'), val:stats.resolved, cls:'#e8f8e8', col:'#1e8449'},
   ].forEach(s => { %>
   <div class="card" style="background:<%= s.cls %>; text-align:center; padding:1rem;">
     <div style="font-size:1.8rem; font-weight:700; color:<%= s.col %>;"><%= s.val %></div>
@@ -51,18 +51,18 @@
 <div class="card">
   <!-- Filters -->
   <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-bottom:1rem; align-items:center;">
-    <input id="filterText" type="text" placeholder="Search…" oninput="applyFilter()"
+    <input id="filterText" type="text" placeholder="<%= t('labs.vm.search') %>" oninput="applyFilter()"
       style="flex:1; min-width:180px; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;">
     <select id="filterSev" onchange="applyFilter()" style="padding:8px; border:1px solid #ced4da; border-radius:4px;">
-      <option value="">All severities</option>
+      <option value=""><%= t('labs.vm.allSeverities') %></option>
       <% ['Critical','High','Medium','Low','Info'].forEach(s => { %><option value="<%= s %>"><%= s %></option><% }) %>
     </select>
     <select id="filterStatus" onchange="applyFilter()" style="padding:8px; border:1px solid #ced4da; border-radius:4px;">
-      <option value="">All statuses</option>
+      <option value=""><%= t('labs.vm.allStatuses') %></option>
       <% ['open','in_progress','resolved','wont_fix'].forEach(s => { %><option value="<%= s %>"><%= s.replace('_',' ') %></option><% }) %>
     </select>
     <select id="filterSrc" onchange="applyFilter()" style="padding:8px; border:1px solid #ced4da; border-radius:4px;">
-      <option value="">All sources</option>
+      <option value=""><%= t('labs.vm.allSources') %></option>
       <% ['sca','dast','pentest','manual'].forEach(s => { %><option value="<%= s %>"><%= s.toUpperCase() %></option><% }) %>
     </select>
   </div>
@@ -71,13 +71,13 @@
     <thead>
       <tr>
         <th>#</th>
-        <th>Title</th>
-        <th>Severity</th>
-        <th>Status</th>
-        <th>Source</th>
-        <th>Priority</th>
-        <th>OWASP</th>
-        <th>Actions</th>
+        <th><%= t('labs.title') %></th>
+        <th><%= t('labs.severity') %></th>
+        <th><%= t('labs.status') %></th>
+        <th><%= t('labs.vm.source') %></th>
+        <th><%= t('labs.vm.priority') %></th>
+        <th><%= t('labs.vm.owasp') %></th>
+        <th><%= t('labs.actions') %></th>
       </tr>
     </thead>
     <tbody>
@@ -92,9 +92,9 @@
         <td><span class="badge-sm status-<%= v.status %>"><%= v.status.replace('_',' ') %></span></td>
         <td><span class="badge-sm src-<%= v.source %>"><%= v.source.toUpperCase() %></span></td>
         <td style="text-align:center;"><%= v.priority %></td>
-        <td style="font-size:0.8rem; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><%= v.owasp_category || '—' %></td>
+        <td style="font-size:0.8rem; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><%= v.owasp_category || '&mdash;' %></td>
         <td>
-          <a href="/vm/vulns/<%= v.id %>" style="font-size:0.8rem; color:#002855;">View →</a>
+          <a href="/vm/vulns/<%= v.id %>" style="font-size:0.8rem; color:#002855;"><%= t('labs.view') %> &rarr;</a>
         </td>
       </tr>
       <% }) %>
@@ -105,42 +105,42 @@
 <!-- Create vulnerability modal -->
 <div id="createModal" class="modal">
   <div class="modal-box">
-    <h3 style="margin-bottom:1rem;">Add Vulnerability (Manual)</h3>
+    <h3 style="margin-bottom:1rem;"><%= t('labs.vm.addVulnerabilityManual') %></h3>
     <form method="POST" action="/vm/vulns">
       <div style="margin-bottom:0.75rem;">
-        <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Title *</label>
+        <label style="display:block; font-weight:600; margin-bottom:0.4rem;"><%= t('labs.title') %> *</label>
         <input type="text" name="title" required style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px;">
       </div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
         <div>
-          <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Severity *</label>
+          <label style="display:block; font-weight:600; margin-bottom:0.4rem;"><%= t('labs.severity') %> *</label>
           <select name="severity" required style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px;">
             <% ['Critical','High','Medium','Low','Info'].forEach(s => { %><option value="<%= s %>"><%= s %></option><% }) %>
           </select>
         </div>
         <div>
-          <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Priority (1=highest)</label>
+          <label style="display:block; font-weight:600; margin-bottom:0.4rem;"><%= t('labs.vm.priorityLabel') %></label>
           <select name="priority" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px;">
             <% [1,2,3,4].forEach(p => { %><option value="<%= p %>" <%= p===3?'selected':'' %>><%= p %></option><% }) %>
           </select>
         </div>
       </div>
       <div style="margin-bottom:0.75rem;">
-        <label style="display:block; font-weight:600; margin-bottom:0.4rem;">CWE</label>
-        <input type="text" name="cwe" placeholder="e.g. CWE-79" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px;">
+        <label style="display:block; font-weight:600; margin-bottom:0.4rem;"><%= t('labs.sca.cwe') %></label>
+        <input type="text" name="cwe" placeholder="<%= t('labs.vm.cwePlaceholder') %>" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px;">
       </div>
       <div style="margin-bottom:0.75rem;">
-        <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Affected Component</label>
+        <label style="display:block; font-weight:600; margin-bottom:0.4rem;"><%= t('labs.vm.affectedComponent') %></label>
         <input type="text" name="affected_component" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px;">
       </div>
       <div style="margin-bottom:1rem;">
-        <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Description</label>
+        <label style="display:block; font-weight:600; margin-bottom:0.4rem;"><%= t('labs.description') %></label>
         <textarea name="description" rows="3" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px;"></textarea>
       </div>
       <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
         <button type="button" onclick="document.getElementById('createModal').style.display='none'"
-          style="border:1px solid #dee2e6;background:none;border-radius:4px;padding:8px 14px;cursor:pointer;">Cancel</button>
-        <button type="submit" style="background:#002855; color:#fff; border:none; border-radius:4px; padding:8px 18px; cursor:pointer;">Create</button>
+          style="border:1px solid #dee2e6;background:none;border-radius:4px;padding:8px 14px;cursor:pointer;"><%= t('common.cancel') %></button>
+        <button type="submit" style="background:#002855; color:#fff; border:none; border-radius:4px; padding:8px 18px; cursor:pointer;"><%= t('labs.vm.create') %></button>
       </div>
     </form>
   </div>
