@@ -63,10 +63,10 @@ router.get('/', requireAuth, (req, res) => {
   };
 
   if (user.role === 'student') {
-    return res.render('vm/student-lab', { title: 'Vulnerability Manager', vulns, stats });
+    return res.render('vm/student-lab', { title: req.t('labs.vm.managerTitle'), vulns, stats });
   }
 
-  res.render('vm/instructor', { title: 'Vulnerability Manager', vulns, stats });
+  res.render('vm/instructor', { title: req.t('labs.vm.managerTitle'), vulns, stats });
 });
 
 // ─── GET /vm/stats ─── JSON counters
@@ -88,7 +88,7 @@ router.get('/stats', requireAuth, (req, res) => {
 // ─── GET /vm/vulns/:id ─── Detail
 router.get('/vulns/:id', requireAuth, (req, res) => {
   const vuln = db.prepare('SELECT * FROM vulnerabilities WHERE id = ?').get(parseInt(req.params.id));
-  if (!vuln) return res.status(404).render('error', { message: 'Vulnerability not found', error: { status: 404 } });
+  if (!vuln) return res.status(404).render('error', { message: req.t('errors.notFound'), error: { status: 404 } });
 
   const history = db.prepare('SELECT * FROM vm_status_history WHERE vuln_id = ?').all(vuln.id);
   const comments = db.prepare('SELECT * FROM vm_comments WHERE vuln_id = ?').all(vuln.id);
@@ -106,7 +106,7 @@ router.get('/vulns/:id', requireAuth, (req, res) => {
 // ─── POST /vm/vulns ─── Manual create (instructor+)
 router.post('/vulns', requireAuth, requireRole(['admin', 'professor']), (req, res) => {
   const { title, severity, owasp_category, cwe, affected_component, description, priority } = req.body;
-  if (!title || !severity) return res.status(400).json({ success: false, error: 'title and severity required' });
+  if (!title || !severity) return res.status(400).json({ success: false, error: req.t('labs.vm.titleSeverityRequired') });
 
   const now = new Date().toISOString();
   const result = db.prepare(`
@@ -128,7 +128,7 @@ router.post('/vulns', requireAuth, requireRole(['admin', 'professor']), (req, re
 router.post('/vulns/:id/update', requireAuth, requireRole(['admin', 'professor']), (req, res) => {
   const vulnId = parseInt(req.params.id);
   const vuln = db.prepare('SELECT * FROM vulnerabilities WHERE id = ?').get(vulnId);
-  if (!vuln) return res.status(404).json({ success: false, error: 'Not found' });
+  if (!vuln) return res.status(404).json({ success: false, error: req.t('errors.notFound') });
 
   const { title, severity, priority, owasp_category, affected_component, description, remediation_plan, remediation_deadline, assigned_to } = req.body;
   db.prepare(`
@@ -153,7 +153,7 @@ router.post('/vulns/:id/update', requireAuth, requireRole(['admin', 'professor']
 router.post('/vulns/:id/status', requireAuth, requireRole(['admin', 'professor']), (req, res) => {
   const vulnId = parseInt(req.params.id);
   const vuln = db.prepare('SELECT * FROM vulnerabilities WHERE id = ?').get(vulnId);
-  if (!vuln) return res.status(404).json({ success: false, error: 'Not found' });
+  if (!vuln) return res.status(404).json({ success: false, error: req.t('errors.notFound') });
 
   const { newStatus, note, resolution_notes } = req.body;
   const user = req.session.user;
@@ -161,17 +161,17 @@ router.post('/vulns/:id/status', requireAuth, requireRole(['admin', 'professor']
   // Validate transition
   const allowed = VALID_TRANSITIONS[vuln.status] || [];
   if (!allowed.includes(newStatus)) {
-    return res.status(400).json({ success: false, error: `Invalid transition: ${vuln.status} → ${newStatus}` });
+    return res.status(400).json({ success: false, error: req.t('labs.vm.invalidTransition') });
   }
 
   // Admin-only for wont_fix
   if (newStatus === 'wont_fix' && user.role !== 'admin') {
-    return res.status(403).json({ success: false, error: 'Only admins can mark wont_fix' });
+    return res.status(403).json({ success: false, error: req.t('labs.vm.adminOnlyWontFix') });
   }
 
   // Resolve requires resolution notes
   if (newStatus === 'resolved' && !resolution_notes) {
-    return res.status(400).json({ success: false, error: 'resolution_notes required when resolving' });
+    return res.status(400).json({ success: false, error: req.t('labs.vm.resolutionNotesRequired') });
   }
 
   const now = new Date().toISOString();
@@ -212,7 +212,7 @@ router.post('/vulns/:id/status', requireAuth, requireRole(['admin', 'professor']
 router.post('/vulns/:id/delete', requireAuth, requireRole(['admin']), (req, res) => {
   const vulnId = parseInt(req.params.id);
   const result = db.prepare('DELETE FROM vulnerabilities WHERE id = ?').run(vulnId);
-  if (result.changes === 0) return res.status(404).json({ success: false, error: 'Not found' });
+  if (result.changes === 0) return res.status(404).json({ success: false, error: req.t('errors.notFound') });
   res.json({ success: true });
 });
 
@@ -220,10 +220,10 @@ router.post('/vulns/:id/delete', requireAuth, requireRole(['admin']), (req, res)
 router.post('/vulns/:id/comments', requireAuth, (req, res) => {
   const vulnId = parseInt(req.params.id);
   const vuln = db.prepare('SELECT * FROM vulnerabilities WHERE id = ?').get(vulnId);
-  if (!vuln) return res.status(404).json({ success: false, error: 'Not found' });
+  if (!vuln) return res.status(404).json({ success: false, error: req.t('errors.notFound') });
 
   const { body } = req.body;
-  if (!body || !body.trim()) return res.status(400).json({ success: false, error: 'Comment body required' });
+  if (!body || !body.trim()) return res.status(400).json({ success: false, error: req.t('labs.vm.commentBodyRequired') });
 
   const user = req.session.user;
   db.prepare(`

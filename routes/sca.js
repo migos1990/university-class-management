@@ -51,7 +51,7 @@ router.get('/', requireAuth, (req, res) => {
     reviews.forEach(r => { reviewMap[r.finding_id] = r; });
     const submitted = reviews.filter(r => r.status === 'submitted').length;
     return res.render('sca/student-lab', {
-      title: 'SCA Lab',
+      title: req.t('labs.sca.labTitle'),
       findings,
       reviewMap,
       submitted,
@@ -77,7 +77,7 @@ router.get('/', requireAuth, (req, res) => {
   const importedIds = new Set(vmFindings.map(v => v.source_id));
 
   res.render('sca/instructor', {
-    title: 'SCA - Instructor Dashboard',
+    title: req.t('labs.sca.instructorTitle'),
     findings,
     students,
     matrix,
@@ -89,7 +89,7 @@ router.get('/', requireAuth, (req, res) => {
 // ─── GET /sca/findings/:id ─── Detail view (shared)
 router.get('/findings/:id', requireAuth, (req, res) => {
   const finding = db.prepare('SELECT * FROM sca_findings WHERE id = ?').get(parseInt(req.params.id));
-  if (!finding) return res.status(404).render('error', { message: 'Finding not found', error: { status: 404 } });
+  if (!finding) return res.status(404).render('error', { message: req.t('errors.notFound'), error: { status: 404 } });
 
   const user = req.session.user;
   let myReview = null;
@@ -123,7 +123,7 @@ router.post('/findings/:id/review', requireAuth, requireRole(['student']), (req,
   const { classification, student_notes, remediation_notes, action } = req.body;
 
   if (!['confirmed', 'false_positive', 'needs_investigation'].includes(classification)) {
-    return res.status(400).json({ success: false, error: 'Invalid classification' });
+    return res.status(400).json({ success: false, error: req.t('labs.sca.invalidClassification') });
   }
 
   const isSubmit = action === 'submit';
@@ -156,7 +156,7 @@ router.post('/findings/:id/review', requireAuth, requireRole(['student']), (req,
 // ─── GET /sca/student/:studentId ─── Instructor: view a student's reviews
 router.get('/student/:studentId', requireAuth, requireRole(['admin', 'professor']), (req, res) => {
   const student = db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.studentId);
-  if (!student) return res.status(404).render('error', { message: 'Student not found', error: { status: 404 } });
+  if (!student) return res.status(404).render('error', { message: req.t('errors.notFound'), error: { status: 404 } });
 
   const findings = db.prepare('SELECT * FROM sca_findings').all();
   const reviews = db.prepare('SELECT * FROM sca_student_reviews WHERE student_id = ?').all(student.id);

@@ -1,8 +1,19 @@
 <%- include('../partials/header') %>
 
+<script>
+  window.__i18n = {
+    confirmDelete: '<%= t("labs.vm.confirmDelete").replace(/\x27/g, "\\x27") %>',
+    confirmDeleteFinal: '<%= t("labs.vm.confirmDeleteFinal").replace(/\x27/g, "\\x27") %>',
+    statusUpdated: '<%= t("labs.vm.statusUpdated").replace(/\x27/g, "\\x27") %>',
+    errorUpdatingStatus: '<%= t("labs.vm.errorUpdatingStatus").replace(/\x27/g, "\\x27") %>',
+    networkError: '<%= t("labs.networkError").replace(/\x27/g, "\\x27") %>',
+    resolutionNotesRequired: '<%= t("labs.vm.resolutionNotesRequired").replace(/\x27/g, "\\x27") %>'
+  };
+</script>
+
 <div class="page-header">
   <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
-    <a href="/vm" style="color:#666; text-decoration:none; font-size:0.9rem;">← VM Registry</a>
+    <a href="/vm" style="color:#666; text-decoration:none; font-size:0.9rem;">&larr; <%= t('labs.vm.backToRegistry') %></a>
     <h1 class="page-title" style="margin:0;">#<%= vuln.id %>: <%= vuln.title %></h1>
   </div>
 </div>
@@ -38,32 +49,32 @@
         <span class="badge-sm src-<%= vuln.source %>"><%= vuln.source.toUpperCase() %></span>
         <% if (vuln.cwe) { %><span class="badge-sm" style="background:#f0f0f0;color:#444;"><%= vuln.cwe %></span><% } %>
         <% if (vuln.cvss_score) { %><span class="badge-sm" style="background:#f0f0f0;color:#444;">CVSS <%= vuln.cvss_score %></span><% } %>
-        Priority <%= vuln.priority %>
+        <%= t('labs.vm.priority') %> <%= vuln.priority %>
       </div>
 
       <% if (vuln.owasp_category) { %><p style="font-size:0.85rem; color:#666; margin-bottom:0.75rem;"><%= vuln.owasp_category %></p><% } %>
-      <% if (vuln.affected_component) { %><p style="margin-bottom:0.75rem;"><strong>Affected:</strong> <code><%= vuln.affected_component %></code></p><% } %>
+      <% if (vuln.affected_component) { %><p style="margin-bottom:0.75rem;"><strong><%= t('labs.vm.affected') %>:</strong> <code><%= vuln.affected_component %></code></p><% } %>
 
-      <h3 style="margin-bottom:0.5rem;">Description</h3>
+      <h3 style="margin-bottom:0.5rem;"><%= t('labs.description') %></h3>
       <p style="line-height:1.7; margin-bottom:1rem;"><%= vuln.description %></p>
 
       <% if (vuln.remediation_plan) { %>
-      <h3 style="margin-bottom:0.5rem;">Remediation Plan</h3>
+      <h3 style="margin-bottom:0.5rem;"><%= t('labs.vm.remediationPlan') %></h3>
       <p style="line-height:1.7;"><%= vuln.remediation_plan %></p>
       <% } %>
     </div>
 
     <!-- Status history -->
     <div class="card" style="margin-bottom:1rem;">
-      <h3 style="margin-bottom:0.75rem;">Status History</h3>
-      <% if (!history.length) { %><p style="color:#999; font-size:0.9rem;">No transitions yet.</p><% } %>
+      <h3 style="margin-bottom:0.75rem;"><%= t('labs.vm.statusHistory') %></h3>
+      <% if (!history.length) { %><p style="color:#999; font-size:0.9rem;"><%= t('labs.vm.noTransitions') %></p><% } %>
       <% history.forEach(h => { %>
       <div class="timeline-item">
         <div class="tl-dot"></div>
         <div>
-          <strong><%= h.old_status.replace('_',' ') %> → <%= h.new_status.replace('_',' ') %></strong>
-          by user #<%= h.changed_by %>
-          <span style="color:#999; font-size:0.8rem;"> · <%= new Date(h.changed_at).toLocaleString() %></span>
+          <strong><%= h.old_status.replace('_',' ') %> &rarr; <%= h.new_status.replace('_',' ') %></strong>
+          <%= t('labs.vm.byUser') %> #<%= h.changed_by %>
+          <span style="color:#999; font-size:0.8rem;"> &middot; <%= new Date(h.changed_at).toLocaleString() %></span>
           <% if (h.note) { %><div style="color:#555; margin-top:2px;"><%= h.note %></div><% } %>
         </div>
       </div>
@@ -72,7 +83,7 @@
 
     <!-- Comments -->
     <div class="card">
-      <h3 style="margin-bottom:0.75rem;">Comments (<%= comments.length %>)</h3>
+      <h3 style="margin-bottom:0.75rem;"><%= t('labs.vm.comments') %> (<%= comments.length %>)</h3>
       <% comments.forEach(c => { %>
       <div class="comment-item">
         <div style="font-weight:600; margin-bottom:4px;"><%= c.username %> <span style="font-weight:400; color:#999; font-size:0.8rem;"><%= new Date(c.created_at).toLocaleString() %></span></div>
@@ -81,9 +92,9 @@
       <% }) %>
 
       <form method="POST" action="/vm/vulns/<%= vuln.id %>/comments" style="margin-top:0.75rem;">
-        <textarea name="body" rows="3" placeholder="Add a comment…" required
+        <textarea name="body" rows="3" placeholder="<%= t('labs.vm.addComment') %>" required
           style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem; margin-bottom:0.5rem;"></textarea>
-        <button type="submit" style="background:#002855; color:#fff; border:none; border-radius:4px; padding:8px 16px; cursor:pointer;">Post Comment</button>
+        <button type="submit" style="background:#002855; color:#fff; border:none; border-radius:4px; padding:8px 16px; cursor:pointer;"><%= t('labs.vm.postComment') %></button>
       </form>
     </div>
   </div>
@@ -93,25 +104,25 @@
     <% if (user.role !== 'student') { %>
     <!-- Status transition -->
     <div class="card" style="margin-bottom:1rem;">
-      <h3 style="margin-bottom:1rem;">Change Status</h3>
+      <h3 style="margin-bottom:1rem;"><%= t('labs.vm.changeStatus') %></h3>
       <% if (!validNext.length) { %>
-        <p style="color:#999; font-size:0.9rem;">No transitions available from <strong><%= vuln.status %></strong>.</p>
+        <p style="color:#999; font-size:0.9rem;"><%= t('labs.vm.noTransitionsFrom') %> <strong><%= vuln.status %></strong>.</p>
       <% } else { %>
         <div id="statusMsg" style="margin-bottom:0.75rem; font-size:0.9rem;"></div>
         <div id="resolveFields" style="display:none; margin-bottom:0.75rem;">
-          <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Resolution Notes <span style="color:red;">*</span></label>
+          <label style="display:block; font-weight:600; margin-bottom:0.4rem;"><%= t('labs.vm.resolutionNotes') %> <span style="color:red;">*</span></label>
           <textarea id="resolutionNotes" rows="3" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;"></textarea>
         </div>
         <div style="margin-bottom:0.75rem;">
-          <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Transition Note</label>
-          <textarea id="statusNote" rows="2" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;" placeholder="Optional note…"></textarea>
+          <label style="display:block; font-weight:600; margin-bottom:0.4rem;"><%= t('labs.vm.transitionNote') %></label>
+          <textarea id="statusNote" rows="2" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;" placeholder="<%= t('labs.vm.optionalNote') %>"></textarea>
         </div>
         <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
           <% validNext.forEach(s => { %>
             <% if (s === 'wont_fix' && user.role !== 'admin') return; %>
             <button onclick="changeStatus('<%= s %>')"
               style="background:<%= s==='resolved'?'#1e8449':s==='wont_fix'?'#555':'#002855' %>; color:#fff; border:none; border-radius:4px; padding:8px 14px; cursor:pointer; font-size:0.9rem;">
-              → <%= s.replace('_',' ') %>
+              &rarr; <%= s.replace('_',' ') %>
             </button>
           <% }) %>
         </div>
@@ -120,43 +131,43 @@
 
     <!-- Edit fields -->
     <div class="card" style="margin-bottom:1rem;">
-      <h3 style="margin-bottom:0.75rem;">Edit</h3>
+      <h3 style="margin-bottom:0.75rem;"><%= t('labs.vm.edit') %></h3>
       <form method="POST" action="/vm/vulns/<%= vuln.id %>/update">
         <div style="margin-bottom:0.75rem;">
-          <label style="display:block; font-weight:600; margin-bottom:0.3rem; font-size:0.9rem;">Severity</label>
+          <label style="display:block; font-weight:600; margin-bottom:0.3rem; font-size:0.9rem;"><%= t('labs.severity') %></label>
           <select name="severity" style="width:100%; padding:6px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;">
             <% SEVERITIES.forEach(s => { %><option value="<%= s %>" <%= vuln.severity===s?'selected':'' %>><%= s %></option><% }) %>
           </select>
         </div>
         <div style="margin-bottom:0.75rem;">
-          <label style="display:block; font-weight:600; margin-bottom:0.3rem; font-size:0.9rem;">Priority (1=highest)</label>
+          <label style="display:block; font-weight:600; margin-bottom:0.3rem; font-size:0.9rem;"><%= t('labs.vm.priorityLabel') %></label>
           <select name="priority" style="width:100%; padding:6px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;">
             <% [1,2,3,4].forEach(p => { %><option value="<%= p %>" <%= vuln.priority===p?'selected':'' %>><%= p %></option><% }) %>
           </select>
         </div>
         <div style="margin-bottom:0.75rem;">
-          <label style="display:block; font-weight:600; margin-bottom:0.3rem; font-size:0.9rem;">Remediation Plan</label>
+          <label style="display:block; font-weight:600; margin-bottom:0.3rem; font-size:0.9rem;"><%= t('labs.vm.remediationPlan') %></label>
           <textarea name="remediation_plan" rows="3" style="width:100%; padding:6px; border:1px solid #ced4da; border-radius:4px; font-size:0.85rem;"><%= vuln.remediation_plan || '' %></textarea>
         </div>
-        <button type="submit" style="background:#6c757d; color:#fff; border:none; border-radius:4px; padding:6px 14px; cursor:pointer; font-size:0.9rem;">Save</button>
+        <button type="submit" style="background:#6c757d; color:#fff; border:none; border-radius:4px; padding:6px 14px; cursor:pointer; font-size:0.9rem;"><%= t('common.save') %></button>
       </form>
     </div>
 
     <% if (user.role === 'admin') { %>
     <div class="card">
-      <h3 style="margin-bottom:0.75rem; color:#a93226;">Danger Zone</h3>
-      <button onclick="deleteVuln()" style="background:#c0392b; color:#fff; border:none; border-radius:4px; padding:8px 14px; cursor:pointer;">Delete Vulnerability</button>
+      <h3 style="margin-bottom:0.75rem; color:#a93226;"><%= t('labs.vm.dangerZone') %></h3>
+      <button onclick="deleteVuln()" style="background:#c0392b; color:#fff; border:none; border-radius:4px; padding:8px 14px; cursor:pointer;"><%= t('labs.vm.deleteVulnerability') %></button>
     </div>
     <% } %>
     <% } %>
 
     <div class="card">
-      <h3 style="margin-bottom:0.5rem;">Metadata</h3>
+      <h3 style="margin-bottom:0.5rem;"><%= t('labs.vm.metadata') %></h3>
       <dl style="font-size:0.88rem; line-height:2;">
-        <dt style="font-weight:600;">Source</dt><dd><%= vuln.source.toUpperCase() %> #<%= vuln.source_id || '—' %></dd>
-        <dt style="font-weight:600;">Created</dt><dd><%= new Date(vuln.created_at).toLocaleString() %></dd>
-        <dt style="font-weight:600;">Updated</dt><dd><%= new Date(vuln.updated_at).toLocaleString() %></dd>
-        <% if (vuln.cvss_vector) { %><dt style="font-weight:600;">CVSS Vector</dt><dd style="font-size:0.8rem; word-break:break-all;"><%= vuln.cvss_vector %></dd><% } %>
+        <dt style="font-weight:600;"><%= t('labs.vm.source') %></dt><dd><%= vuln.source.toUpperCase() %> #<%= vuln.source_id || '&mdash;' %></dd>
+        <dt style="font-weight:600;"><%= t('labs.vm.created') %></dt><dd><%= new Date(vuln.created_at).toLocaleString() %></dd>
+        <dt style="font-weight:600;"><%= t('labs.vm.updated') %></dt><dd><%= new Date(vuln.updated_at).toLocaleString() %></dd>
+        <% if (vuln.cvss_vector) { %><dt style="font-weight:600;"><%= t('labs.vm.cvssVector') %></dt><dd style="font-size:0.8rem; word-break:break-all;"><%= vuln.cvss_vector %></dd><% } %>
       </dl>
     </div>
   </div>
@@ -172,7 +183,7 @@ function changeStatus(newStatus) {
     document.getElementById('resolveFields').style.display = 'block';
     if (!resolutionNotes.trim()) {
       msg.style.color = '#721c24';
-      msg.textContent = 'Please enter resolution notes before marking as resolved.';
+      msg.textContent = window.__i18n.resolutionNotesRequired;
       return;
     }
   }
@@ -186,14 +197,14 @@ function changeStatus(newStatus) {
   .then(data => {
     if (data.success) {
       msg.style.color = '#155724';
-      msg.textContent = 'Status updated! Reloading…';
+      msg.textContent = window.__i18n.statusUpdated;
       setTimeout(() => location.reload(), 600);
     } else {
       msg.style.color = '#721c24';
-      msg.textContent = data.error || 'Error updating status.';
+      msg.textContent = data.error || window.__i18n.errorUpdatingStatus;
     }
   })
-  .catch(() => { msg.style.color='#721c24'; msg.textContent='Network error.'; });
+  .catch(() => { msg.style.color='#721c24'; msg.textContent=window.__i18n.networkError; });
 }
 
 // Show resolution notes field when "resolved" button is visible
@@ -207,14 +218,14 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function deleteVuln() {
-  if (!confirm('Permanently delete this vulnerability? This cannot be undone.')) return;
-  if (!confirm('Are you sure? All history and comments will also be removed.')) return;
+  if (!confirm(window.__i18n.confirmDelete)) return;
+  if (!confirm(window.__i18n.confirmDeleteFinal)) return;
   try {
     const res = await fetch('/vm/vulns/<%= vuln.id %>/delete', {method:'POST', headers:{'Accept':'application/json'}});
     const data = await res.json();
     if (data.success) { window.location.href = '/vm'; }
     else alert(data.error);
-  } catch(e) { alert('Network error'); }
+  } catch(e) { alert(window.__i18n.networkError); }
 }
 </script>
 

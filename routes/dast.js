@@ -43,7 +43,7 @@ router.get('/', requireAuth, (req, res) => {
     myFindings.forEach(f => { findingMap[f.scenario_id] = f; });
 
     return res.render('dast/student-lab', {
-      title: 'DAST Lab',
+      title: req.t('labs.dast.labTitle'),
       scenarios,
       findingMap,
       securitySettings: req.securitySettings
@@ -62,7 +62,7 @@ router.get('/', requireAuth, (req, res) => {
   const importedIds = new Set(vmImported.map(v => v.source_id));
 
   res.render('dast/instructor', {
-    title: 'DAST — Instructor Dashboard',
+    title: req.t('labs.dast.instructorTitle'),
     scenarios,
     students,
     countMap,
@@ -73,7 +73,7 @@ router.get('/', requireAuth, (req, res) => {
 // ─── GET /dast/scenarios/:id ─── Detail view
 router.get('/scenarios/:id', requireAuth, (req, res) => {
   const scenario = db.prepare('SELECT * FROM dast_scenarios WHERE id = ?').get(parseInt(req.params.id));
-  if (!scenario) return res.status(404).render('error', { message: 'Scenario not found', error: { status: 404 } });
+  if (!scenario) return res.status(404).render('error', { message: req.t('errors.notFound'), error: { status: 404 } });
 
   let steps = [];
   try { steps = JSON.parse(scenario.steps); } catch(e) { steps = []; }
@@ -107,21 +107,21 @@ router.get('/scenarios/:id', requireAuth, (req, res) => {
 // ─── GET /dast/scenarios/:id/precondition ─── JSON live check
 router.get('/scenarios/:id/precondition', requireAuth, (req, res) => {
   const scenario = db.prepare('SELECT * FROM dast_scenarios WHERE id = ?').get(parseInt(req.params.id));
-  if (!scenario) return res.json({ met: false, message: 'Scenario not found' });
+  if (!scenario) return res.json({ met: false, message: req.t('errors.notFound') });
 
   const settings = req.securitySettings;
   const pre = scenario.precondition;
 
   if (pre === 'none') {
-    return res.json({ met: true, message: 'No precondition required — scenario is always available.' });
+    return res.json({ met: true, message: req.t('labs.dast.noPrecondition') });
   }
   if (pre === 'rbac_disabled') {
     const met = !settings.rbac_enabled;
     return res.json({
       met,
       message: met
-        ? 'RBAC is OFF — scenario is unlocked.'
-        : 'Requires RBAC to be disabled. Ask your instructor to toggle it in the Security Panel.'
+        ? req.t('labs.dast.rbacOff')
+        : req.t('labs.dast.rbacRequired')
     });
   }
   if (pre === 'rate_limit_disabled') {
@@ -129,12 +129,12 @@ router.get('/scenarios/:id/precondition', requireAuth, (req, res) => {
     return res.json({
       met,
       message: met
-        ? 'Rate limiting is OFF — scenario is unlocked.'
-        : 'Requires Rate Limiting to be disabled. Ask your instructor to toggle it in the Security Panel.'
+        ? req.t('labs.dast.rateLimitOff')
+        : req.t('labs.dast.rateLimitRequired')
     });
   }
 
-  res.json({ met: false, message: `Unknown precondition: ${pre}` });
+  res.json({ met: false, message: req.t('labs.dast.unknownPrecondition') });
 });
 
 // ─── POST /dast/scenarios/:id/findings ─── Student submit finding
@@ -186,7 +186,7 @@ router.post('/findings/:id/update', requireAuth, requireRole(['student']), (req,
   const finding = db.prepare('SELECT * FROM dast_student_findings WHERE id = ?').get(findingId);
 
   if (!finding || finding.student_id !== studentId) {
-    return res.status(403).json({ success: false, error: 'Forbidden' });
+    return res.status(403).json({ success: false, error: req.t('errors.forbidden') });
   }
 
   const { triggered, trigger_evidence, impact_assessment, reproduction_steps, recommendation, severity_rating, action } = req.body;
@@ -214,7 +214,7 @@ router.post('/findings/:id/update', requireAuth, requireRole(['student']), (req,
 router.post('/findings/:id/feedback', requireAuth, requireRole(['admin', 'professor']), (req, res) => {
   const findingId = parseInt(req.params.id);
   const finding = db.prepare('SELECT * FROM dast_student_findings WHERE id = ?').get(findingId);
-  if (!finding) return res.status(404).json({ success: false, error: 'Not found' });
+  if (!finding) return res.status(404).json({ success: false, error: req.t('errors.notFound') });
 
   const { instructor_feedback, grade } = req.body;
   db.prepare(`
