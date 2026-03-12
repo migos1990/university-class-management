@@ -41,10 +41,10 @@ Plans:
   1. The login page displays all labels, placeholders, buttons, and demo account instructions in French
   2. The sidebar/header navigation shows all links, role badges, and team names in French on every authenticated page
   3. Error pages display friendly French messages with clear guidance on what to do next
-**Plans**: TBD
+**Plans:** 1 plan
 
 Plans:
-- [ ] 02-01: TBD
+- [ ] 02-01-PLAN.md -- Add missing translation keys and wire login.ejs, header.ejs, error.ejs with t() calls
 
 ### Phase 3: SCA Student Experience
 **Goal**: Students can complete the entire SCA lab workflow in French -- browsing findings, reading enriched descriptions, classifying vulnerabilities, writing notes, and submitting -- with guided support throughout
@@ -96,7 +96,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Translation Foundation | 1/1 | Complete | 2026-03-12 |
-| 2. Shared UI Translation | 0/? | Not started | - |
+| 2. Shared UI Translation | 0/1 | Not started | - |
 | 3. SCA Student Experience | 0/? | Not started | - |
 | 4. SCA Instructor Experience | 0/? | Not started | - |
 | 5. Deployment Verification | 0/? | Not started | - |
