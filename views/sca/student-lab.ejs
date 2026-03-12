@@ -1,8 +1,8 @@
 <%- include('../partials/header') %>
 
 <div class="page-header">
-  <h1 class="page-title">Static Code Analysis Lab</h1>
-  <p class="page-subtitle">Review each finding, classify it, and document your reasoning — then submit when ready.</p>
+  <h1 class="page-title"><%= t('sca.studentLab.title') %></h1>
+  <p class="page-subtitle"><%= t('sca.studentLab.subtitle') %></p>
 </div>
 
 <style>
@@ -22,22 +22,45 @@
   .finding-card.pending { border-left:4px solid #ffc107; }
 </style>
 
+<% if (user.role === 'student') { %>
+<div id="sca-intro-banner" class="card" style="background:#e8f0ff; border:1px solid #b8d4f0; margin-bottom:1.5rem;">
+  <strong style="color:#002855; font-size:1.05rem;"><%= t('sca.guided.introBannerTitle') %></strong>
+  <p style="color:#002855; margin:0.5rem 0;"><%= t('sca.guided.introBannerText') %></p>
+  <button onclick="dismissBanner()" style="background:#002855; color:#fff; border:none; border-radius:4px; padding:6px 16px; cursor:pointer; font-size:0.85rem;">
+    <%= t('sca.guided.dismiss') %>
+  </button>
+</div>
+<% } %>
+
 <div class="card" style="margin-bottom:1.5rem;">
   <div style="display:flex; align-items:center; gap:1.5rem; flex-wrap:wrap;">
     <div>
       <div style="font-size:2rem; font-weight:700; color:#002855;"><%= submitted %>/<%= total %></div>
-      <div style="color:#666; font-size:0.9rem;">findings submitted</div>
+      <div style="color:#666; font-size:0.9rem;"><%= t('sca.studentLab.findingsSubmitted') %></div>
     </div>
     <div style="flex:1; min-width:200px;">
       <div class="progress-outer">
         <div class="progress-inner" style="width:<%= total ? Math.round(submitted/total*100) : 0 %>%;"></div>
       </div>
       <div style="font-size:0.8rem; color:#666; margin-top:4px;">
-        <%= total ? Math.round(submitted/total*100) : 0 %>% complete
+        <%= total ? Math.round(submitted/total*100) : 0 %>% <%= t('sca.studentLab.complete') %>
       </div>
     </div>
   </div>
 </div>
+
+<%
+  const diffColors = {
+    easy: { bg: '#e8f8e8', color: '#1e8449' },
+    medium: { bg: '#fff0e0', color: '#c0732a' },
+    advanced: { bg: '#ffe0e0', color: '#c0392b' }
+  };
+  const diffLabel = {
+    easy: t('sca.difficulty.easy'),
+    medium: t('sca.difficulty.medium'),
+    advanced: t('sca.difficulty.advanced')
+  };
+%>
 
 <% findings.forEach(f => {
   const review = reviewMap[f.id];
@@ -50,10 +73,11 @@
       <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem;">
         <span class="badge-sm sev-<%= f.severity %>"><%= f.severity %></span>
         <span class="badge-sm" style="background:#e8f0ff; color:#1a5276;"><%= f.cwe %></span>
+        <span class="badge-sm" style="background:<%= diffColors[f.difficulty].bg %>; color:<%= diffColors[f.difficulty].color %>;"><%= diffLabel[f.difficulty] %></span>
         <% if (isDone) { %>
-          <span class="badge-sm" style="background:#d4edda; color:#155724;">✓ Submitted</span>
+          <span class="badge-sm" style="background:#d4edda; color:#155724;"><%= t('sca.studentLab.submitted') %></span>
         <% } else if (hasDraft) { %>
-          <span class="badge-sm" style="background:#fff3cd; color:#856404;">Draft saved</span>
+          <span class="badge-sm" style="background:#fff3cd; color:#856404;"><%= t('sca.studentLab.draftSaved') %></span>
         <% } %>
       </div>
       <a href="/sca/findings/<%= f.id %>" style="font-size:1.05rem; font-weight:600; color:#002855; text-decoration:none;">
@@ -64,39 +88,39 @@
       </div>
     </div>
     <button onclick="toggleForm(<%= f.id %>)" style="background:#002855; color:#fff; border:none; border-radius:6px; padding:6px 14px; cursor:pointer; font-size:0.85rem; white-space:nowrap;">
-      <%= isDone ? 'View / Edit' : review ? 'Continue' : 'Start Review' %>
+      <%= isDone ? t('sca.studentLab.viewEdit') : review ? t('sca.studentLab.continueReview') : t('sca.studentLab.startReview') %>
     </button>
   </div>
 
   <!-- Inline review form (hidden by default) -->
   <div id="form-<%= f.id %>" style="display:none; margin-top:1rem; padding-top:1rem; border-top:1px solid #dee2e6;">
     <div style="background:#f8f9fa; border-radius:6px; padding:0.75rem; margin-bottom:1rem;">
-      <strong>Code snippet:</strong>
+      <strong><%= t('sca.findingDetail.codeSnippet') %> :</strong>
       <pre style="margin:0.5rem 0 0; font-size:0.85rem; overflow-x:auto; white-space:pre-wrap; word-break:break-word;"><%= f.code_snippet %></pre>
     </div>
     <p style="margin-bottom:0.75rem; font-size:0.9rem;"><%= f.description %></p>
     <form onsubmit="saveReview(event, <%= f.id %>)">
       <div style="margin-bottom:0.75rem;">
-        <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Classification</label>
+        <label style="display:block; font-weight:600; margin-bottom:0.4rem;"><%= t('sca.findingDetail.classification') %></label>
         <select name="classification" required style="width:100%; max-width:320px; padding:8px; border:1px solid #ced4da; border-radius:4px;">
-          <option value="">— select —</option>
-          <option value="confirmed"           <%= review && review.classification==='confirmed'           ? 'selected':'' %>>True Positive (confirmed vulnerability)</option>
-          <option value="false_positive"      <%= review && review.classification==='false_positive'      ? 'selected':'' %>>False Positive</option>
-          <option value="needs_investigation" <%= review && review.classification==='needs_investigation' ? 'selected':'' %>>Needs Further Investigation</option>
+          <option value=""><%= t('sca.findingDetail.selectOption') %></option>
+          <option value="confirmed"           <%= review && review.classification==='confirmed'           ? 'selected':'' %>><%= t('sca.common.truePositiveDesc') %></option>
+          <option value="false_positive"      <%= review && review.classification==='false_positive'      ? 'selected':'' %>><%= t('sca.common.falsePositive') %></option>
+          <option value="needs_investigation" <%= review && review.classification==='needs_investigation' ? 'selected':'' %>><%= t('sca.common.needsInvestigation') %></option>
         </select>
       </div>
       <div style="margin-bottom:0.75rem;">
-        <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Your Analysis Notes</label>
-        <textarea name="student_notes" rows="3" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;" placeholder="Explain why you classified it this way…"><%= review ? (review.student_notes || '') : '' %></textarea>
+        <label style="display:block; font-weight:600; margin-bottom:0.4rem;"><%= t('sca.findingDetail.yourNotes') %></label>
+        <textarea name="student_notes" rows="3" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;" placeholder="<%= t('sca.findingDetail.yourNotes') %>..."><%= review ? (review.student_notes || '') : '' %></textarea>
       </div>
       <div style="margin-bottom:1rem;">
-        <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Proposed Remediation</label>
-        <textarea name="remediation_notes" rows="3" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;" placeholder="How would you fix this?"><%= review ? (review.remediation_notes || '') : '' %></textarea>
+        <label style="display:block; font-weight:600; margin-bottom:0.4rem;"><%= t('sca.findingDetail.proposedRemediation') %></label>
+        <textarea name="remediation_notes" rows="3" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;" placeholder="<%= t('sca.findingDetail.proposedRemediation') %>..."><%= review ? (review.remediation_notes || '') : '' %></textarea>
       </div>
       <div style="display:flex; gap:0.5rem;">
-        <button type="submit" name="action" value="save" style="background:#6c757d; color:#fff; border:none; border-radius:4px; padding:8px 18px; cursor:pointer;">Save Draft</button>
-        <button type="submit" name="action" value="submit" style="background:#002855; color:#fff; border:none; border-radius:4px; padding:8px 18px; cursor:pointer;">Submit</button>
-        <button type="button" onclick="toggleForm(<%= f.id %>)" style="background:none; border:1px solid #dee2e6; border-radius:4px; padding:8px 14px; cursor:pointer; color:#666;">Cancel</button>
+        <button type="submit" name="action" value="save" style="background:#6c757d; color:#fff; border:none; border-radius:4px; padding:8px 18px; cursor:pointer;"><%= t('sca.findingDetail.saveDraft') %></button>
+        <button type="submit" name="action" value="submit" style="background:#002855; color:#fff; border:none; border-radius:4px; padding:8px 18px; cursor:pointer;"><%= t('sca.findingDetail.submit') %></button>
+        <button type="button" onclick="toggleForm(<%= f.id %>)" style="background:none; border:1px solid #dee2e6; border-radius:4px; padding:8px 14px; cursor:pointer; color:#666;"><%= t('common.cancel') %></button>
       </div>
       <div id="msg-<%= f.id %>" style="margin-top:0.5rem; font-size:0.85rem;"></div>
     </form>
@@ -105,6 +129,12 @@
 <% }) %>
 
 <script>
+const MSG_SAVING = '<%= t("sca.common.saving") %>';
+const MSG_SAVED = '<%= t("sca.common.savedDraft") %>';
+const MSG_SUBMITTED = '<%= t("sca.common.submittedSuccess") %>';
+const MSG_ERROR = '<%= t("sca.common.errorSaving") %>';
+const MSG_NETWORK = '<%= t("sca.common.networkError") %>';
+
 function toggleForm(id) {
   const el = document.getElementById('form-' + id);
   el.style.display = el.style.display === 'none' ? 'block' : 'none';
@@ -118,7 +148,7 @@ async function saveReview(event, findingId) {
   data.set('action', action);
 
   const msg = document.getElementById('msg-' + findingId);
-  msg.textContent = 'Saving…';
+  msg.textContent = MSG_SAVING;
 
   try {
     const res = await fetch(`/sca/findings/${findingId}/review`, {
@@ -129,16 +159,25 @@ async function saveReview(event, findingId) {
     const result = await res.json();
     if (result.success) {
       msg.style.color = '#155724';
-      msg.textContent = action === 'submit' ? '✓ Submitted!' : '✓ Draft saved.';
+      msg.textContent = action === 'submit' ? MSG_SUBMITTED : MSG_SAVED;
       setTimeout(() => location.reload(), 800);
     } else {
       msg.style.color = '#721c24';
-      msg.textContent = result.error || 'Error saving review.';
+      msg.textContent = result.error || MSG_ERROR;
     }
   } catch(e) {
     msg.style.color = '#721c24';
-    msg.textContent = 'Network error — please try again.';
+    msg.textContent = MSG_NETWORK;
   }
+}
+
+if (localStorage.getItem('sca-intro-dismissed')) {
+  var b = document.getElementById('sca-intro-banner');
+  if (b) b.style.display = 'none';
+}
+function dismissBanner() {
+  localStorage.setItem('sca-intro-dismissed', '1');
+  document.getElementById('sca-intro-banner').style.display = 'none';
 }
 </script>
 
