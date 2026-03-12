@@ -74,30 +74,30 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TRAN-01 | Phase TBD | Pending |
-| TRAN-02 | Phase TBD | Pending |
-| TRAN-03 | Phase TBD | Pending |
-| TRAN-04 | Phase TBD | Pending |
-| TRAN-05 | Phase TBD | Pending |
-| TRAN-06 | Phase TBD | Pending |
-| TRAN-07 | Phase TBD | Pending |
-| TRAN-08 | Phase TBD | Pending |
-| TRAN-09 | Phase TBD | Pending |
-| TRAN-10 | Phase TBD | Pending |
-| SCAC-01 | Phase TBD | Pending |
-| SCAC-02 | Phase TBD | Pending |
-| SCAC-03 | Phase TBD | Pending |
-| SCAC-04 | Phase TBD | Pending |
-| INST-01 | Phase TBD | Pending |
-| DEPL-01 | Phase TBD | Pending |
-| DEPL-02 | Phase TBD | Pending |
-| DEPL-03 | Phase TBD | Pending |
+| TRAN-01 | Phase 1 | Pending |
+| TRAN-02 | Phase 3 | Pending |
+| TRAN-03 | Phase 3 | Pending |
+| TRAN-04 | Phase 4 | Pending |
+| TRAN-05 | Phase 4 | Pending |
+| TRAN-06 | Phase 2 | Pending |
+| TRAN-07 | Phase 2 | Pending |
+| TRAN-08 | Phase 2 | Pending |
+| TRAN-09 | Phase 3 | Pending |
+| TRAN-10 | Phase 3 | Pending |
+| SCAC-01 | Phase 3 | Pending |
+| SCAC-02 | Phase 3 | Pending |
+| SCAC-03 | Phase 3 | Pending |
+| SCAC-04 | Phase 3 | Pending |
+| INST-01 | Phase 4 | Pending |
+| DEPL-01 | Phase 5 | Pending |
+| DEPL-02 | Phase 5 | Pending |
+| DEPL-03 | Phase 5 | Pending |
 
 **Coverage:**
 - v1 requirements: 18 total
-- Mapped to phases: 0
-- Unmapped: 18
+- Mapped to phases: 18
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-12*
-*Last updated: 2026-03-12 after initial definition*
+*Last updated: 2026-03-12 after roadmap creation*
