@@ -56,11 +56,11 @@ Plans:
   3. Saving a draft and submitting a finding produces French feedback messages (AJAX responses) confirming the action
   4. A dismissible guided workflow intro banner in French explains the analysis approach to students on the lab view
   5. Each finding offers contextual hints in French with scaffolded analysis guidance that helps students understand what good triage looks like
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
+- [ ] 03-01-PLAN.md -- Enrich finding descriptions with business impact, add per-finding hint keys, wire route handler with localize/difficulty/sorting
+- [ ] 03-02-PLAN.md -- Wire student-lab.ejs and finding-detail.ejs with t() calls, intro banner, difficulty badges, AJAX feedback, and collapsible hints
 
 ### Phase 4: SCA Instructor Experience
 **Goal**: The instructor can monitor class progress in French -- seeing which students have started, their completion rates, and reviewing individual student submissions
@@ -97,6 +97,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 |-------|----------------|--------|-----------|
 | 1. Translation Foundation | 1/1 | Complete | 2026-03-12 |
 | 2. Shared UI Translation | 0/1 | Not started | - |
-| 3. SCA Student Experience | 0/? | Not started | - |
+| 3. SCA Student Experience | 0/2 | Not started | - |
 | 4. SCA Instructor Experience | 0/? | Not started | - |
 | 5. Deployment Verification | 0/? | Not started | - |
