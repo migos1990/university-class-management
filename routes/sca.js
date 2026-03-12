@@ -160,12 +160,15 @@ router.get('/findings/:id', requireAuth, (req, res) => {
   const localizedFinding = localize(finding, lang);
   localizedFinding.difficulty = DIFFICULTY_MAP[finding.id] || 'medium';
 
+  const users = user.role !== 'student' ? db.prepare('SELECT id, username FROM users WHERE role = ?').all('student') : null;
+
   res.render('sca/finding-detail', {
     title: localizedFinding.title,
     finding: localizedFinding,
     myReview,
     allReviews,
     vmEntry,
+    users,
     needsPrism: true
   });
 });
