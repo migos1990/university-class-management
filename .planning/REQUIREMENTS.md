@@ -33,9 +33,9 @@ Requirements for tonight's class. Each maps to roadmap phases.
 
 ### Deployment Verification
 
-- [ ] **DEPL-01**: Codespaces first-boot works cleanly (seeding, SSL, all team instances start)
+- [x] **DEPL-01**: Codespaces first-boot works cleanly (seeding, SSL, all team instances start)
 - [ ] **DEPL-02**: End-to-end student journey verified (login -> SCA lab -> review finding -> save draft -> submit -> instructor sees submission)
-- [ ] **DEPL-03**: Codespaces port visibility configured for student access
+- [x] **DEPL-03**: Codespaces port visibility configured for student access
 
 ## v2 Requirements
 
@@ -89,9 +89,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCAC-03 | Phase 3 | Complete |
 | SCAC-04 | Phase 3 | Complete |
 | INST-01 | Phase 4 | Complete |
-| DEPL-01 | Phase 5 | Pending |
+| DEPL-01 | Phase 5 | Complete |
 | DEPL-02 | Phase 5 | Pending |
-| DEPL-03 | Phase 5 | Pending |
+| DEPL-03 | Phase 5 | Complete |
 
 **Coverage:**
 - v1 requirements: 18 total
