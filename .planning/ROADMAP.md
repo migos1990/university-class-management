@@ -28,10 +28,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   1. A new browser session loads the application in French (no manual language selection needed)
   2. The fr.json file contains all SCA, navigation, and shared UI translation keys needed by subsequent phases
   3. A localize() helper exists that returns French content from seed data objects when available, falling back to English
-**Plans**: TBD
+**Plans:** 1 plan
 
 Plans:
-- [ ] 01-01: TBD
+- [ ] 01-01-PLAN.md -- Default language to French, localize() helper, bulk SCA translation keys in fr.json and en.json
 
 ### Phase 2: Shared UI Translation
 **Goal**: Students see French from the moment they open the application -- login, navigation, error pages are all in Quebec French
@@ -95,7 +95,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Translation Foundation | 0/? | Not started | - |
+| 1. Translation Foundation | 0/1 | Not started | - |
 | 2. Shared UI Translation | 0/? | Not started | - |
 | 3. SCA Student Experience | 0/? | Not started | - |
 | 4. SCA Instructor Experience | 0/? | Not started | - |
