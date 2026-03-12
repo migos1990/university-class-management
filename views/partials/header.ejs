@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= typeof title !== 'undefined' ? title : 'HEC Montréal - Application Security' %></title>
+  <title><%= typeof title !== 'undefined' ? title : t('nav.defaultTitle') %></title>
   <style>
     * {
       margin: 0;
@@ -412,7 +412,7 @@
   <%# Instructor broadcast banner — polls /api/instructor-message every 30s %>
   <div id="instructor-banner" style="display:none;position:sticky;top:0;z-index:9999;background:#002855;color:#fff;padding:0.6rem 1.5rem;font-size:0.9rem;display:none;align-items:center;justify-content:space-between;gap:1rem;">
     <span id="instructor-banner-text"></span>
-    <button onclick="document.getElementById('instructor-banner').style.display='none'" style="background:transparent;border:1px solid rgba(255,255,255,0.5);color:#fff;border-radius:3px;padding:2px 10px;cursor:pointer;font-size:0.8rem;flex-shrink:0;">Dismiss</button>
+    <button onclick="document.getElementById('instructor-banner').style.display='none'" style="background:transparent;border:1px solid rgba(255,255,255,0.5);color:#fff;border-radius:3px;padding:2px 10px;cursor:pointer;font-size:0.8rem;flex-shrink:0;"><%= t('common.close') %></button>
   </div>
   <script>
     (function() {
@@ -449,83 +449,83 @@
           <img src="/images/hec-logo.svg" alt="HEC Montréal">
           <div>
             <div class="sidebar-logo-text">HEC Montréal</div>
-            <div class="sidebar-logo-subtitle">Application Security</div>
+            <div class="sidebar-logo-subtitle"><%= t('nav.appSubtitle') %></div>
           </div>
         </a>
       </div>
 
       <nav class="sidebar-nav">
         <div class="nav-section">
-          <div class="nav-section-title">Main</div>
+          <div class="nav-section-title"><%= t('nav.main') %></div>
           <a href="/dashboard" class="nav-link">
             <span class="nav-icon">📊</span>
-            <span>Dashboard</span>
+            <span><%= t('common.dashboard') %></span>
           </a>
           <a href="/classes" class="nav-link">
             <span class="nav-icon">📚</span>
-            <span>Classes</span>
+            <span><%= t('nav.classes') %></span>
           </a>
         </div>
 
         <% if (user.role === 'admin') { %>
         <div class="nav-section">
-          <div class="nav-section-title">Administration</div>
+          <div class="nav-section-title"><%= t('nav.administration') %></div>
           <a href="/admin/security" class="nav-link">
             <span class="nav-icon">🔒</span>
-            <span>Security Panel</span>
+            <span><%= t('nav.securityPanel') %></span>
           </a>
           <a href="/admin/audit-logs" class="nav-link">
             <span class="nav-icon">📋</span>
-            <span>Audit Logs</span>
+            <span><%= t('nav.auditLogs') %></span>
           </a>
           <a href="/admin/mfa-setup" class="nav-link">
             <span class="nav-icon">🔐</span>
-            <span>MFA Setup</span>
+            <span><%= t('nav.mfaSetup') %></span>
           </a>
           <a href="/admin/backups" class="nav-link">
             <span class="nav-icon">💾</span>
-            <span>Backups</span>
+            <span><%= t('nav.backups') %></span>
           </a>
         </div>
         <% } %>
 
         <% if (user.role === 'professor') { %>
         <div class="nav-section">
-          <div class="nav-section-title">Teaching</div>
+          <div class="nav-section-title"><%= t('nav.teaching') %></div>
           <a href="/dashboard" class="nav-link">
             <span class="nav-icon">📝</span>
-            <span>My Classes</span>
+            <span><%= t('nav.myClasses') %></span>
           </a>
         </div>
         <% } %>
 
         <% if (user.role === 'student') { %>
         <div class="nav-section">
-          <div class="nav-section-title">Learning</div>
+          <div class="nav-section-title"><%= t('nav.learning') %></div>
           <a href="/dashboard" class="nav-link">
             <span class="nav-icon">📖</span>
-            <span>My Enrollments</span>
+            <span><%= t('nav.myEnrollments') %></span>
           </a>
         </div>
         <% } %>
 
         <div class="nav-section">
-          <div class="nav-section-title">Security Labs</div>
+          <div class="nav-section-title"><%= t('nav.securityLabs') %></div>
           <a href="/sca" class="nav-link <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/sca') ? 'active' : '' %>">
             <span class="nav-icon">🔍</span>
-            <span>Static Analysis</span>
+            <span><%= t('nav.staticAnalysis') %></span>
           </a>
           <a href="/dast" class="nav-link <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/dast') ? 'active' : '' %>">
             <span class="nav-icon">⚡</span>
-            <span>Dynamic Analysis</span>
+            <span><%= t('nav.dynamicAnalysis') %></span>
           </a>
           <a href="/vm" class="nav-link <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/vm') ? 'active' : '' %>">
             <span class="nav-icon">📊</span>
-            <span>Vuln Management</span>
+            <span><%= t('nav.vulnManagement') %></span>
           </a>
           <a href="/pentest" class="nav-link <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/pentest') ? 'active' : '' %>">
             <span class="nav-icon">🎯</span>
-            <span>Pentest Lab</span>
+            <span><%= t('nav.pentestLab') %></span>
           </a>
         </div>
       </nav>
@@ -535,10 +535,10 @@
           <div class="user-avatar">👤</div>
           <div class="user-details">
             <div class="user-name"><%= user.username %></div>
-            <div class="user-role"><%= user.role %></div>
+            <div class="user-role"><%= ({admin: t('nav.roleAdmin'), professor: t('nav.roleProf'), student: t('nav.roleStudent')})[user.role] || user.role %></div>
           </div>
         </div>
-        <a href="/auth/logout" class="logout-btn">Logout</a>
+        <a href="/auth/logout" class="logout-btn"><%= t('common.logout') %></a>
       </div>
     </aside>
 
@@ -546,7 +546,7 @@
     <div class="main-content">
       <div class="security-status">
         <div class="security-badges">
-          <span class="security-label">Security Status:</span>
+          <span class="security-label"><%= t('nav.securityStatus') %></span>
           <span class="badge <%= securitySettings.mfa_enabled ? 'badge-success' : 'badge-danger' %>">
             MFA: <%= securitySettings.mfa_enabled ? 'ON' : 'OFF' %>
           </span>

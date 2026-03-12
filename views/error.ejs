@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Error - University Class Management</title>
+  <title><%= t('common.error') %> - HEC Montr&eacute;al <%= t('nav.appSubtitle') %></title>
   <style>
     * {
       margin: 0;
@@ -98,11 +98,24 @@
       <div class="error-code"><%= error.status %></div>
     <% } %>
 
-    <h1><%= message %></h1>
+    <%
+      var statusCode = (error && error.status) ? error.status : 500;
+      var titleMap = {
+        404: t('errors.notFoundTitle'),
+        403: t('errors.forbiddenTitle'),
+        429: t('errors.tooManyAttemptsTitle'),
+      };
+      var guidanceMap = {
+        404: t('errors.notFoundGuidance'),
+        403: t('errors.forbiddenGuidance'),
+        429: t('errors.tooManyAttemptsGuidance'),
+      };
+      var errorTitle = titleMap[statusCode] || t('errors.serverErrorTitle');
+      var errorGuidance = guidanceMap[statusCode] || t('errors.serverErrorGuidance');
+    %>
+    <h1><%= errorTitle %></h1>
 
-    <% if (error && error.details) { %>
-      <p class="error-message"><%= error.details %></p>
-    <% } %>
+    <p class="error-message"><%= errorGuidance %></p>
 
     <% if (error && error.stack && process.env.NODE_ENV === 'development') { %>
       <div class="error-details">
@@ -111,7 +124,7 @@
       </div>
     <% } %>
 
-    <a href="/dashboard" class="btn">← Back to Dashboard</a>
+    <a href="/dashboard" class="btn">&larr; <%= t('errors.backToDashboard') %></a>
   </div>
 </body>
 </html>
