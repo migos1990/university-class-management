@@ -13,7 +13,7 @@ Requirements for tonight's class. Each maps to roadmap phases.
 - [x] **TRAN-02**: SCA student-lab view fully translated to French (progress text, button labels, form fields, AJAX feedback)
 - [x] **TRAN-03**: SCA finding-detail view fully translated to French (code snippet labels, classification options, notes placeholders)
 - [ ] **TRAN-04**: SCA instructor dashboard fully translated to French (table headers, matrix labels, import buttons)
-- [ ] **TRAN-05**: SCA student-detail view fully translated to French
+- [x] **TRAN-05**: SCA student-detail view fully translated to French
 - [x] **TRAN-06**: Header/sidebar navigation translated to French (all nav links, role badges, team name)
 - [x] **TRAN-07**: Login page fully translated to French
 - [x] **TRAN-08**: Error page translated to French
@@ -29,7 +29,7 @@ Requirements for tonight's class. Each maps to roadmap phases.
 
 ### Instructor Dashboard
 
-- [ ] **INST-01**: Live class progress stats on SCA instructor view (students started, average completion %, pace)
+- [x] **INST-01**: Live class progress stats on SCA instructor view (students started, average completion %, pace)
 
 ### Deployment Verification
 
@@ -78,7 +78,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TRAN-02 | Phase 3 | Complete |
 | TRAN-03 | Phase 3 | Complete |
 | TRAN-04 | Phase 4 | Pending |
-| TRAN-05 | Phase 4 | Pending |
+| TRAN-05 | Phase 4 | Complete |
 | TRAN-06 | Phase 2 | Complete |
 | TRAN-07 | Phase 2 | Complete |
 | TRAN-08 | Phase 2 | Complete |
@@ -88,7 +88,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCAC-02 | Phase 3 | Complete |
 | SCAC-03 | Phase 3 | Complete |
 | SCAC-04 | Phase 3 | Complete |
-| INST-01 | Phase 4 | Pending |
+| INST-01 | Phase 4 | Complete |
 | DEPL-01 | Phase 5 | Pending |
 | DEPL-02 | Phase 5 | Pending |
 | DEPL-03 | Phase 5 | Pending |
