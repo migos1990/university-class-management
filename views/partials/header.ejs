@@ -407,6 +407,17 @@
       color: #666;
     }
   </style>
+<% if (locals.needsPrism) { %>
+<link rel="stylesheet" href="/vendor/prism/prism-one-dark.css">
+<link rel="stylesheet" href="/vendor/prism/prism-line-numbers.css">
+<link rel="stylesheet" href="/vendor/prism/prism-line-highlight.css">
+<style>
+  .line-highlight {
+    background: rgba(224, 108, 117, 0.15) !important;
+    border-left: 3px solid #e06c75;
+  }
+</style>
+<% } %>
 </head>
 <body>
   <%# Instructor broadcast banner — polls /api/instructor-message every 30s %>

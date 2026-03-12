@@ -165,7 +165,8 @@ router.get('/findings/:id', requireAuth, (req, res) => {
     finding: localizedFinding,
     myReview,
     allReviews,
-    vmEntry
+    vmEntry,
+    needsPrism: true
   });
 });
 

@@ -50,7 +50,7 @@
       </p>
 
       <h3 style="margin-bottom:0.5rem;"><%= t('sca.findingDetail.codeSnippet') %></h3>
-      <pre style="background:#282c34; color:#abb2bf; padding:1rem; border-radius:6px; overflow-x:auto; font-size:0.9rem; margin-bottom:1rem;"><%= finding.code_snippet %></pre>
+      <pre class="line-numbers" data-start="<%= finding.snippet_start_line %>" data-line="<%= finding.line_number %>" data-line-offset="<%= finding.snippet_start_line - 1 %>" style="border-radius:6px; margin-bottom:1rem;"><code class="language-<%= finding.id === 11 ? 'json' : 'javascript' %>"><%= finding.code_snippet %></code></pre>
 
       <h3 style="margin-bottom:0.5rem;"><%= t('sca.findingDetail.description') %></h3>
       <p style="margin-bottom:1rem; line-height:1.7;"><%= finding.description %></p>
