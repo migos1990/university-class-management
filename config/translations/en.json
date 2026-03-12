@@ -384,7 +384,9 @@
       "classProgress": "Class Progress",
       "studentsStarted": "Students Started",
       "avgCompletion": "Average Completion",
-      "overallPace": "Overall Pace"
+      "overallPace": "Overall Pace",
+      "confirmImport": "Push this finding to the Vulnerability Manager?",
+      "importFailed": "Import failed"
     },
     "studentDetail": {
       "backToDashboard": "SCA Dashboard",

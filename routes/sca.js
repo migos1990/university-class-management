@@ -75,6 +75,7 @@ router.get('/', requireAuth, (req, res) => {
   }
 
   // Instructor / admin view
+  const lang = req.session.language || 'fr';
   const allReviews = db.prepare('SELECT * FROM sca_student_reviews').all();
   const students = db.prepare('SELECT * FROM users WHERE role = ?').all('student');
 
@@ -91,14 +92,47 @@ router.get('/', requireAuth, (req, res) => {
   ).all();
   const importedIds = new Set(vmFindings.map(v => v.source_id));
 
+  const localizedFindings = findings.map(f => localize(f, lang));
+
   res.render('sca/instructor', {
-    title: 'SCA - Instructor Dashboard',
-    findings,
+    title: t(lang, 'sca.instructor.title'),
+    findings: localizedFindings,
     students,
     matrix,
     importedIds,
     allReviews
   });
+});
+
+// ─── GET /sca/stats ─── Live class progress JSON for polling
+router.get('/stats', requireAuth, requireRole(['admin', 'professor']), (req, res) => {
+  const totalFindings = db.prepare('SELECT COUNT(*) as count FROM sca_findings').get().count;
+  const totalStudents = db.prepare("SELECT COUNT(*) as count FROM users WHERE role = 'student'").get().count;
+
+  // Students started: those with at least 1 review record (any status: pending or submitted)
+  const studentsStarted = db.prepare(
+    'SELECT COUNT(DISTINCT student_id) as count FROM sca_student_reviews'
+  ).get().count;
+
+  // Average completion: mean of (submitted / totalFindings) per student, across ALL students
+  const submittedPerStudent = db.prepare(`
+    SELECT student_id, COUNT(*) as cnt
+    FROM sca_student_reviews WHERE status = 'submitted'
+    GROUP BY student_id
+  `).all();
+  let avgCompletion = 0;
+  if (totalStudents > 0 && totalFindings > 0) {
+    const totalPct = submittedPerStudent.reduce((sum, s) => sum + (s.cnt / totalFindings), 0);
+    avgCompletion = Math.round((totalPct / totalStudents) * 100);
+  }
+
+  // Pace: submissions in last 5 minutes (only those with a non-null submitted_at)
+  const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+  const pace = db.prepare(
+    'SELECT COUNT(*) as count FROM sca_student_reviews WHERE submitted_at IS NOT NULL AND submitted_at >= ?'
+  ).get(fiveMinAgo).count;
+
+  res.json({ studentsStarted, totalStudents, avgCompletion, pace });
 });
 
 // ─── GET /sca/findings/:id ─── Detail view (shared)
@@ -177,15 +211,18 @@ router.get('/student/:studentId', requireAuth, requireRole(['admin', 'professor'
   const student = db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.studentId);
   if (!student) return res.status(404).render('error', { message: 'Student not found', error: { status: 404 } });
 
+  const lang = req.session.language || 'fr';
   const findings = db.prepare('SELECT * FROM sca_findings').all();
   const reviews = db.prepare('SELECT * FROM sca_student_reviews WHERE student_id = ?').all(student.id);
   const reviewMap = {};
   reviews.forEach(r => { reviewMap[r.finding_id] = r; });
 
+  const localizedFindings = findings.map(f => localize(f, lang));
+
   res.render('sca/student-detail', {
-    title: `SCA Reviews: ${student.username}`,
+    title: t(lang, 'sca.studentDetail.reviewsTitle', { username: student.username }),
     student,
-    findings,
+    findings: localizedFindings,
     reviewMap,
     reviews
   });

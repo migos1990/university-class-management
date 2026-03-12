@@ -384,7 +384,9 @@
       "classProgress": "Progression de la classe",
       "studentsStarted": "Étudiants ayant commencé",
       "avgCompletion": "Complétion moyenne",
-      "overallPace": "Rythme global"
+      "overallPace": "Rythme global",
+      "confirmImport": "Envoyer ce constat au gestionnaire de vulnérabilités ?",
+      "importFailed": "Échec de l'importation"
     },
     "studentDetail": {
       "backToDashboard": "Tableau de bord ACS",
