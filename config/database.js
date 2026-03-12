@@ -582,13 +582,14 @@ function executeSQL(sql, params = []) {
         file_path: params[2],
         line_number: params[3],
         code_snippet: params[4],
-        category: params[5],
-        cwe: params[6],
-        severity: params[7],
-        description: params[8],
-        tool: params[9],
-        remediation: params[10],
-        false_positive_reason: params[11] || null,
+        snippet_start_line: params[5],
+        category: params[6],
+        cwe: params[7],
+        severity: params[8],
+        description: params[9],
+        tool: params[10],
+        remediation: params[11],
+        false_positive_reason: params[12] || null,
         created_at: new Date().toISOString()
       };
       db.sca_findings.push(finding);

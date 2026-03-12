@@ -172,79 +172,206 @@ function seedDatabase() {
   // -------------------------------------------------------
   console.log('Seeding SCA findings...');
   const scaStmt = db.prepare(`
-    INSERT INTO sca_findings (id, title, file_path, line_number, code_snippet, category, cwe, severity, description, tool, remediation, false_positive_reason)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO sca_findings (id, title, file_path, line_number, code_snippet, snippet_start_line, category, cwe, severity, description, tool, remediation, false_positive_reason)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   const scaFindings = [
-    [1, 'Hardcoded Session Secret', 'server.js', 44,
-      "secret: 'university-secret-key-change-in-production'",
+    [1, 'Hardcoded Session Secret', 'server.js', 45,
+      '// Session configuration — set secure cookie at startup if HTTPS is enabled\n' +
+      'const startupSecuritySettings = getSecuritySettings();\n' +
+      'app.use(session({\n' +
+      '  secret: \'university-class-management-secret-key-change-in-production\',\n' +
+      '  resave: false,\n' +
+      '  saveUninitialized: false,\n' +
+      '  cookie: {\n' +
+      '    maxAge: 1000 * 60 * 60 * 24, // 24 hours\n' +
+      '    httpOnly: true,\n' +
+      '    secure: !!startupSecuritySettings.https_enabled\n' +
+      '  }\n' +
+      '}));',
+      42,
       'Hardcoded Credentials', 'CWE-798', 'Critical',
       'The Express session secret is hardcoded in source code. Anyone with code access can forge session cookies, leading to authentication bypass.',
       'Semgrep', 'Move the secret to an environment variable (SESSION_SECRET). Generate a cryptographically random 64-byte value for production.', null],
 
     [2, 'Hardcoded AES Encryption Key', 'utils/encryption.js', 6,
-      "const ENCRYPTION_KEY = 'university-encryption-key-32byte';",
+      'const crypto = require(\'crypto\');\n' +
+      'const fs = require(\'fs\');\n' +
+      'const path = require(\'path\');\n' +
+      '\n' +
+      '// Default key for demonstration purposes\n' +
+      'const DEFAULT_ENCRYPTION_KEY = \'university-app-secret-key-32!\'; // Must be 32 characters\n' +
+      'const ALGORITHM = \'aes-256-cbc\';\n' +
+      'const CUSTOM_KEY_PATH = path.join(__dirname, \'..\', \'keys\', \'custom-key.txt\');',
+      1,
       'Hardcoded Credentials', 'CWE-321', 'Critical',
       'The AES-256 encryption key is hardcoded. Compromise of the key allows decryption of all encrypted PII (SSNs, grades) in the database.',
       'Semgrep', 'Load the key from an environment variable (ENCRYPTION_KEY). Use a key derivation function (PBKDF2/Argon2) if deriving from a passphrase.', null],
 
     [3, 'Plaintext Credentials Logged to Console', 'server.js', 141,
-      "console.log(`Login attempt: ${username}:${password}`);",
+      '    const security = {\n' +
+      '      mfa_enabled:         !!(settings && settings.mfa_enabled),\n' +
+      '      rbac_enabled:        !!(settings && settings.rbac_enabled),\n' +
+      '      encryption_at_rest:  !!(settings && settings.encryption_at_rest),\n' +
+      '      field_encryption:    !!(settings && settings.field_encryption),\n' +
+      '      https_enabled:       !!(settings && settings.https_enabled),\n' +
+      '      audit_logging:       !!(settings && settings.audit_logging),\n' +
+      '      rate_limiting:       !!(settings && settings.rate_limiting)\n' +
+      '    };\n' +
+      '\n' +
+      '    // User counts\n' +
+      '    const allUsers   = db.prepare(\'SELECT * FROM users\').all();',
+      130,
       'Sensitive Data Exposure', 'CWE-312', 'High',
       'Plaintext passwords are written to the console/log on every login attempt. Log aggregation systems (Splunk, CloudWatch) will store and expose credentials.',
       'Semgrep', 'Remove the password from the log statement. Log only the username and outcome (success/failure).', null],
 
     [4, 'Plaintext Password Comparison', 'routes/auth.js', 38,
-      "if (user.password === password) {",
+      '    // Check password\n' +
+      '    let passwordValid = false;\n' +
+      '    if (user.password_is_hashed) {\n' +
+      '      // Use bcrypt to compare\n' +
+      '      passwordValid = await comparePassword(password, user.password_hash);\n' +
+      '    } else {\n' +
+      '      // Direct comparison (insecure, but demonstrative)\n' +
+      '      passwordValid = (password === user.password);\n' +
+      '    }',
+      31,
       'Insecure Authentication', 'CWE-256', 'Critical',
       'Passwords are stored and compared in plaintext. A database breach exposes every user\'s password immediately.',
       'Semgrep', 'Hash passwords with bcrypt/argon2 on registration. Compare using bcrypt.compare() at login. Migrate existing users on next login.', null],
 
-    [5, 'Audit Logging Defaults to OFF', 'config/database.js', 18,
-      "audit_logging: 0",
+    [5, 'Audit Logging Defaults to OFF', 'config/database.js', 19,
+      'let db = {\n' +
+      '  users: [],\n' +
+      '  classes: [],\n' +
+      '  sessions: [],\n' +
+      '  enrollments: [],\n' +
+      '  security_settings: [{ id: 1, mfa_enabled: 0, rbac_enabled: 1,\n' +
+      '    encryption_at_rest: 1, field_encryption: 0, https_enabled: 0,\n' +
+      '    audit_logging: 0, rate_limiting: 0, backup_enabled: 0 }],\n' +
+      '  audit_logs: [],\n' +
+      '  rate_limit_attempts: [],',
+      14,
       'Security Misconfiguration', 'CWE-778', 'High',
       'Audit logging is disabled by default. Security-relevant events (logins, privilege changes, data access) are not recorded, preventing incident detection and forensics.',
       'Manual Review', 'Change the default to audit_logging: 1. Document the intentional-off toggle in the Security Panel as a teaching tool only.', null],
 
     [6, 'IDOR: No Ownership Check on Enrollment Access', 'routes/classes.js', 39,
-      "const enrollment = db.prepare('SELECT * FROM enrollments WHERE student_id = ? AND class_id = ?').get(req.params.studentId, req.params.classId);",
+      '  // Check if student is enrolled (if user is a student)\n' +
+      '  if (userRole === \'student\') {\n' +
+      '    const enrollment = db.prepare(`\n' +
+      '      SELECT * FROM enrollments\n' +
+      '      WHERE student_id = ? AND class_id = ?\n' +
+      '    `).get(userId, classId);\n' +
+      '\n' +
+      '    if (!enrollment && req.securitySettings.rbac_enabled) {\n' +
+      '      return res.status(403).render(\'error\', {\n' +
+      '        message: \'Access Denied\',',
+      32,
       'Broken Access Control', 'CWE-639', 'High',
       'The endpoint uses the student ID from the URL path rather than the authenticated session. Students can read any other student\'s enrollment records by changing the ID in the URL.',
       'Semgrep', 'Replace req.params.studentId with req.session.userId. Verify resource ownership before returning data.', null],
 
     [7, 'No CSRF Protection on State-Changing Requests', 'server.js', 1,
-      "// No CSRF middleware configured",
+      'const express = require(\'express\');\n' +
+      'const session = require(\'express-session\');\n' +
+      'const cookieParser = require(\'cookie-parser\');\n' +
+      'const path = require(\'path\');\n' +
+      'const http = require(\'http\');\n' +
+      'const https = require(\'https\');\n' +
+      'const fs = require(\'fs\');',
+      1,
       'CSRF', 'CWE-352', 'High',
       'POST/PUT/DELETE routes have no CSRF token validation. An attacker can craft a malicious page that triggers authenticated state-changing actions on behalf of a logged-in user.',
       'Manual Review', 'Add the csurf middleware (or a modern equivalent like csrf-csrf). Include the token in all forms and AJAX requests.', null],
 
-    [8, 'Rate Limiting Only on Login Route', 'middleware/rateLimiter.js', 1,
-      "// Applied only to /auth/login",
+    [8, 'Rate Limiting Only on Login Route', 'middleware/rateLimiter.js', 9,
+      'const { db } = require(\'../config/database\');\n' +
+      '\n' +
+      'const MAX_ATTEMPTS = 5;\n' +
+      'const WINDOW_MS = 15 * 60 * 1000; // 15 minutes in milliseconds\n' +
+      '\n' +
+      '/**\n' +
+      ' * Check if IP is rate limited for login attempts\n' +
+      ' */\n' +
+      'function checkRateLimit(req, res, next) {\n' +
+      '  // Only apply rate limiting if enabled\n' +
+      '  if (!req.securitySettings.rate_limiting) {\n' +
+      '    return next();\n' +
+      '  }',
+      1,
       'Security Misconfiguration', 'CWE-307', 'Medium',
       'Rate limiting is only applied to the login endpoint. Password reset, MFA verification, and API endpoints remain vulnerable to automated brute-force attacks.',
       'Manual Review', 'Apply rate limiting globally or to all sensitive endpoints. Use different limits per endpoint based on sensitivity.', null],
 
-    [9, 'No HTTP Security Headers', 'server.js', 1,
-      "// No helmet() or security headers configured",
+    [9, 'No HTTP Security Headers', 'server.js', 17,
+      '// Initialize app\n' +
+      'const app = express();\n' +
+      '\n' +
+      '// Auto-initialize database on first run\n' +
+      'console.log(\'Initializing database...\');\n' +
+      'initializeDatabase();\n' +
+      '\n' +
+      'if (!isDatabaseSeeded()) {\n' +
+      '  console.log(\'Database is empty. Seeding with sample data...\');\n' +
+      '  seedDatabase();\n' +
+      '}',
+      16,
       'Security Misconfiguration', 'CWE-693', 'Medium',
       'The application does not set security headers (CSP, X-Frame-Options, HSTS, X-Content-Type-Options). This leaves it vulnerable to clickjacking, MIME-sniffing, and XSS amplification.',
       'Semgrep', 'Add the helmet middleware: app.use(helmet()). Configure Content-Security-Policy for the application\'s specific sources.', null],
 
-    [10, 'Path Traversal in Backup Download', 'routes/admin.js', 435,
-      "const filepath = path.join(BACKUP_DIR, req.params.filename);",
+    [10, 'Path Traversal in Backup Download', 'routes/admin.js', 509,
+      '/**\n' +
+      ' * GET /admin/backups/download/:filename\n' +
+      ' * Download backup file\n' +
+      ' */\n' +
+      'router.get(\'/backups/download/:filename\', requireAuth, requireRole([\'admin\']), (req, res) => {\n' +
+      '  const { filename } = req.params;\n' +
+      '  const backups = listBackups();\n' +
+      '  const backup = backups.find(b => b.filename === filename);\n' +
+      '\n' +
+      '  if (!backup) {\n' +
+      '    return res.status(404).json({ error: \'Backup not found\' });\n' +
+      '  }\n' +
+      '\n' +
+      '  res.download(backup.filepath, filename);\n' +
+      '});',
+      504,
       'Path Traversal', 'CWE-22', 'High',
       'The backup filename comes directly from the URL without validation. An attacker with admin access can request ../../etc/passwd or any other file on the server.',
       'Semgrep', 'Validate that the resolved path starts with BACKUP_DIR: assert(filepath.startsWith(BACKUP_DIR)). Reject requests with path separators in the filename.', null],
 
     [11, 'Outdated express-session with Known Vulnerabilities', 'package.json', 24,
-      '"express-session": "^1.17.0"',
+      '  "dependencies": {\n' +
+      '    "express": "^4.18.2",\n' +
+      '    "express-session": "^1.17.3",\n' +
+      '    "ejs": "^3.1.9",\n' +
+      '    "bcrypt": "^5.1.1",\n' +
+      '    "speakeasy": "^2.0.0",\n' +
+      '    "qrcode": "^1.5.3",\n' +
+      '    "cookie-parser": "^1.4.6",\n' +
+      '    "selfsigned": "^2.4.1"\n' +
+      '  }',
+      22,
       'Vulnerable Dependency', 'CWE-1035', 'Medium',
       'The project uses an older version of express-session. Dependencies should be kept current to include security patches.',
       'npm audit', 'Run npm audit fix. Pin to the latest stable version. Add npm audit to the CI pipeline to catch regressions.', null],
 
-    [12, 'Session Cookie Missing secure Flag', 'server.js', 50,
-      "cookie: { secure: false }",
+    [12, 'Session Cookie Missing secure Flag', 'server.js', 51,
+      'app.use(session({\n' +
+      '  secret: \'university-class-management-secret-key-change-in-production\',\n' +
+      '  resave: false,\n' +
+      '  saveUninitialized: false,\n' +
+      '  cookie: {\n' +
+      '    maxAge: 1000 * 60 * 60 * 24, // 24 hours\n' +
+      '    httpOnly: true,\n' +
+      '    secure: !!startupSecuritySettings.https_enabled\n' +
+      '  }\n' +
+      '}));',
+      44,
       'Sensitive Cookie', 'CWE-614', 'Medium',
       'The session cookie does not have the secure flag set. Over an HTTP connection the session token is transmitted in plaintext and can be intercepted by a network attacker.',
       'Semgrep', 'Set secure: process.env.NODE_ENV === "production" so the flag is active in production HTTPS deployments while remaining usable in local HTTP dev.', null]
