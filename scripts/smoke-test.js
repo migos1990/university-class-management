@@ -1,61 +1,71 @@
 /**
- * Smoke Test Script for University Class Management System
+ * Comprehensive Smoke Test for University Class Management System
  *
- * This script runs basic tests to verify the application is working correctly.
- * Run before class to ensure all key functions work.
+ * Pre-class verification command: npm test
+ * Tests all 13 ports (dashboard + 12 team instances) for:
+ *   - Health check responsiveness
+ *   - French login page rendering ("Connexion")
+ *   - Deep authenticated student journey on one instance
+ *   - Instructor dashboard French content and stats endpoint
  *
- * Usage: npm run test
- * Output: Opens an HTML report in the browser
+ * Output: Emoji pass/fail per port with X/13 summary
+ * Exit code: 0 if all pass, 1 if any fail
  */
 
 const http = require('http');
-const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
+// ---------------------------------------------------------------------------
 // Configuration
-const BASE_URL = process.env.TEST_URL || 'http://localhost:3001';
-const REPORT_PATH = path.join(__dirname, '..', 'test-report.html');
+// ---------------------------------------------------------------------------
 
-// Test accounts
-const TEST_ACCOUNTS = [
-  { username: 'admin', password: 'admin123', role: 'admin', expectedPages: ['/dashboard', '/admin/security', '/admin/audit-logs'] },
-  { username: 'prof_jones', password: 'prof123', role: 'professor', expectedPages: ['/dashboard'] },
-  { username: 'alice_student', password: 'student123', role: 'student', expectedPages: ['/dashboard'] }
-];
+const configPath = path.join(__dirname, '..', 'classroom.config.json');
+let config;
+try {
+  config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+} catch (e) {
+  console.error('Could not read classroom.config.json:', e.message);
+  process.exit(1);
+}
 
-// Public pages to test
-const PUBLIC_PAGES = [
-  { path: '/', name: 'Login Page' }
-];
+const DASHBOARD_PORT = config.dashboardPort || 3000;
+const BASE_PORT = config.basePort || 3001;
+const INSTANCE_COUNT = config.instanceCount || 12;
+const TEAMS = config.teams || [];
 
-// Test results storage
-const results = {
-  startTime: new Date(),
-  endTime: null,
-  passed: 0,
-  failed: 0,
-  tests: []
-};
+const REQUEST_TIMEOUT = 5000;   // ms per request
+const HEALTH_RETRIES = 3;       // retry attempts for health check
+const HEALTH_DELAY = 2000;      // ms between retries
+
+// Build port list: dashboard + team instances
+const ALL_PORTS = [DASHBOARD_PORT];
+for (let i = 0; i < INSTANCE_COUNT; i++) {
+  ALL_PORTS.push(BASE_PORT + i);
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 /**
- * Make an HTTP request
+ * Make an HTTP request with timeout support.
  */
 function request(options) {
   return new Promise((resolve, reject) => {
     const url = new URL(options.url);
-    const protocol = url.protocol === 'https:' ? https : http;
 
     const reqOptions = {
       hostname: url.hostname,
-      port: url.port || (url.protocol === 'https:' ? 443 : 80),
+      port: url.port || 80,
       path: url.pathname + url.search,
       method: options.method || 'GET',
-      headers: options.headers || {},
-      rejectUnauthorized: false // Allow self-signed certs
+      headers: options.headers || {}
     };
 
-    const req = protocol.request(reqOptions, (res) => {
+    const timeout = options.timeout || REQUEST_TIMEOUT;
+
+    const req = http.request(reqOptions, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
@@ -65,6 +75,11 @@ function request(options) {
           body: data
         });
       });
+    });
+
+    req.setTimeout(timeout, () => {
+      req.destroy();
+      reject(new Error(`Timeout after ${timeout}ms`));
     });
 
     req.on('error', reject);
@@ -78,7 +93,7 @@ function request(options) {
 }
 
 /**
- * Extract session cookie from response
+ * Extract session cookie from response.
  */
 function getSessionCookie(response) {
   const setCookie = response.headers['set-cookie'];
@@ -93,443 +108,310 @@ function getSessionCookie(response) {
 }
 
 /**
- * Add test result
+ * Wait for an instance to become healthy with retry logic.
  */
-function addResult(category, name, passed, details = '') {
-  results.tests.push({
-    category,
-    name,
-    passed,
-    details,
-    timestamp: new Date().toISOString()
-  });
+async function waitForInstance(port, maxRetries, delayMs) {
+  maxRetries = maxRetries || HEALTH_RETRIES;
+  delayMs = delayMs || HEALTH_DELAY;
 
-  if (passed) {
-    results.passed++;
-    console.log(`  ✓ ${name}`);
-  } else {
-    results.failed++;
-    console.log(`  ✗ ${name} - ${details}`);
-  }
-}
-
-/**
- * Test login for a user account
- */
-async function testLogin(account) {
-  console.log(`\nTesting ${account.role} login (${account.username})...`);
-
-  try {
-    // Step 1: Get login page (and any initial cookies)
-    const loginPage = await request({ url: `${BASE_URL}/` });
-
-    if (loginPage.statusCode !== 200) {
-      addResult('Login', `${account.role}: Access login page`, false, `Status ${loginPage.statusCode}`);
-      return null;
-    }
-    addResult('Login', `${account.role}: Access login page`, true);
-
-    // Step 2: Submit login form
-    const loginData = `username=${encodeURIComponent(account.username)}&password=${encodeURIComponent(account.password)}`;
-
-    const loginResponse = await request({
-      url: `${BASE_URL}/auth/login`,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Content-Length': Buffer.byteLength(loginData)
-      },
-      body: loginData
-    });
-
-    // Check for redirect (successful login redirects to dashboard)
-    if (loginResponse.statusCode === 302 || loginResponse.statusCode === 303) {
-      const sessionCookie = getSessionCookie(loginResponse);
-      if (sessionCookie) {
-        addResult('Login', `${account.role}: Login successful`, true);
-        return sessionCookie;
-      }
-    }
-
-    // Check if we got an error page
-    if (loginResponse.body.includes('Invalid') || loginResponse.body.includes('error')) {
-      addResult('Login', `${account.role}: Login successful`, false, 'Invalid credentials');
-      return null;
-    }
-
-    addResult('Login', `${account.role}: Login successful`, false, `Unexpected response: ${loginResponse.statusCode}`);
-    return null;
-
-  } catch (error) {
-    addResult('Login', `${account.role}: Login attempt`, false, error.message);
-    return null;
-  }
-}
-
-/**
- * Test page access with session
- */
-async function testPageAccess(pagePath, pageName, sessionCookie, role) {
-  try {
-    const response = await request({
-      url: `${BASE_URL}${pagePath}`,
-      headers: {
-        'Cookie': sessionCookie
-      }
-    });
-
-    // Follow redirect if needed
-    if (response.statusCode === 302 || response.statusCode === 303) {
-      const location = response.headers.location;
-      if (location && !location.includes('/auth/login')) {
-        // Redirect to another page (not login) is OK
-        addResult('Page Access', `${role}: ${pageName} (${pagePath})`, true, 'Redirected');
-        return true;
-      }
-      addResult('Page Access', `${role}: ${pageName} (${pagePath})`, false, 'Redirected to login');
-      return false;
-    }
-
-    if (response.statusCode === 200) {
-      // Check for error indicators in the page
-      if (response.body.includes('Error') && response.body.includes('error-code')) {
-        addResult('Page Access', `${role}: ${pageName} (${pagePath})`, false, 'Error page returned');
-        return false;
-      }
-      addResult('Page Access', `${role}: ${pageName} (${pagePath})`, true);
-      return true;
-    }
-
-    addResult('Page Access', `${role}: ${pageName} (${pagePath})`, false, `Status ${response.statusCode}`);
-    return false;
-
-  } catch (error) {
-    addResult('Page Access', `${role}: ${pageName} (${pagePath})`, false, error.message);
-    return false;
-  }
-}
-
-/**
- * Test public pages
- */
-async function testPublicPages() {
-  console.log('\nTesting public pages...');
-
-  for (const page of PUBLIC_PAGES) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const response = await request({ url: `${BASE_URL}${page.path}` });
-
-      if (response.statusCode === 200) {
-        addResult('Public Pages', page.name, true);
-      } else {
-        addResult('Public Pages', page.name, false, `Status ${response.statusCode}`);
-      }
-    } catch (error) {
-      addResult('Public Pages', page.name, false, error.message);
+      const res = await request({
+        url: `http://localhost:${port}/health`,
+        timeout: REQUEST_TIMEOUT
+      });
+      if (res.statusCode === 200) return true;
+    } catch (e) {
+      // Retry on error
+    }
+    if (attempt < maxRetries) {
+      await new Promise(r => setTimeout(r, delayMs));
     }
   }
+  return false;
 }
 
 /**
- * Test static assets
+ * Get display name for a port.
  */
-async function testStaticAssets() {
-  console.log('\nTesting static assets...');
-
-  const assets = [
-    { path: '/images/hec-logo.svg', name: 'HEC Logo' }
-  ];
-
-  for (const asset of assets) {
-    try {
-      const response = await request({ url: `${BASE_URL}${asset.path}` });
-
-      if (response.statusCode === 200) {
-        addResult('Static Assets', asset.name, true);
-      } else {
-        addResult('Static Assets', asset.name, false, `Status ${response.statusCode}`);
-      }
-    } catch (error) {
-      addResult('Static Assets', asset.name, false, error.message);
-    }
+function portLabel(port) {
+  if (port === DASHBOARD_PORT) {
+    return `Instructor Dashboard (${port})`;
   }
+  const teamIndex = port - BASE_PORT;
+  const teamName = TEAMS[teamIndex] || `Instance ${teamIndex + 1}`;
+  return `${teamName} (${port})`;
 }
 
 /**
- * Generate HTML report
+ * Sleep helper.
  */
-function generateReport() {
-  results.endTime = new Date();
-  const duration = ((results.endTime - results.startTime) / 1000).toFixed(2);
-
-  const passRate = results.tests.length > 0
-    ? ((results.passed / results.tests.length) * 100).toFixed(1)
-    : 0;
-
-  const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smoke Test Report - HEC Montréal</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #f0f2f5;
-      padding: 2rem;
-      color: #333;
-    }
-    .container { max-width: 900px; margin: 0 auto; }
-    .header {
-      background: #002855;
-      color: white;
-      padding: 2rem;
-      border-radius: 12px 12px 0 0;
-      text-align: center;
-    }
-    .header h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
-    .header p { opacity: 0.8; font-size: 0.9rem; }
-    .summary {
-      background: white;
-      padding: 2rem;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1rem;
-      border-bottom: 1px solid #e0e0e0;
-    }
-    .stat {
-      text-align: center;
-      padding: 1rem;
-    }
-    .stat-value {
-      font-size: 2rem;
-      font-weight: 700;
-    }
-    .stat-label { color: #666; font-size: 0.85rem; }
-    .stat-passed .stat-value { color: #27ae60; }
-    .stat-failed .stat-value { color: #e74c3c; }
-    .stat-rate .stat-value { color: #002855; }
-    .results {
-      background: white;
-      padding: 2rem;
-      border-radius: 0 0 12px 12px;
-    }
-    .category {
-      margin-bottom: 2rem;
-    }
-    .category:last-child { margin-bottom: 0; }
-    .category h3 {
-      font-size: 1rem;
-      color: #002855;
-      margin-bottom: 1rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 2px solid #002855;
-    }
-    .test-item {
-      display: flex;
-      align-items: center;
-      padding: 0.75rem 1rem;
-      border-radius: 6px;
-      margin-bottom: 0.5rem;
-    }
-    .test-item:last-child { margin-bottom: 0; }
-    .test-passed { background: #d4edda; }
-    .test-failed { background: #f8d7da; }
-    .test-icon {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-right: 1rem;
-      font-size: 0.8rem;
-    }
-    .test-passed .test-icon { background: #27ae60; color: white; }
-    .test-failed .test-icon { background: #e74c3c; color: white; }
-    .test-name { flex: 1; font-weight: 500; }
-    .test-details {
-      font-size: 0.85rem;
-      color: #666;
-      margin-left: 1rem;
-    }
-    .test-failed .test-details { color: #721c24; }
-    .footer {
-      text-align: center;
-      padding: 1.5rem;
-      color: #666;
-      font-size: 0.85rem;
-    }
-    .all-passed {
-      background: #d4edda;
-      color: #155724;
-      padding: 1rem;
-      border-radius: 8px;
-      text-align: center;
-      margin-bottom: 1.5rem;
-      font-weight: 600;
-    }
-    .has-failures {
-      background: #f8d7da;
-      color: #721c24;
-      padding: 1rem;
-      border-radius: 8px;
-      text-align: center;
-      margin-bottom: 1.5rem;
-      font-weight: 600;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>Smoke Test Report</h1>
-      <p>HEC Montréal - Application Security Platform</p>
-    </div>
-
-    <div class="summary">
-      <div class="stat">
-        <div class="stat-value">${results.tests.length}</div>
-        <div class="stat-label">Total Tests</div>
-      </div>
-      <div class="stat stat-passed">
-        <div class="stat-value">${results.passed}</div>
-        <div class="stat-label">Passed</div>
-      </div>
-      <div class="stat stat-failed">
-        <div class="stat-value">${results.failed}</div>
-        <div class="stat-label">Failed</div>
-      </div>
-      <div class="stat stat-rate">
-        <div class="stat-value">${passRate}%</div>
-        <div class="stat-label">Pass Rate</div>
-      </div>
-    </div>
-
-    <div class="results">
-      ${results.failed === 0
-        ? '<div class="all-passed">✓ All tests passed! The application is ready for class.</div>'
-        : `<div class="has-failures">⚠ ${results.failed} test(s) failed. Please review the issues below.</div>`
-      }
-
-      ${generateTestCategories()}
-    </div>
-
-    <div class="footer">
-      <p>Test completed in ${duration} seconds</p>
-      <p>Generated: ${results.endTime.toLocaleString()}</p>
-    </div>
-  </div>
-</body>
-</html>`;
-
-  fs.writeFileSync(REPORT_PATH, html);
-  console.log(`\n📄 Report saved to: ${REPORT_PATH}`);
-  return REPORT_PATH;
+function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
 }
 
-/**
- * Generate test categories HTML
- */
-function generateTestCategories() {
-  const categories = {};
+// ---------------------------------------------------------------------------
+// Test phases
+// ---------------------------------------------------------------------------
 
-  for (const test of results.tests) {
-    if (!categories[test.category]) {
-      categories[test.category] = [];
-    }
-    categories[test.category].push(test);
-  }
-
-  let html = '';
-  for (const [category, tests] of Object.entries(categories)) {
-    html += `
-      <div class="category">
-        <h3>${category}</h3>
-        ${tests.map(test => `
-          <div class="test-item ${test.passed ? 'test-passed' : 'test-failed'}">
-            <div class="test-icon">${test.passed ? '✓' : '✗'}</div>
-            <div class="test-name">${test.name}</div>
-            ${test.details ? `<div class="test-details">${test.details}</div>` : ''}
-          </div>
-        `).join('')}
-      </div>
-    `;
-  }
-
-  return html;
-}
-
-/**
- * Open report in browser
- */
-function openReport(reportPath) {
-  const { exec } = require('child_process');
-  const platform = process.platform;
-
-  let command;
-  if (platform === 'darwin') {
-    command = `open "${reportPath}"`;
-  } else if (platform === 'win32') {
-    command = `start "" "${reportPath}"`;
-  } else {
-    command = `xdg-open "${reportPath}" 2>/dev/null || echo "Report saved to: ${reportPath}"`;
-  }
-
-  exec(command, (error) => {
-    if (error) {
-      console.log(`Open the report manually: ${reportPath}`);
-    }
-  });
-}
-
-/**
- * Main test runner
- */
 async function runTests() {
-  console.log('╔══════════════════════════════════════════════════════════╗');
-  console.log('║     HEC Montréal - Application Security Smoke Tests      ║');
-  console.log('╚══════════════════════════════════════════════════════════╝');
-  console.log(`\nTarget: ${BASE_URL}`);
-  console.log('Starting tests...\n');
+  console.log('');
+  console.log('==========================================================');
+  console.log('  HEC Montreal - Pre-Class Smoke Test');
+  console.log('==========================================================');
+  console.log(`  Ports: ${DASHBOARD_PORT}, ${BASE_PORT}-${BASE_PORT + INSTANCE_COUNT - 1}`);
+  console.log(`  Teams: ${INSTANCE_COUNT}`);
+  console.log('');
 
-  // Test 1: Public pages
-  await testPublicPages();
+  const healthyPorts = new Set();
+  const frenchPorts = new Set();
+  const failedPorts = [];
+  let allPassed = true;
 
-  // Test 2: Static assets
-  await testStaticAssets();
+  // -----------------------------------------------------------------------
+  // Phase A: Health checks (all 13 ports)
+  // -----------------------------------------------------------------------
+  console.log('--- Phase A: Health Checks ---');
+  console.log('');
 
-  // Test 3: Login and page access for each role
-  for (const account of TEST_ACCOUNTS) {
-    const sessionCookie = await testLogin(account);
+  for (const port of ALL_PORTS) {
+    const label = portLabel(port);
+    const healthy = await waitForInstance(port);
+    if (healthy) {
+      healthyPorts.add(port);
+      console.log(`  \u2705 ${label} -- healthy`);
+    } else {
+      console.log(`  \u274C ${label} -- not responding`);
+      failedPorts.push(port);
+      allPassed = false;
+    }
+  }
 
-    if (sessionCookie) {
-      // Test expected pages for this role
-      for (const pagePath of account.expectedPages) {
-        const pageName = pagePath === '/dashboard' ? 'Dashboard' : pagePath.split('/').pop();
-        await testPageAccess(pagePath, pageName, sessionCookie, account.role);
+  console.log('');
+
+  // -----------------------------------------------------------------------
+  // Phase B: French login page (all healthy ports)
+  // -----------------------------------------------------------------------
+  console.log('--- Phase B: French Login Page ---');
+  console.log('');
+
+  for (const port of ALL_PORTS) {
+    if (!healthyPorts.has(port)) continue;
+
+    const label = portLabel(port);
+    try {
+      const res = await request({ url: `http://localhost:${port}/` });
+      if (res.statusCode === 200 && res.body.includes('Connexion')) {
+        frenchPorts.add(port);
+        console.log(`  \u2705 French login -- ${label}`);
+      } else {
+        console.log(`  \u274C French login -- ${label} (missing "Connexion")`);
+        if (!failedPorts.includes(port)) failedPorts.push(port);
+        allPassed = false;
+      }
+    } catch (e) {
+      console.log(`  \u274C French login -- ${label} (${e.message})`);
+      if (!failedPorts.includes(port)) failedPorts.push(port);
+      allPassed = false;
+    }
+  }
+
+  console.log('');
+
+  // -----------------------------------------------------------------------
+  // Phase C: Deep authenticated test (port 3001 -- Team Alpha)
+  // -----------------------------------------------------------------------
+  console.log('--- Phase C: Student Journey (port 3001) ---');
+  console.log('');
+
+  const DEEP_PORT = BASE_PORT; // 3001
+
+  if (!healthyPorts.has(DEEP_PORT)) {
+    console.log(`  \u274C Skipped -- port ${DEEP_PORT} not healthy`);
+    allPassed = false;
+  } else {
+    // Step 1: Login as student
+    let studentCookie = null;
+    try {
+      const loginData = 'username=alice_student&password=student123';
+      const loginRes = await request({
+        url: `http://localhost:${DEEP_PORT}/auth/login`,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Length': Buffer.byteLength(loginData).toString()
+        },
+        body: loginData
+      });
+
+      studentCookie = getSessionCookie(loginRes);
+      if (studentCookie && (loginRes.statusCode === 302 || loginRes.statusCode === 303)) {
+        console.log('  \u2705 Student login (alice_student)');
+      } else {
+        console.log(`  \u274C Student login -- status ${loginRes.statusCode}, no session cookie`);
+        allPassed = false;
+      }
+    } catch (e) {
+      console.log(`  \u274C Student login -- ${e.message}`);
+      allPassed = false;
+    }
+
+    // Step 2: GET /sca -- French SCA lab
+    if (studentCookie) {
+      try {
+        const scaRes = await request({
+          url: `http://localhost:${DEEP_PORT}/sca`,
+          headers: { 'Cookie': studentCookie }
+        });
+        if (scaRes.statusCode === 200 && scaRes.body.includes('Analyse statique')) {
+          console.log('  \u2705 SCA lab page -- "Analyse statique" found');
+        } else {
+          console.log(`  \u274C SCA lab page -- status ${scaRes.statusCode}, missing French content`);
+          allPassed = false;
+        }
+      } catch (e) {
+        console.log(`  \u274C SCA lab page -- ${e.message}`);
+        allPassed = false;
+      }
+
+      // Step 3: GET /sca/findings/1 -- Finding detail
+      try {
+        const findingRes = await request({
+          url: `http://localhost:${DEEP_PORT}/sca/findings/1`,
+          headers: { 'Cookie': studentCookie }
+        });
+        if (findingRes.statusCode === 200 && findingRes.body.includes('Classification')) {
+          console.log('  \u2705 Finding detail -- "Classification" found');
+        } else {
+          console.log(`  \u274C Finding detail -- status ${findingRes.statusCode}, missing French content`);
+          allPassed = false;
+        }
+      } catch (e) {
+        console.log(`  \u274C Finding detail -- ${e.message}`);
+        allPassed = false;
       }
     }
   }
 
-  // Generate report
-  console.log('\n' + '═'.repeat(60));
-  console.log(`Results: ${results.passed} passed, ${results.failed} failed`);
+  console.log('');
 
-  const reportPath = generateReport();
+  // -----------------------------------------------------------------------
+  // Phase D: Instructor dashboard (port 3000)
+  // -----------------------------------------------------------------------
+  console.log('--- Phase D: Instructor Dashboard (port 3000) ---');
+  console.log('');
 
-  // Try to open report
-  if (process.argv.includes('--open')) {
-    openReport(reportPath);
+  if (!healthyPorts.has(DASHBOARD_PORT)) {
+    console.log(`  \u274C Skipped -- port ${DASHBOARD_PORT} not healthy`);
+    allPassed = false;
+  } else {
+    // Step 1: Login as professor
+    let profCookie = null;
+    try {
+      const loginData = 'username=prof_jones&password=prof123';
+      const loginRes = await request({
+        url: `http://localhost:${DASHBOARD_PORT}/auth/login`,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Length': Buffer.byteLength(loginData).toString()
+        },
+        body: loginData
+      });
+
+      profCookie = getSessionCookie(loginRes);
+      if (profCookie && (loginRes.statusCode === 302 || loginRes.statusCode === 303)) {
+        console.log('  \u2705 Professor login (prof_jones)');
+      } else {
+        console.log(`  \u274C Professor login -- status ${loginRes.statusCode}, no session cookie`);
+        allPassed = false;
+      }
+    } catch (e) {
+      console.log(`  \u274C Professor login -- ${e.message}`);
+      allPassed = false;
+    }
+
+    // Step 2: GET /sca -- Instructor dashboard French content
+    if (profCookie) {
+      try {
+        const dashRes = await request({
+          url: `http://localhost:${DASHBOARD_PORT}/sca`,
+          headers: { 'Cookie': profCookie }
+        });
+        if (dashRes.statusCode === 200 && dashRes.body.includes('\u00C9tudiants')) {
+          console.log('  \u2705 Instructor dashboard -- "\u00C9tudiants" found');
+        } else {
+          console.log(`  \u274C Instructor dashboard -- status ${dashRes.statusCode}, missing French content`);
+          allPassed = false;
+        }
+      } catch (e) {
+        console.log(`  \u274C Instructor dashboard -- ${e.message}`);
+        allPassed = false;
+      }
+
+      // Step 3: GET /sca/stats -- Stats endpoint JSON shape
+      try {
+        const statsRes = await request({
+          url: `http://localhost:${DASHBOARD_PORT}/sca/stats`,
+          headers: { 'Cookie': profCookie }
+        });
+        if (statsRes.statusCode === 200) {
+          const data = JSON.parse(statsRes.body);
+          const hasFields = 'studentsStarted' in data
+            && 'totalStudents' in data
+            && 'avgCompletion' in data
+            && 'pace' in data;
+          if (hasFields) {
+            console.log('  \u2705 Stats endpoint -- valid JSON with required fields');
+          } else {
+            console.log('  \u274C Stats endpoint -- missing required fields');
+            allPassed = false;
+          }
+        } else {
+          console.log(`  \u274C Stats endpoint -- status ${statsRes.statusCode}`);
+          allPassed = false;
+        }
+      } catch (e) {
+        console.log(`  \u274C Stats endpoint -- ${e.message}`);
+        allPassed = false;
+      }
+    }
   }
 
-  // Exit with error code if any tests failed
-  process.exit(results.failed > 0 ? 1 : 0);
+  console.log('');
+
+  // -----------------------------------------------------------------------
+  // Summary
+  // -----------------------------------------------------------------------
+  console.log('==========================================================');
+
+  // Count ports that passed all tests (health + French login)
+  const passedCount = ALL_PORTS.filter(p =>
+    healthyPorts.has(p) && frenchPorts.has(p)
+  ).length;
+
+  const total = ALL_PORTS.length;
+
+  if (passedCount === total && allPassed) {
+    console.log(`  \u2705 ${passedCount}/${total} instances passed -- ready for class!`);
+  } else {
+    console.log(`  \u26A0\uFE0F  ${passedCount}/${total} instances passed`);
+    if (failedPorts.length > 0) {
+      console.log(`  Failed ports: ${failedPorts.join(', ')} -- reduce TEAM_COUNT or check logs`);
+    }
+  }
+
+  console.log('==========================================================');
+  console.log('');
+
+  process.exit(allPassed && passedCount === total ? 0 : 1);
 }
 
-// Run tests
+// ---------------------------------------------------------------------------
+// Run
+// ---------------------------------------------------------------------------
+
 runTests().catch(error => {
-  console.error('Test runner error:', error);
+  console.error('Smoke test error:', error.message);
   process.exit(1);
 });
