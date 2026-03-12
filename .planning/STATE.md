@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Phase 3 context gathered
-last_updated: "2026-03-12T15:47:19.087Z"
-last_activity: 2026-03-12 -- Completed Phase 2 Plan 1 (shared UI translation)
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-03-12T16:07:15.946Z"
+last_activity: 2026-03-12 -- Completed Phase 3 Plan 1 (SCA content enrichment)
 progress:
   total_phases: 5
   completed_phases: 2
-  total_plans: 2
-  completed_plans: 2
-  percent: 40
+  total_plans: 4
+  completed_plans: 3
+  percent: 75
 ---
 
 # Project State
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** The SCA lab must work flawlessly end-to-end in French -- from Codespace boot to student submission to instructor review -- with zero friction for non-technical students.
-**Current focus:** Phase 2: Shared UI Translation
+**Current focus:** Phase 3: SCA Student Experience
 
 ## Current Position
 
-Phase: 2 of 5 (Shared UI Translation)
-Plan: 1 of 1 in current phase
-Status: Phase 2 complete
-Last activity: 2026-03-12 -- Completed Phase 2 Plan 1 (shared UI translation)
+Phase: 3 of 5 (SCA Student Experience)
+Plan: 1 of 2 in current phase
+Status: Plan 03-01 complete, continuing to 03-02
+Last activity: 2026-03-12 -- Completed Phase 3 Plan 1 (SCA content enrichment)
 
-Progress: [####......] 40%
+Progress: [████████░░] 75%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: 6.5min
-- Total execution time: 0.22 hours
+- Total plans completed: 3
+- Average duration: 5.7min
+- Total execution time: 0.28 hours
 
 **By Phase:**
 
@@ -45,10 +45,11 @@ Progress: [####......] 40%
 |-------|-------|-------|----------|
 | 01-translation-foundation | 1 | 5min | 5min |
 | 02-shared-ui-translation | 1 | 8min | 8min |
+| 03-sca-student-experience | 1/2 | 4min | 4min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (5min), 02-01 (8min)
-- Trend: steady
+- Last 5 plans: 01-01 (5min), 02-01 (8min), 03-01 (4min)
+- Trend: accelerating
 
 *Updated after each plan completion*
 
@@ -69,6 +70,9 @@ Recent decisions affecting current work:
 - Error page uses template-side status-code lookup instead of modifying server.js
 - Security badge values kept in English (industry-standard terms)
 - Login error shows translated string instead of server-provided English
+- Numbered hint keys (hint1, hint2, hint3) rather than array for simpler t() access
+- DIFFICULTY_MAP as route-level constant mapping finding IDs to easy/medium/advanced
+- enriched array via .map().sort() to avoid mutating original findings array
 
 ### Pending Todos
 
@@ -83,6 +87,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-12T15:47:19.082Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-sca-student-experience/03-CONTEXT.md
+Last session: 2026-03-12T16:07:15.941Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: None
