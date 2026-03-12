@@ -25,6 +25,23 @@
   details summary { cursor:pointer; font-weight:600; padding:0.5rem 0; }
 </style>
 
+<!-- Stats bar: 3 cards above Findings Overview -->
+<div style="display:flex; gap:1.5rem; margin-bottom:1.5rem; flex-wrap:wrap;">
+  <div class="card" style="flex:1; min-width:180px; text-align:center; padding:1.25rem;">
+    <div id="stat-started" style="font-size:2.2rem; font-weight:700; color:#002855;">0/0</div>
+    <div style="color:#666; font-size:0.85rem; margin-top:0.25rem;"><%= t('sca.instructor.studentsStarted') %></div>
+  </div>
+  <div class="card" style="flex:1; min-width:180px; text-align:center; padding:1.25rem;">
+    <div id="stat-completion" style="font-size:2.2rem; font-weight:700; color:#002855;">0%</div>
+    <div style="color:#666; font-size:0.85rem; margin-top:0.25rem;"><%= t('sca.instructor.avgCompletion') %></div>
+  </div>
+  <div class="card" style="flex:1; min-width:180px; text-align:center; padding:1.25rem;">
+    <div id="stat-pace" style="font-size:2.2rem; font-weight:700; color:#002855;">0</div>
+    <div style="color:#666; font-size:0.85rem; margin-top:0.25rem;"><%= t('sca.instructor.overallPace') %></div>
+  </div>
+</div>
+<div id="stats-timestamp" style="text-align:right; font-size:0.75rem; color:#999; margin-top:-1rem; margin-bottom:1rem;"></div>
+
 <div class="card" style="margin-bottom:1.5rem;">
   <h2 style="margin-bottom:1rem;"><%= t('sca.instructor.findingsOverview') %></h2>
   <table>
@@ -122,27 +139,55 @@
 </div>
 
 <script>
+// --- French constants (baked by EJS at render time) ---
+const MSG_CONFIRM_IMPORT = '<%= t("sca.instructor.confirmImport") %>';
+const MSG_IMPORTING = '<%= t("sca.instructor.importing") %>';
+const MSG_IN_VM = '<%= t("sca.instructor.inVM") %>';
+const MSG_PUSH_VM = '<%= t("sca.instructor.pushToVM") %>';
+const MSG_NETWORK_ERROR = '<%= t("sca.common.networkError") %>';
+const MSG_IMPORT_FAILED = '<%= t("sca.instructor.importFailed") %>';
+
+// --- VM Import ---
 async function importToVM(findingId, btn) {
-  if (!confirm('Push this finding to the Vulnerability Manager?')) return;
+  if (!confirm(MSG_CONFIRM_IMPORT)) return;
   btn.disabled = true;
-  btn.textContent = 'Importing…';
+  btn.textContent = MSG_IMPORTING;
   try {
-    const res = await fetch(`/sca/import-to-vm/${findingId}`, { method: 'POST' });
+    const res = await fetch('/sca/import-to-vm/' + findingId, { method: 'POST' });
     const data = await res.json();
     if (data.success) {
-      btn.textContent = 'In VM';
+      btn.textContent = MSG_IN_VM;
       btn.className = 'action-btn btn-imported';
     } else {
       btn.disabled = false;
-      btn.textContent = 'Push to VM';
-      alert(data.error || 'Import failed');
+      btn.textContent = MSG_PUSH_VM;
+      alert(data.error || MSG_IMPORT_FAILED);
     }
   } catch (e) {
     btn.disabled = false;
-    btn.textContent = 'Push to VM';
-    alert('Network error');
+    btn.textContent = MSG_PUSH_VM;
+    alert(MSG_NETWORK_ERROR);
   }
 }
+
+// --- Stats polling (30s) ---
+async function refreshStats() {
+  try {
+    const res = await fetch('/sca/stats');
+    const data = await res.json();
+    document.getElementById('stat-started').textContent = data.studentsStarted + '/' + data.totalStudents;
+    document.getElementById('stat-completion').textContent = data.avgCompletion + '%';
+    document.getElementById('stat-pace').textContent = data.pace > 0
+      ? data.pace + ' soumissions / 5 min'
+      : '0';
+    document.getElementById('stats-timestamp').textContent =
+      'Mis \u00e0 jour : ' + new Date().toLocaleTimeString('fr-CA', { hour12: false });
+  } catch (e) {
+    // Silently fail -- stats will refresh on next interval
+  }
+}
+refreshStats(); // Initial load on page open
+setInterval(refreshStats, 30000); // Refresh every 30 seconds
 </script>
 
 <%- include('../partials/footer') %>
