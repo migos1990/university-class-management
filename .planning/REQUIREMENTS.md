@@ -9,7 +9,7 @@ Requirements for tonight's class. Each maps to roadmap phases.
 
 ### Translation
 
-- [ ] **TRAN-01**: App defaults to French for all new sessions
+- [x] **TRAN-01**: App defaults to French for all new sessions
 - [ ] **TRAN-02**: SCA student-lab view fully translated to French (progress text, button labels, form fields, AJAX feedback)
 - [ ] **TRAN-03**: SCA finding-detail view fully translated to French (code snippet labels, classification options, notes placeholders)
 - [ ] **TRAN-04**: SCA instructor dashboard fully translated to French (table headers, matrix labels, import buttons)
@@ -74,7 +74,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TRAN-01 | Phase 1 | Pending |
+| TRAN-01 | Phase 1 | Complete |
 | TRAN-02 | Phase 3 | Pending |
 | TRAN-03 | Phase 3 | Pending |
 | TRAN-04 | Phase 4 | Pending |

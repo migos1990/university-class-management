@@ -12,7 +12,7 @@ Transform the existing English-only SCA lab platform into a fully French, classr
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Translation Foundation** - Default language to French, translation keys in fr.json, localize() helper for seed data
+- [x] **Phase 1: Translation Foundation** - Default language to French, translation keys in fr.json, localize() helper for seed data
 - [ ] **Phase 2: Shared UI Translation** - French login page, sidebar navigation, and error page
 - [ ] **Phase 3: SCA Student Experience** - Fully French student workflow with enriched content, guided hints, and difficulty indicators
 - [ ] **Phase 4: SCA Instructor Experience** - French instructor dashboard and student-detail views with live class progress stats
@@ -31,7 +31,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans:** 1 plan
 
 Plans:
-- [ ] 01-01-PLAN.md -- Default language to French, localize() helper, bulk SCA translation keys in fr.json and en.json
+- [x] 01-01-PLAN.md -- Default language to French, localize() helper, bulk SCA translation keys in fr.json and en.json
 
 ### Phase 2: Shared UI Translation
 **Goal**: Students see French from the moment they open the application -- login, navigation, error pages are all in Quebec French
@@ -95,7 +95,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Translation Foundation | 0/1 | Not started | - |
+| 1. Translation Foundation | 1/1 | Complete | 2026-03-12 |
 | 2. Shared UI Translation | 0/? | Not started | - |
 | 3. SCA Student Experience | 0/? | Not started | - |
 | 4. SCA Instructor Experience | 0/? | Not started | - |
