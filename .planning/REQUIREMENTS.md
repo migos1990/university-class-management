@@ -73,30 +73,30 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SNIP-01 | -- | Pending |
-| SNIP-02 | -- | Pending |
-| SNIP-03 | -- | Pending |
-| SNIP-04 | -- | Pending |
-| SNIP-05 | -- | Pending |
-| AKEY-01 | -- | Pending |
-| AKEY-02 | -- | Pending |
-| AKEY-03 | -- | Pending |
-| AKEY-04 | -- | Pending |
-| AKEY-05 | -- | Pending |
-| AKEY-06 | -- | Pending |
-| DOCS-01 | -- | Pending |
-| DOCS-02 | -- | Pending |
-| QUAL-01 | -- | Pending |
-| QUAL-02 | -- | Pending |
-| QUAL-03 | -- | Pending |
-| QUAL-04 | -- | Pending |
-| QUAL-05 | -- | Pending |
+| SNIP-01 | Phase 6 | Pending |
+| SNIP-02 | Phase 6 | Pending |
+| SNIP-03 | Phase 6 | Pending |
+| SNIP-04 | Phase 6 | Pending |
+| SNIP-05 | Phase 6 | Pending |
+| AKEY-01 | Phase 7 | Pending |
+| AKEY-02 | Phase 7 | Pending |
+| AKEY-03 | Phase 7 | Pending |
+| AKEY-04 | Phase 7 | Pending |
+| AKEY-05 | Phase 7 | Pending |
+| AKEY-06 | Phase 7 | Pending |
+| DOCS-01 | Phase 8 | Pending |
+| DOCS-02 | Phase 8 | Pending |
+| QUAL-01 | Phase 9 | Pending |
+| QUAL-02 | Phase 9 | Pending |
+| QUAL-03 | Phase 9 | Pending |
+| QUAL-04 | Phase 9 | Pending |
+| QUAL-05 | Phase 9 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 18 total
-- Mapped to phases: 0
-- Unmapped: 18
+- Mapped to phases: 18
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-12*
-*Last updated: 2026-03-12 after initial definition*
+*Last updated: 2026-03-12 after roadmap creation*
