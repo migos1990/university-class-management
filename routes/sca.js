@@ -3,6 +3,15 @@ const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/rbac');
 const { db } = require('../config/database');
+const { localize, t } = require('../utils/i18n');
+
+const DIFFICULTY_MAP = {
+  1: 'easy', 2: 'easy', 3: 'easy', 4: 'easy',
+  6: 'medium', 7: 'medium', 8: 'medium',
+  5: 'advanced', 9: 'advanced', 10: 'advanced',
+  11: 'advanced', 12: 'advanced'
+};
+const DIFFICULTY_ORDER = { easy: 0, medium: 1, advanced: 2 };
 
 // Helper: import a confirmed SCA finding into the VM as a vulnerability
 function importToVM(findingId, importedBy) {
@@ -50,9 +59,15 @@ router.get('/', requireAuth, (req, res) => {
     const reviewMap = {};
     reviews.forEach(r => { reviewMap[r.finding_id] = r; });
     const submitted = reviews.filter(r => r.status === 'submitted').length;
+    const lang = req.session.language || 'fr';
+    const enriched = findings.map(f => ({
+      ...localize(f, lang),
+      difficulty: DIFFICULTY_MAP[f.id] || 'medium'
+    }));
+    enriched.sort((a, b) => DIFFICULTY_ORDER[a.difficulty] - DIFFICULTY_ORDER[b.difficulty]);
     return res.render('sca/student-lab', {
-      title: 'SCA Lab',
-      findings,
+      title: t(lang, 'sca.studentLab.title'),
+      findings: enriched,
       reviewMap,
       submitted,
       total: findings.length
@@ -107,9 +122,13 @@ router.get('/findings/:id', requireAuth, (req, res) => {
     'SELECT * FROM vulnerabilities WHERE source = ? AND source_id = ?'
   ).get('sca', finding.id);
 
+  const lang = req.session.language || 'fr';
+  const localizedFinding = localize(finding, lang);
+  localizedFinding.difficulty = DIFFICULTY_MAP[finding.id] || 'medium';
+
   res.render('sca/finding-detail', {
-    title: `SCA: ${finding.title}`,
-    finding,
+    title: localizedFinding.title,
+    finding: localizedFinding,
     myReview,
     allReviews,
     vmEntry
