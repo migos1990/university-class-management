@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: HEC Montreal SCA Lab Production Release
-status: shipped
-stopped_at: v1.0 milestone archived
-last_updated: "2026-03-12T19:00:00.000Z"
-last_activity: 2026-03-12 -- v1.0 milestone completed and archived
+milestone: v1.1
+milestone_name: Polish & Pedagogy
+status: active
+stopped_at: null
+last_updated: "2026-03-12T20:00:00.000Z"
+last_activity: 2026-03-12 -- Milestone v1.1 started
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 8
-  completed_plans: 8
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -21,15 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** The SCA lab must work flawlessly end-to-end in French -- from Codespace boot to student submission to instructor review -- with zero friction for non-technical students.
-**Current focus:** v1.0 shipped -- planning next milestone
+**Current focus:** v1.1 Polish & Pedagogy
 
 ## Current Position
 
-Milestone: v1.0 HEC Montreal SCA Lab Production Release -- SHIPPED
-Status: All 5 phases, 8 plans, 18/18 requirements complete
-Last activity: 2026-03-12 -- Milestone archived
-
-Progress: [██████████] 100%
+Phase: Not started (defining requirements)
+Plan: --
+Status: Defining requirements
+Last activity: 2026-03-12 -- Milestone v1.1 started
 
 ## Accumulated Context
 
@@ -49,5 +48,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-12
-Stopped at: v1.0 milestone archived
+Stopped at: Milestone v1.1 initialized
 Resume file: None

@@ -30,6 +30,13 @@ The SCA lab must work flawlessly end-to-end in French — from Codespace boot to
 
 ### Active
 
+- [ ] Inline code snippets in finding detail view (~5-10 lines, syntax-highlighted, vulnerable line called out)
+- [ ] Instructor answer key for the 12 SCA findings (expected classification, reasoning, discussion points)
+- [ ] Updated README reflecting post-v1.0 project state
+- [ ] AI-driven code quality optimization (structure, consistency, efficiency)
+
+### Future
+
 - [ ] Class consensus indicators per finding (% confirmed vs FP vs needs investigation)
 - [ ] Severity distribution visual card on instructor dashboard
 - [ ] Instructor broadcast message form on SCA dashboard
@@ -44,6 +51,16 @@ The SCA lab must work flawlessly end-to-end in French — from Codespace boot to
 - Auto-grading or "correct answer" comparison — SCA triage is subjective
 - Mobile responsive design — students use laptops in class
 - Solution guide visible to students — instructor references SOLUTION-GUIDE.md during discussion
+
+## Current Milestone: v1.1 Polish & Pedagogy
+
+**Goal:** Improve the learning experience with inline code snippets, instructor answer key, updated documentation, and code quality optimization.
+
+**Target features:**
+- Inline code snippets in finding detail view (syntax-highlighted, ~5-10 lines with vulnerable line called out)
+- Instructor answer key for the 12 SCA findings
+- Updated README and project documentation
+- AI-driven code quality pass across the codebase
 
 ## Context
 
@@ -79,4 +96,4 @@ Smoke test (`npm test`) validates all 13 ports, French content, and authenticate
 | Deep test one instance, health-check all 13 | Balances thoroughness with test speed | ✓ Good |
 
 ---
-*Last updated: 2026-03-12 after v1.0 milestone*
+*Last updated: 2026-03-12 after v1.1 milestone start*
