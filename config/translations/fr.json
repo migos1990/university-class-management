@@ -426,63 +426,99 @@
     "findings": {
       "1": {
         "title": "Secret de session codé en dur",
-        "description": "Le secret de session Express est codé en dur dans le code source. Toute personne ayant accès au code peut falsifier les cookies de session, menant à un contournement de l'authentification.",
-        "remediation": "Déplacez le secret vers une variable d'environnement (SESSION_SECRET). Générez une valeur aléatoire cryptographiquement sûre de 64 octets pour la production."
+        "description": "Le secret de session Express est codé en dur dans le code source. Toute personne ayant accès au code peut falsifier les cookies de session, menant à un contournement de l'authentification. Dans cette application, cela pourrait compromettre toutes les sessions actives, permettant à un attaquant de se faire passer pour n'importe quel étudiant ou professeur et d'accéder à leurs notes ou données d'inscription.",
+        "remediation": "Déplacez le secret vers une variable d'environnement (SESSION_SECRET). Générez une valeur aléatoire cryptographiquement sûre de 64 octets pour la production.",
+        "hint1": "Que se passe-t-il si un attaquant accède au code source ?",
+        "hint2": "Cette valeur devrait-elle être dans le code ou dans l'environnement ?",
+        "hint3": "Quel type de données un attaquant pourrait-il falsifier avec ce secret ?"
       },
       "2": {
         "title": "Clé de chiffrement AES codée en dur",
-        "description": "La clé de chiffrement AES-256 est codée en dur. La compromission de la clé permet le déchiffrement de toutes les données personnelles chiffrées (NAS, notes) dans la base de données.",
-        "remediation": "Chargez la clé depuis une variable d'environnement (ENCRYPTION_KEY). Utilisez une fonction de dérivation de clé (PBKDF2/Argon2) si vous dérivez à partir d'une phrase secrète."
+        "description": "La clé de chiffrement AES-256 est codée en dur. La compromission de la clé permet le déchiffrement de toutes les données personnelles chiffrées (NAS, notes) dans la base de données. Dans cette application, un attaquant pourrait déchiffrer les numéros d'assurance sociale et les notes de tous les étudiants inscrits, causant une violation massive de données personnelles.",
+        "remediation": "Chargez la clé depuis une variable d'environnement (ENCRYPTION_KEY). Utilisez une fonction de dérivation de clé (PBKDF2/Argon2) si vous dérivez à partir d'une phrase secrète.",
+        "hint1": "Si quelqu'un obtient cette clé, quelles données peut-il déchiffrer ?",
+        "hint2": "Comment les secrets cryptographiques devraient-ils être gérés dans une application en production ?",
+        "hint3": "Quelle est la différence entre stocker une clé dans le code et dans une variable d'environnement ?"
       },
       "3": {
         "title": "Identifiants en clair dans les journaux de la console",
-        "description": "Les mots de passe en clair sont écrits dans la console/journal à chaque tentative de connexion. Les systèmes d'agrégation de journaux (Splunk, CloudWatch) stockeront et exposeront les identifiants.",
-        "remediation": "Retirez le mot de passe de l'instruction de journalisation. Enregistrez uniquement le nom d'utilisateur et le résultat (succès/échec)."
+        "description": "Les mots de passe en clair sont écrits dans la console/journal à chaque tentative de connexion. Les systèmes d'agrégation de journaux (Splunk, CloudWatch) stockeront et exposeront les identifiants. Dans cette application, chaque tentative de connexion d'un étudiant ou professeur enregistre son mot de passe en clair, ce qui pourrait être exploité par quiconque a accès aux journaux du serveur.",
+        "remediation": "Retirez le mot de passe de l'instruction de journalisation. Enregistrez uniquement le nom d'utilisateur et le résultat (succès/échec).",
+        "hint1": "Quelles informations sont visibles dans les journaux du serveur ?",
+        "hint2": "Qui pourrait avoir accès aux fichiers de journalisation en production ?",
+        "hint3": "Quelles informations est-il sécuritaire d'enregistrer lors d'une tentative de connexion ?"
       },
       "4": {
         "title": "Comparaison de mots de passe en clair",
-        "description": "Les mots de passe sont stockés et comparés en clair. Une brèche de la base de données expose immédiatement le mot de passe de chaque utilisateur.",
-        "remediation": "Hachez les mots de passe avec bcrypt/argon2 lors de l'inscription. Comparez avec bcrypt.compare() à la connexion. Migrez les utilisateurs existants lors de leur prochaine connexion."
+        "description": "Les mots de passe sont stockés et comparés en clair. Une brèche de la base de données expose immédiatement le mot de passe de chaque utilisateur. Dans cette application, si la base de données est compromise, les mots de passe de tous les étudiants et professeurs seraient lisibles instantanément, permettant l'usurpation de n'importe quel compte.",
+        "remediation": "Hachez les mots de passe avec bcrypt/argon2 lors de l'inscription. Comparez avec bcrypt.compare() à la connexion. Migrez les utilisateurs existants lors de leur prochaine connexion.",
+        "hint1": "Comment les mots de passe sont-ils stockés dans la base de données ?",
+        "hint2": "Que verrait un attaquant s'il obtenait une copie de la base de données ?",
+        "hint3": "Quelle technique permet de vérifier un mot de passe sans le stocker en clair ?"
       },
       "5": {
         "title": "Journalisation d'audit désactivée par défaut",
-        "description": "La journalisation d'audit est désactivée par défaut. Les événements liés à la sécurité (connexions, changements de privilèges, accès aux données) ne sont pas enregistrés, empêchant la détection d'incidents et l'analyse forensique.",
-        "remediation": "Changez la valeur par défaut à audit_logging: 1. Documentez le bouton de désactivation intentionnelle dans le panneau de sécurité comme outil pédagogique uniquement."
+        "description": "La journalisation d'audit est désactivée par défaut. Les événements liés à la sécurité (connexions, changements de privilèges, accès aux données) ne sont pas enregistrés, empêchant la détection d'incidents et l'analyse forensique. Dans cette application, si un étudiant accédait aux notes d'un autre étudiant ou si un compte était compromis, il n'y aurait aucune trace pour détecter ou investiguer l'incident.",
+        "remediation": "Changez la valeur par défaut à audit_logging: 1. Documentez le bouton de désactivation intentionnelle dans le panneau de sécurité comme outil pédagogique uniquement.",
+        "hint1": "Que se passe-t-il quand une fonctionnalité de sécurité est désactivée par défaut plutôt qu'activée ?",
+        "hint2": "Comment pourriez-vous détecter un accès non autorisé sans journaux d'audit ?",
+        "hint3": "Quel principe de sécurité est violé par un paramètre par défaut non sécurisé ?"
       },
       "6": {
         "title": "IDOR : aucune vérification de propriété sur l'accès aux inscriptions",
-        "description": "Le point d'accès utilise l'identifiant étudiant provenant du chemin URL plutôt que de la session authentifiée. Les étudiants peuvent consulter les dossiers d'inscription de n'importe quel autre étudiant en modifiant l'identifiant dans l'URL.",
-        "remediation": "Remplacez req.params.studentId par req.session.userId. Vérifiez la propriété de la ressource avant de retourner les données."
+        "description": "Le point d'accès utilise l'identifiant étudiant provenant du chemin URL plutôt que de la session authentifiée. Les étudiants peuvent consulter les dossiers d'inscription de n'importe quel autre étudiant en modifiant l'identifiant dans l'URL. Dans cette application, un étudiant pourrait consulter les notes, les inscriptions et le dossier académique de n'importe quel autre étudiant simplement en modifiant un numéro dans l'URL.",
+        "remediation": "Remplacez req.params.studentId par req.session.userId. Vérifiez la propriété de la ressource avant de retourner les données.",
+        "hint1": "D'où provient l'identifiant de l'étudiant dans cette requête — de la session ou de l'URL ?",
+        "hint2": "Que se passe-t-il si un étudiant modifie manuellement l'identifiant dans l'URL ?",
+        "hint3": "Comment le serveur devrait-il vérifier que l'utilisateur a le droit d'accéder à cette ressource ?"
       },
       "7": {
         "title": "Aucune protection CSRF sur les requêtes modifiant l'état",
-        "description": "Les routes POST/PUT/DELETE n'ont aucune validation de jeton CSRF. Un attaquant peut créer une page malveillante qui déclenche des actions authentifiées modifiant l'état au nom d'un utilisateur connecté.",
-        "remediation": "Ajoutez le middleware csurf (ou un équivalent moderne comme csrf-csrf). Incluez le jeton dans tous les formulaires et requêtes AJAX."
+        "description": "Les routes POST/PUT/DELETE n'ont aucune validation de jeton CSRF. Un attaquant peut créer une page malveillante qui déclenche des actions authentifiées modifiant l'état au nom d'un utilisateur connecté. Dans cette application, un attaquant pourrait soumettre des analyses de code au nom d'un étudiant ou modifier des cours au nom d'un professeur via un lien piégé.",
+        "remediation": "Ajoutez le middleware csurf (ou un équivalent moderne comme csrf-csrf). Incluez le jeton dans tous les formulaires et requêtes AJAX.",
+        "hint1": "Qu'est-ce qui empêche un site externe de soumettre un formulaire vers cette application ?",
+        "hint2": "Comment le serveur peut-il distinguer une requête légitime d'une requête forgée ?",
+        "hint3": "Quelles actions dans cette application modifient des données et devraient être protégées ?"
       },
       "8": {
         "title": "Limitation de débit uniquement sur la route de connexion",
-        "description": "La limitation de débit est appliquée uniquement au point d'accès de connexion. La réinitialisation de mot de passe, la vérification MFA et les points d'accès API restent vulnérables aux attaques automatisées par force brute.",
-        "remediation": "Appliquez la limitation de débit globalement ou sur tous les points d'accès sensibles. Utilisez des limites différentes par point d'accès selon la sensibilité."
+        "description": "La limitation de débit est appliquée uniquement au point d'accès de connexion. La réinitialisation de mot de passe, la vérification MFA et les points d'accès API restent vulnérables aux attaques automatisées par force brute. Dans cette application, un attaquant pourrait effectuer un nombre illimité de tentatives sur la vérification MFA ou soumettre des requêtes API massives sans restriction.",
+        "remediation": "Appliquez la limitation de débit globalement ou sur tous les points d'accès sensibles. Utilisez des limites différentes par point d'accès selon la sensibilité.",
+        "hint1": "La route de connexion est-elle le seul point d'accès sensible aux attaques par force brute ?",
+        "hint2": "Quels autres points d'accès pourraient bénéficier d'une limitation de débit ?",
+        "hint3": "Comment un attaquant pourrait-il exploiter l'absence de limitation de débit sur les points d'accès API ?"
       },
       "9": {
         "title": "Aucun en-tête de sécurité HTTP",
-        "description": "L'application ne définit pas d'en-têtes de sécurité (CSP, X-Frame-Options, HSTS, X-Content-Type-Options). Cela la rend vulnérable au détournement de clic, au reniflage MIME et à l'amplification XSS.",
-        "remediation": "Ajoutez le middleware helmet : app.use(helmet()). Configurez la Content-Security-Policy pour les sources spécifiques de l'application."
+        "description": "L'application ne définit pas d'en-têtes de sécurité (CSP, X-Frame-Options, HSTS, X-Content-Type-Options). Cela la rend vulnérable au détournement de clic, au reniflage MIME et à l'amplification XSS. Dans cette application, un attaquant pourrait intégrer la page de connexion dans une iframe piégée pour capturer les identifiants des étudiants et professeurs.",
+        "remediation": "Ajoutez le middleware helmet : app.use(helmet()). Configurez la Content-Security-Policy pour les sources spécifiques de l'application.",
+        "hint1": "Quels types d'attaques les en-têtes de sécurité HTTP préviennent-ils ?",
+        "hint2": "Que se passe-t-il si cette application est chargée dans une iframe sur un site malveillant ?",
+        "hint3": "Quel middleware Node.js populaire configure automatiquement ces en-têtes ?"
       },
       "10": {
         "title": "Traversée de chemin dans le téléchargement de sauvegarde",
-        "description": "Le nom de fichier de sauvegarde provient directement de l'URL sans validation. Un attaquant avec un accès administrateur peut demander ../../etc/passwd ou tout autre fichier sur le serveur.",
-        "remediation": "Validez que le chemin résolu commence par BACKUP_DIR : assert(filepath.startsWith(BACKUP_DIR)). Rejetez les requêtes contenant des séparateurs de chemin dans le nom de fichier."
+        "description": "Le nom de fichier de sauvegarde provient directement de l'URL sans validation. Un attaquant avec un accès administrateur peut demander ../../etc/passwd ou tout autre fichier sur le serveur. Dans cette application, un administrateur malveillant ou un compte administrateur compromis pourrait télécharger la base de données complète ou les fichiers de configuration contenant les secrets de l'application.",
+        "remediation": "Validez que le chemin résolu commence par BACKUP_DIR : assert(filepath.startsWith(BACKUP_DIR)). Rejetez les requêtes contenant des séparateurs de chemin dans le nom de fichier.",
+        "hint1": "Le nom de fichier est-il validé avant d'être utilisé pour lire un fichier sur le serveur ?",
+        "hint2": "Que se passe-t-il si le nom de fichier contient des séquences comme « ../ » ?",
+        "hint3": "Comment pouvez-vous garantir que le chemin résolu reste dans le répertoire prévu ?"
       },
       "11": {
         "title": "express-session obsolète avec des vulnérabilités connues",
-        "description": "Le projet utilise une version plus ancienne d'express-session. Les dépendances doivent être maintenues à jour pour inclure les correctifs de sécurité.",
-        "remediation": "Exécutez npm audit fix. Fixez la dernière version stable. Ajoutez npm audit au pipeline CI pour détecter les régressions."
+        "description": "Le projet utilise une version plus ancienne d'express-session. Les dépendances doivent être maintenues à jour pour inclure les correctifs de sécurité. Dans cette application, une vulnérabilité connue dans la gestion des sessions pourrait permettre à un attaquant de détourner les sessions actives des étudiants et professeurs.",
+        "remediation": "Exécutez npm audit fix. Fixez la dernière version stable. Ajoutez npm audit au pipeline CI pour détecter les régressions.",
+        "hint1": "Comment pouvez-vous vérifier si les dépendances du projet contiennent des vulnérabilités connues ?",
+        "hint2": "Quel risque pose une dépendance obsolète même si le code de l'application est correct ?",
+        "hint3": "Quel outil npm permet d'identifier et corriger automatiquement les vulnérabilités de dépendances ?"
       },
       "12": {
         "title": "Cookie de session sans l'indicateur secure",
-        "description": "Le cookie de session n'a pas l'indicateur secure activé. Sur une connexion HTTP, le jeton de session est transmis en clair et peut être intercepté par un attaquant réseau.",
-        "remediation": "Définissez secure: process.env.NODE_ENV === \"production\" pour que l'indicateur soit actif dans les déploiements HTTPS en production tout en restant utilisable en développement local HTTP."
+        "description": "Le cookie de session n'a pas l'indicateur secure activé. Sur une connexion HTTP, le jeton de session est transmis en clair et peut être intercepté par un attaquant réseau. Dans cette application, sur un réseau Wi-Fi partagé comme celui de l'université, un attaquant pourrait intercepter les cookies de session et usurper l'identité de n'importe quel utilisateur connecté.",
+        "remediation": "Définissez secure: process.env.NODE_ENV === \"production\" pour que l'indicateur soit actif dans les déploiements HTTPS en production tout en restant utilisable en développement local HTTP.",
+        "hint1": "Que contient un cookie de session et pourquoi doit-il être protégé ?",
+        "hint2": "Sur un réseau non chiffré, qui peut voir les cookies transmis en HTTP ?",
+        "hint3": "Quel indicateur de cookie empêche la transmission sur une connexion non sécurisée ?"
       }
     }
   }

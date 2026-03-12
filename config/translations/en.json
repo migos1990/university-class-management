@@ -426,63 +426,99 @@
     "findings": {
       "1": {
         "title": "Hardcoded Session Secret",
-        "description": "The Express session secret is hardcoded in source code. Anyone with code access can forge session cookies, leading to authentication bypass.",
-        "remediation": "Move the secret to an environment variable (SESSION_SECRET). Generate a cryptographically random 64-byte value for production."
+        "description": "The Express session secret is hardcoded in source code. Anyone with code access can forge session cookies, leading to authentication bypass. In this application, this could compromise all active sessions, allowing an attacker to impersonate any student or professor and access their grades or enrollment data.",
+        "remediation": "Move the secret to an environment variable (SESSION_SECRET). Generate a cryptographically random 64-byte value for production.",
+        "hint1": "What happens if an attacker gains access to the source code?",
+        "hint2": "Should this value be in the code or in the environment?",
+        "hint3": "What kind of data could an attacker forge with this secret?"
       },
       "2": {
         "title": "Hardcoded AES Encryption Key",
-        "description": "The AES-256 encryption key is hardcoded. Compromise of the key allows decryption of all encrypted PII (SSNs, grades) in the database.",
-        "remediation": "Load the key from an environment variable (ENCRYPTION_KEY). Use a key derivation function (PBKDF2/Argon2) if deriving from a passphrase."
+        "description": "The AES-256 encryption key is hardcoded. Compromise of the key allows decryption of all encrypted PII (SSNs, grades) in the database. In this application, an attacker could decrypt the social security numbers and grades of all enrolled students, causing a massive personal data breach.",
+        "remediation": "Load the key from an environment variable (ENCRYPTION_KEY). Use a key derivation function (PBKDF2/Argon2) if deriving from a passphrase.",
+        "hint1": "If someone obtains this key, what data can they decrypt?",
+        "hint2": "How should cryptographic secrets be managed in a production application?",
+        "hint3": "What is the difference between storing a key in code versus in an environment variable?"
       },
       "3": {
         "title": "Plaintext Credentials Logged to Console",
-        "description": "Plaintext passwords are written to the console/log on every login attempt. Log aggregation systems (Splunk, CloudWatch) will store and expose credentials.",
-        "remediation": "Remove the password from the log statement. Log only the username and outcome (success/failure)."
+        "description": "Plaintext passwords are written to the console/log on every login attempt. Log aggregation systems (Splunk, CloudWatch) will store and expose credentials. In this application, every login attempt by a student or professor logs their password in plaintext, which could be exploited by anyone with access to server logs.",
+        "remediation": "Remove the password from the log statement. Log only the username and outcome (success/failure).",
+        "hint1": "What information is visible in the server logs?",
+        "hint2": "Who might have access to log files in production?",
+        "hint3": "What information is safe to log during a login attempt?"
       },
       "4": {
         "title": "Plaintext Password Comparison",
-        "description": "Passwords are stored and compared in plaintext. A database breach exposes every user's password immediately.",
-        "remediation": "Hash passwords with bcrypt/argon2 on registration. Compare using bcrypt.compare() at login. Migrate existing users on next login."
+        "description": "Passwords are stored and compared in plaintext. A database breach exposes every user's password immediately. In this application, if the database is compromised, passwords for all students and professors would be instantly readable, allowing impersonation of any account.",
+        "remediation": "Hash passwords with bcrypt/argon2 on registration. Compare using bcrypt.compare() at login. Migrate existing users on next login.",
+        "hint1": "How are passwords stored in the database?",
+        "hint2": "What would an attacker see if they obtained a copy of the database?",
+        "hint3": "What technique allows verifying a password without storing it in plaintext?"
       },
       "5": {
         "title": "Audit Logging Defaults to OFF",
-        "description": "Audit logging is disabled by default. Security-relevant events (logins, privilege changes, data access) are not recorded, preventing incident detection and forensics.",
-        "remediation": "Change the default to audit_logging: 1. Document the intentional-off toggle in the Security Panel as a teaching tool only."
+        "description": "Audit logging is disabled by default. Security-relevant events (logins, privilege changes, data access) are not recorded, preventing incident detection and forensics. In this application, if a student accessed another student's grades or if an account was compromised, there would be no trail to detect or investigate the incident.",
+        "remediation": "Change the default to audit_logging: 1. Document the intentional-off toggle in the Security Panel as a teaching tool only.",
+        "hint1": "What happens when a security feature is disabled by default rather than enabled?",
+        "hint2": "How could you detect unauthorized access without audit logs?",
+        "hint3": "What security principle is violated by an insecure default setting?"
       },
       "6": {
         "title": "IDOR: No Ownership Check on Enrollment Access",
-        "description": "The endpoint uses the student ID from the URL path rather than the authenticated session. Students can read any other student's enrollment records by changing the ID in the URL.",
-        "remediation": "Replace req.params.studentId with req.session.userId. Verify resource ownership before returning data."
+        "description": "The endpoint uses the student ID from the URL path rather than the authenticated session. Students can read any other student's enrollment records by changing the ID in the URL. In this application, a student could view the grades, enrollments, and academic record of any other student simply by changing a number in the URL.",
+        "remediation": "Replace req.params.studentId with req.session.userId. Verify resource ownership before returning data.",
+        "hint1": "Where does the student ID come from in this request — the session or the URL?",
+        "hint2": "What happens if a student manually changes the ID in the URL?",
+        "hint3": "How should the server verify that the user has the right to access this resource?"
       },
       "7": {
         "title": "No CSRF Protection on State-Changing Requests",
-        "description": "POST/PUT/DELETE routes have no CSRF token validation. An attacker can craft a malicious page that triggers authenticated state-changing actions on behalf of a logged-in user.",
-        "remediation": "Add the csurf middleware (or a modern equivalent like csrf-csrf). Include the token in all forms and AJAX requests."
+        "description": "POST/PUT/DELETE routes have no CSRF token validation. An attacker can craft a malicious page that triggers authenticated state-changing actions on behalf of a logged-in user. In this application, an attacker could submit code analysis reviews on behalf of a student or modify courses on behalf of a professor through a crafted link.",
+        "remediation": "Add the csurf middleware (or a modern equivalent like csrf-csrf). Include the token in all forms and AJAX requests.",
+        "hint1": "What prevents an external site from submitting a form to this application?",
+        "hint2": "How can the server distinguish a legitimate request from a forged one?",
+        "hint3": "Which actions in this application modify data and should be protected?"
       },
       "8": {
         "title": "Rate Limiting Only on Login Route",
-        "description": "Rate limiting is only applied to the login endpoint. Password reset, MFA verification, and API endpoints remain vulnerable to automated brute-force attacks.",
-        "remediation": "Apply rate limiting globally or to all sensitive endpoints. Use different limits per endpoint based on sensitivity."
+        "description": "Rate limiting is only applied to the login endpoint. Password reset, MFA verification, and API endpoints remain vulnerable to automated brute-force attacks. In this application, an attacker could perform unlimited attempts on MFA verification or submit massive API requests without restriction.",
+        "remediation": "Apply rate limiting globally or to all sensitive endpoints. Use different limits per endpoint based on sensitivity.",
+        "hint1": "Is the login route the only endpoint sensitive to brute-force attacks?",
+        "hint2": "What other endpoints could benefit from rate limiting?",
+        "hint3": "How could an attacker exploit the absence of rate limiting on API endpoints?"
       },
       "9": {
         "title": "No HTTP Security Headers",
-        "description": "The application does not set security headers (CSP, X-Frame-Options, HSTS, X-Content-Type-Options). This leaves it vulnerable to clickjacking, MIME-sniffing, and XSS amplification.",
-        "remediation": "Add the helmet middleware: app.use(helmet()). Configure Content-Security-Policy for the application's specific sources."
+        "description": "The application does not set security headers (CSP, X-Frame-Options, HSTS, X-Content-Type-Options). This leaves it vulnerable to clickjacking, MIME-sniffing, and XSS amplification. In this application, an attacker could embed the login page in a malicious iframe to capture student and professor credentials.",
+        "remediation": "Add the helmet middleware: app.use(helmet()). Configure Content-Security-Policy for the application's specific sources.",
+        "hint1": "What types of attacks do HTTP security headers prevent?",
+        "hint2": "What happens if this application is loaded in an iframe on a malicious site?",
+        "hint3": "What popular Node.js middleware automatically configures these headers?"
       },
       "10": {
         "title": "Path Traversal in Backup Download",
-        "description": "The backup filename comes directly from the URL without validation. An attacker with admin access can request ../../etc/passwd or any other file on the server.",
-        "remediation": "Validate that the resolved path starts with BACKUP_DIR: assert(filepath.startsWith(BACKUP_DIR)). Reject requests with path separators in the filename."
+        "description": "The backup filename comes directly from the URL without validation. An attacker with admin access can request ../../etc/passwd or any other file on the server. In this application, a malicious administrator or compromised admin account could download the complete database or configuration files containing application secrets.",
+        "remediation": "Validate that the resolved path starts with BACKUP_DIR: assert(filepath.startsWith(BACKUP_DIR)). Reject requests with path separators in the filename.",
+        "hint1": "Is the filename validated before being used to read a file on the server?",
+        "hint2": "What happens if the filename contains sequences like '../'?",
+        "hint3": "How can you ensure the resolved path stays within the intended directory?"
       },
       "11": {
         "title": "Outdated express-session with Known Vulnerabilities",
-        "description": "The project uses an older version of express-session. Dependencies should be kept current to include security patches.",
-        "remediation": "Run npm audit fix. Pin to the latest stable version. Add npm audit to the CI pipeline to catch regressions."
+        "description": "The project uses an older version of express-session. Dependencies should be kept current to include security patches. In this application, a known vulnerability in session management could allow an attacker to hijack active sessions of students and professors.",
+        "remediation": "Run npm audit fix. Pin to the latest stable version. Add npm audit to the CI pipeline to catch regressions.",
+        "hint1": "How can you check if project dependencies contain known vulnerabilities?",
+        "hint2": "What risk does an outdated dependency pose even if the application code is correct?",
+        "hint3": "What npm tool identifies and automatically fixes dependency vulnerabilities?"
       },
       "12": {
         "title": "Session Cookie Missing secure Flag",
-        "description": "The session cookie does not have the secure flag set. Over an HTTP connection the session token is transmitted in plaintext and can be intercepted by a network attacker.",
-        "remediation": "Set secure: process.env.NODE_ENV === \"production\" so the flag is active in production HTTPS deployments while remaining usable in local HTTP dev."
+        "description": "The session cookie does not have the secure flag set. Over an HTTP connection the session token is transmitted in plaintext and can be intercepted by a network attacker. In this application, on a shared Wi-Fi network like the university's, an attacker could intercept session cookies and impersonate any logged-in user.",
+        "remediation": "Set secure: process.env.NODE_ENV === \"production\" so the flag is active in production HTTPS deployments while remaining usable in local HTTP dev.",
+        "hint1": "What does a session cookie contain and why must it be protected?",
+        "hint2": "On an unencrypted network, who can see cookies transmitted over HTTP?",
+        "hint3": "What cookie flag prevents transmission over an insecure connection?"
       }
     }
   }
