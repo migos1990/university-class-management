@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-03-12T16:07:15.946Z"
-last_activity: 2026-03-12 -- Completed Phase 3 Plan 1 (SCA content enrichment)
+stopped_at: Completed 03-02-PLAN.md
+last_updated: "2026-03-12T16:12:59.103Z"
+last_activity: 2026-03-12 -- Completed Phase 3 Plan 2 (SCA student views translation)
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 4
-  completed_plans: 3
-  percent: 75
+  completed_plans: 4
+  percent: 100
 ---
 
 # Project State
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** The SCA lab must work flawlessly end-to-end in French -- from Codespace boot to student submission to instructor review -- with zero friction for non-technical students.
-**Current focus:** Phase 3: SCA Student Experience
+**Current focus:** Phase 3 complete, ready for Phase 4
 
 ## Current Position
 
-Phase: 3 of 5 (SCA Student Experience)
-Plan: 1 of 2 in current phase
-Status: Plan 03-01 complete, continuing to 03-02
-Last activity: 2026-03-12 -- Completed Phase 3 Plan 1 (SCA content enrichment)
+Phase: 3 of 5 (SCA Student Experience) -- COMPLETE
+Plan: 2 of 2 in current phase
+Status: Phase 03 complete, all plans executed
+Last activity: 2026-03-12 -- Completed Phase 3 Plan 2 (SCA student views translation)
 
-Progress: [████████░░] 75%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: 5.7min
-- Total execution time: 0.28 hours
+- Total plans completed: 4
+- Average duration: 5min
+- Total execution time: 0.33 hours
 
 **By Phase:**
 
@@ -45,10 +45,10 @@ Progress: [████████░░] 75%
 |-------|-------|-------|----------|
 | 01-translation-foundation | 1 | 5min | 5min |
 | 02-shared-ui-translation | 1 | 8min | 8min |
-| 03-sca-student-experience | 1/2 | 4min | 4min |
+| 03-sca-student-experience | 2/2 | 7min | 3.5min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (5min), 02-01 (8min), 03-01 (4min)
+- Last 5 plans: 01-01 (5min), 02-01 (8min), 03-01 (4min), 03-02 (3min)
 - Trend: accelerating
 
 *Updated after each plan completion*
@@ -73,6 +73,9 @@ Recent decisions affecting current work:
 - Numbered hint keys (hint1, hint2, hint3) rather than array for simpler t() access
 - DIFFICULTY_MAP as route-level constant mapping finding IDs to easy/medium/advanced
 - enriched array via .map().sort() to avoid mutating original findings array
+- EJS-embedded JS constants for AJAX feedback (MSG_SAVING, etc.) rather than inline t() in strings
+- Intro banner gated to student role only; instructors do not see pedagogical scaffolding
+- hint3 conditional rendering uses t() key-echo detection (key returned when not found)
 
 ### Pending Todos
 
@@ -87,6 +90,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-12T16:07:15.941Z
-Stopped at: Completed 03-01-PLAN.md
+Last session: 2026-03-12T16:12:59.097Z
+Stopped at: Completed 03-02-PLAN.md
 Resume file: None

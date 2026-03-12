@@ -10,8 +10,8 @@ Requirements for tonight's class. Each maps to roadmap phases.
 ### Translation
 
 - [x] **TRAN-01**: App defaults to French for all new sessions
-- [ ] **TRAN-02**: SCA student-lab view fully translated to French (progress text, button labels, form fields, AJAX feedback)
-- [ ] **TRAN-03**: SCA finding-detail view fully translated to French (code snippet labels, classification options, notes placeholders)
+- [x] **TRAN-02**: SCA student-lab view fully translated to French (progress text, button labels, form fields, AJAX feedback)
+- [x] **TRAN-03**: SCA finding-detail view fully translated to French (code snippet labels, classification options, notes placeholders)
 - [ ] **TRAN-04**: SCA instructor dashboard fully translated to French (table headers, matrix labels, import buttons)
 - [ ] **TRAN-05**: SCA student-detail view fully translated to French
 - [x] **TRAN-06**: Header/sidebar navigation translated to French (all nav links, role badges, team name)
@@ -23,8 +23,8 @@ Requirements for tonight's class. Each maps to roadmap phases.
 ### SCA Content Enhancement
 
 - [x] **SCAC-01**: All 12 SCA finding descriptions enriched with business impact and educational context in French
-- [ ] **SCAC-02**: Guided workflow intro banner on student-lab view in French (dismissible, explains approach)
-- [ ] **SCAC-03**: Finding difficulty indicators ("Facile", "Moyen", "Avance") on each finding
+- [x] **SCAC-02**: Guided workflow intro banner on student-lab view in French (dismissible, explains approach)
+- [x] **SCAC-03**: Finding difficulty indicators ("Facile", "Moyen", "Avance") on each finding
 - [x] **SCAC-04**: Contextual hints per finding with scaffolded analysis guidance in French
 
 ### Instructor Dashboard
@@ -75,8 +75,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | TRAN-01 | Phase 1 | Complete |
-| TRAN-02 | Phase 3 | Pending |
-| TRAN-03 | Phase 3 | Pending |
+| TRAN-02 | Phase 3 | Complete |
+| TRAN-03 | Phase 3 | Complete |
 | TRAN-04 | Phase 4 | Pending |
 | TRAN-05 | Phase 4 | Pending |
 | TRAN-06 | Phase 2 | Complete |
@@ -85,8 +85,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TRAN-09 | Phase 3 | Complete |
 | TRAN-10 | Phase 3 | Complete |
 | SCAC-01 | Phase 3 | Complete |
-| SCAC-02 | Phase 3 | Pending |
-| SCAC-03 | Phase 3 | Pending |
+| SCAC-02 | Phase 3 | Complete |
+| SCAC-03 | Phase 3 | Complete |
 | SCAC-04 | Phase 3 | Complete |
 | INST-01 | Phase 4 | Pending |
 | DEPL-01 | Phase 5 | Pending |
