@@ -14,9 +14,9 @@ Requirements for tonight's class. Each maps to roadmap phases.
 - [ ] **TRAN-03**: SCA finding-detail view fully translated to French (code snippet labels, classification options, notes placeholders)
 - [ ] **TRAN-04**: SCA instructor dashboard fully translated to French (table headers, matrix labels, import buttons)
 - [ ] **TRAN-05**: SCA student-detail view fully translated to French
-- [ ] **TRAN-06**: Header/sidebar navigation translated to French (all nav links, role badges, team name)
-- [ ] **TRAN-07**: Login page fully translated to French
-- [ ] **TRAN-08**: Error page translated to French
+- [x] **TRAN-06**: Header/sidebar navigation translated to French (all nav links, role badges, team name)
+- [x] **TRAN-07**: Login page fully translated to French
+- [x] **TRAN-08**: Error page translated to French
 - [ ] **TRAN-09**: Classification dropdown labels in French ("Vrai positif", "Faux positif", "Necessite une investigation")
 - [ ] **TRAN-10**: AJAX save/submit feedback messages in French
 
@@ -79,9 +79,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TRAN-03 | Phase 3 | Pending |
 | TRAN-04 | Phase 4 | Pending |
 | TRAN-05 | Phase 4 | Pending |
-| TRAN-06 | Phase 2 | Pending |
-| TRAN-07 | Phase 2 | Pending |
-| TRAN-08 | Phase 2 | Pending |
+| TRAN-06 | Phase 2 | Complete |
+| TRAN-07 | Phase 2 | Complete |
+| TRAN-08 | Phase 2 | Complete |
 | TRAN-09 | Phase 3 | Pending |
 | TRAN-10 | Phase 3 | Pending |
 | SCAC-01 | Phase 3 | Pending |
