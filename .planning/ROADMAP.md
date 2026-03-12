@@ -24,7 +24,7 @@ Full details: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 
 **Milestone Goal:** Improve the learning experience with inline code snippets, instructor answer key, updated documentation, and code quality optimization.
 
-- [ ] **Phase 6: Inline Code Snippets** - Syntax-highlighted multi-line code with vulnerable-line callout in finding views
+- [x] **Phase 6: Inline Code Snippets** - Syntax-highlighted multi-line code with vulnerable-line callout in finding views
 - [ ] **Phase 7: Instructor Answer Key** - Role-gated answer key with classifications, reasoning, and discussion prompts in French
 - [ ] **Phase 8: Documentation** - README and instructor docs reflecting the v1.1 feature set
 - [ ] **Phase 9: Code Quality** - ESLint/Prettier tooling, dead code removal, and CSS deduplication (preserving intentional vulnerabilities)
@@ -44,8 +44,8 @@ Full details: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 **Plans:** 2 plans
 
 Plans:
-- [ ] 06-01-PLAN.md -- Seed data expansion, Prism.js vendoring, and syntax-highlighted finding detail view
-- [ ] 06-02-PLAN.md -- Student-lab card code preview and visual verification
+- [x] 06-01-PLAN.md -- Seed data expansion, Prism.js vendoring, and syntax-highlighted finding detail view
+- [x] 06-02-PLAN.md -- Student-lab card code preview and visual verification
 
 ### Phase 7: Instructor Answer Key
 **Goal**: Instructor has a French-language reference showing expected classifications, reasoning, and discussion prompts for all 12 findings, enabling confident in-class facilitation
@@ -102,7 +102,7 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9
 | 3. SCA Student Experience | v1.0 | 2/2 | Complete | 2026-03-12 |
 | 4. SCA Instructor Experience | v1.0 | 2/2 | Complete | 2026-03-12 |
 | 5. Deployment Verification | v1.0 | 2/2 | Complete | 2026-03-12 |
-| 6. Inline Code Snippets | v1.1 | 0/2 | Not started | - |
+| 6. Inline Code Snippets | v1.1 | 2/2 | Complete | 2026-03-12 |
 | 7. Instructor Answer Key | v1.1 | 0/? | Not started | - |
 | 8. Documentation | v1.1 | 0/? | Not started | - |
 | 9. Code Quality | v1.1 | 0/? | Not started | - |

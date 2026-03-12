@@ -13,7 +13,7 @@ Requirements for v1.1 Polish & Pedagogy release. Each maps to roadmap phases.
 - [x] **SNIP-02**: Vulnerable line is visually called out within the code snippet (background highlight + left border)
 - [x] **SNIP-03**: Code snippet displays line numbers corresponding to actual file line numbers
 - [x] **SNIP-04**: Code snippet has syntax coloring via Prism.js (keywords, strings, comments differentiated)
-- [ ] **SNIP-05**: Student-lab card shows a compact one-line preview of the vulnerable code
+- [x] **SNIP-05**: Student-lab card shows a compact one-line preview of the vulnerable code
 
 ### Answer Key
 
@@ -77,7 +77,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SNIP-02 | Phase 6 | Complete |
 | SNIP-03 | Phase 6 | Complete |
 | SNIP-04 | Phase 6 | Complete |
-| SNIP-05 | Phase 6 | Pending |
+| SNIP-05 | Phase 6 | Complete |
 | AKEY-01 | Phase 7 | Pending |
 | AKEY-02 | Phase 7 | Pending |
 | AKEY-03 | Phase 7 | Pending |
