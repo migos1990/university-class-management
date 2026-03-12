@@ -70,10 +70,11 @@ Plans:
   1. The SCA instructor dashboard displays all table headers, matrix labels, and action buttons in French
   2. The student-detail view (individual student review) is fully in French
   3. Live class progress stats show on the instructor SCA dashboard: number of students started, average completion percentage, and overall class pace -- updating automatically without page refresh
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 04-01: TBD
+- [ ] 04-01-PLAN.md -- Route-layer localize() calls, GET /sca/stats endpoint, missing translation keys, student-detail.ejs French wiring
+- [ ] 04-02-PLAN.md -- instructor.ejs full French translation, stats bar with 30s polling, translated VM import actions
 
 ### Phase 5: Deployment Verification
 **Goal**: The complete French SCA lab works end-to-end in a fresh Codespaces environment with zero manual intervention beyond starting the Codespace
@@ -98,5 +99,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 1. Translation Foundation | 1/1 | Complete | 2026-03-12 |
 | 2. Shared UI Translation | 0/1 | Not started | - |
 | 3. SCA Student Experience | 0/2 | Not started | - |
-| 4. SCA Instructor Experience | 0/? | Not started | - |
+| 4. SCA Instructor Experience | 0/2 | Not started | - |
 | 5. Deployment Verification | 0/? | Not started | - |
