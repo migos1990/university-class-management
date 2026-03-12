@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: in-progress
-stopped_at: "Completed 05-01-PLAN.md"
-last_updated: "2026-03-12T18:27:49Z"
-last_activity: 2026-03-12 -- Completed Phase 5 Plan 1 (Codespaces first-boot hardening)
+status: completed
+stopped_at: Completed 05-02-PLAN.md -- ALL PLANS COMPLETE
+last_updated: "2026-03-12T18:33:46.911Z"
+last_activity: 2026-03-12 -- Completed Phase 5 Plan 2 (comprehensive smoke test)
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 8
-  completed_plans: 7
+  completed_plans: 8
   percent: 100
 ---
 
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** The SCA lab must work flawlessly end-to-end in French -- from Codespace boot to student submission to instructor review -- with zero friction for non-technical students.
-**Current focus:** Phase 5 in progress -- first-boot hardening complete, smoke test next
+**Current focus:** ALL PHASES COMPLETE -- v1.0 milestone delivered
 
 ## Current Position
 
-Phase: 5 of 5 (Deployment Verification)
-Plan: 1 of 2 in current phase -- COMPLETE
-Status: Phase 5 Plan 1 complete, Plan 2 (smoke test) next
-Last activity: 2026-03-12 -- Completed Phase 5 Plan 1 (Codespaces first-boot hardening)
+Phase: 5 of 5 (Deployment Verification) -- COMPLETE
+Plan: 2 of 2 in current phase -- COMPLETE
+Status: ALL PHASES COMPLETE -- v1.0 milestone delivered
+Last activity: 2026-03-12 -- Completed Phase 5 Plan 2 (comprehensive smoke test)
 
-Progress: [█████████░] 88%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -55,6 +55,7 @@ Progress: [█████████░] 88%
 *Updated after each plan completion*
 | Phase 04-sca-instructor-experience P02 | 3min | 2 tasks | 1 files |
 | Phase 05-deployment-verification P01 | 2min | 2 tasks | 7 files |
+| Phase 05-deployment-verification P02 | 2min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -87,6 +88,8 @@ Recent decisions affecting current work:
 - [Phase 04-sca-instructor-experience]: Pace unit 'soumissions / 5 min' hardcoded in JS (not a t() key) since it appears only in client-side dynamic context
 - [Phase 05-deployment-verification]: HTTPS toggle disabled at both API guard and UI level to prevent Codespaces proxy conflicts
 - [Phase 05-deployment-verification]: Port visibility script uses gh CLI with graceful fallback for non-Codespace environments
+- [Phase 05-deployment-verification]: Dynamic port enumeration from classroom.config.json rather than hardcoded port list
+- [Phase 05-deployment-verification]: Deep test one instance (3001) for full student journey, health+French check all 13
 
 ### Pending Todos
 
@@ -101,6 +104,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-12T18:27:49Z
-Stopped at: Completed 05-01-PLAN.md
-Resume file: .planning/phases/05-deployment-verification/05-01-SUMMARY.md
+Last session: 2026-03-12T18:33:46.907Z
+Stopped at: Completed 05-02-PLAN.md -- ALL PLANS COMPLETE
+Resume file: None
