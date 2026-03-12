@@ -47,7 +47,17 @@
     "vmLab": "Vulnerability Manager",
     "roleAdmin": "Administrator",
     "roleProf": "Professor",
-    "roleStudent": "Student"
+    "roleStudent": "Student",
+    "securityPanel": "Security Panel",
+    "mfaSetup": "MFA Setup",
+    "staticAnalysis": "Static Analysis",
+    "dynamicAnalysis": "Dynamic Analysis",
+    "vulnManagement": "Vuln Management",
+    "myClasses": "My Classes",
+    "myEnrollments": "My Enrollments",
+    "appSubtitle": "Application Security",
+    "securityStatus": "Security Status:",
+    "defaultTitle": "HEC Montreal - Application Security"
   },
   "auth": {
     "loginTitle": "Login to University Class Management",
@@ -288,7 +298,16 @@
     "forbidden": "Access forbidden",
     "notFound": "Resource not found",
     "goBack": "Go Back",
-    "goHome": "Go to Dashboard"
+    "goHome": "Go to Dashboard",
+    "notFoundTitle": "Page not found",
+    "forbiddenTitle": "Access denied",
+    "tooManyAttemptsTitle": "Too many attempts",
+    "serverErrorTitle": "Server error",
+    "notFoundGuidance": "The page you are looking for does not exist or has been moved.",
+    "forbiddenGuidance": "You do not have permission to access this page.",
+    "tooManyAttemptsGuidance": "You have exceeded the maximum number of login attempts. Please try again in a few minutes.",
+    "serverErrorGuidance": "An unexpected error occurred. Please try again later.",
+    "backToDashboard": "Back to Dashboard"
   },
   "mfa": {
     "setupTitle": "Multi-Factor Authentication Setup",
@@ -305,7 +324,9 @@
     "demoProf": "Professor: prof_jones / prof123",
     "demoStudent": "Student: alice_student / student123",
     "subtitle": "Application Security Teaching Platform",
-    "formTitle": "Login"
+    "formTitle": "Login",
+    "footerText": "Educational application security demonstration platform",
+    "loginFailed": "Login Failed"
   },
   "sca": {
     "studentLab": {

@@ -43,11 +43,21 @@
     "securityLabs": "Laboratoires de sécurité",
     "scaLab": "Labo ACS",
     "dastLab": "Labo DAST",
-    "pentestLab": "Labo Pentest",
+    "pentestLab": "Test d'intrusion",
     "vmLab": "Gestionnaire de vulnérabilités",
     "roleAdmin": "Administrateur",
     "roleProf": "Professeur",
-    "roleStudent": "Étudiant(e)"
+    "roleStudent": "Étudiant(e)",
+    "securityPanel": "Panneau de sécurité",
+    "mfaSetup": "Configuration AMF",
+    "staticAnalysis": "Analyse statique",
+    "dynamicAnalysis": "Analyse dynamique",
+    "vulnManagement": "Gestion des vulnérabilités",
+    "myClasses": "Mes cours",
+    "myEnrollments": "Mes inscriptions",
+    "appSubtitle": "Sécurité applicative",
+    "securityStatus": "État de sécurité :",
+    "defaultTitle": "HEC Montréal - Sécurité applicative"
   },
   "auth": {
     "loginTitle": "Connexion à la Gestion des Cours Universitaires",
@@ -288,7 +298,16 @@
     "forbidden": "Accès interdit",
     "notFound": "Ressource non trouvée",
     "goBack": "Retour",
-    "goHome": "Aller au tableau de bord"
+    "goHome": "Aller au tableau de bord",
+    "notFoundTitle": "Page introuvable",
+    "forbiddenTitle": "Accès refusé",
+    "tooManyAttemptsTitle": "Trop de tentatives",
+    "serverErrorTitle": "Erreur du serveur",
+    "notFoundGuidance": "La page que vous recherchez n'existe pas ou a été déplacée.",
+    "forbiddenGuidance": "Vous n'avez pas la permission d'accéder à cette page.",
+    "tooManyAttemptsGuidance": "Vous avez dépassé le nombre maximal de tentatives de connexion. Veuillez réessayer dans quelques minutes.",
+    "serverErrorGuidance": "Une erreur inattendue s'est produite. Veuillez réessayer plus tard.",
+    "backToDashboard": "Retour au tableau de bord"
   },
   "mfa": {
     "setupTitle": "Configuration de l'authentification multifacteur",
@@ -305,7 +324,9 @@
     "demoProf": "Professeur : prof_jones / prof123",
     "demoStudent": "Étudiant(e) : alice_student / student123",
     "subtitle": "Plateforme pédagogique de sécurité applicative",
-    "formTitle": "Connexion"
+    "formTitle": "Connexion",
+    "footerText": "Plateforme pédagogique de démonstration en sécurité applicative",
+    "loginFailed": "Échec de connexion"
   },
   "sca": {
     "studentLab": {
