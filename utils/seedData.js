@@ -31,6 +31,11 @@ function seedDatabase() {
   userStmt.run('charlie_student', 'charlie@university.edu', 'student123', 'student', '333-44-5555');
   userStmt.run('diana_student', 'diana@university.edu', 'student123', 'student', '444-55-6666');
   userStmt.run('eve_student', 'eve@university.edu', 'student123', 'student', '555-66-7777');
+  userStmt.run('frank_student', 'frank@university.edu', 'student123', 'student', '666-77-8888');
+  userStmt.run('grace_student', 'grace@university.edu', 'student123', 'student', '777-88-9999');
+  userStmt.run('henry_student', 'henry@university.edu', 'student123', 'student', '888-99-0000');
+  userStmt.run('iris_student', 'iris@university.edu', 'student123', 'student', '999-00-1111');
+  userStmt.run('jack_student', 'jack@university.edu', 'student123', 'student', '000-11-2222');
 
   // Get user IDs
   const profJones = db.prepare('SELECT id FROM users WHERE username = ?').get('prof_jones');
@@ -145,6 +150,11 @@ function seedDatabase() {
   const charlie = db.prepare('SELECT id FROM users WHERE username = ?').get('charlie_student');
   const diana = db.prepare('SELECT id FROM users WHERE username = ?').get('diana_student');
   const eve = db.prepare('SELECT id FROM users WHERE username = ?').get('eve_student');
+  const frank = db.prepare('SELECT id FROM users WHERE username = ?').get('frank_student');
+  const grace = db.prepare('SELECT id FROM users WHERE username = ?').get('grace_student');
+  const henry = db.prepare('SELECT id FROM users WHERE username = ?').get('henry_student');
+  const iris = db.prepare('SELECT id FROM users WHERE username = ?').get('iris_student');
+  const jack = db.prepare('SELECT id FROM users WHERE username = ?').get('jack_student');
 
   // Insert enrollments
   console.log('Creating enrollments...');
@@ -166,6 +176,12 @@ function seedDatabase() {
 
   enrollStmt.run(eve.id, cs201.id, 'C+');
   enrollStmt.run(eve.id, cs301.id, 'B');
+
+  enrollStmt.run(frank.id, cs101.id, 'B');
+  enrollStmt.run(grace.id, cs201.id, 'A');
+  enrollStmt.run(henry.id, cs301.id, 'B+');
+  enrollStmt.run(iris.id, cs101.id, 'A-');
+  enrollStmt.run(jack.id, cs201.id, 'B');
 
   // -------------------------------------------------------
   // SCA Findings (12 real findings mapped to codebase)
@@ -582,7 +598,7 @@ function seedDatabase() {
 
   console.log('Database seeded successfully!');
   console.log('Created:');
-  console.log('  - 8 users (1 admin, 2 professors, 5 students)');
+  console.log('  - 13 users (1 admin, 2 professors, 10 students)');
   console.log('  - 3 classes (CS101, CS201, CS301)');
   console.log('  - 36 sessions (12 per class)');
   console.log('  - 9 enrollments');
