@@ -35,7 +35,19 @@
     "sessions": "Sessions",
     "backups": "Backups",
     "deletionRequests": "Deletion Requests",
-    "byok": "Encryption Keys"
+    "byok": "Encryption Keys",
+    "main": "Main",
+    "administration": "Administration",
+    "teaching": "Teaching",
+    "learning": "Learning",
+    "securityLabs": "Security Labs",
+    "scaLab": "SCA Lab",
+    "dastLab": "DAST Lab",
+    "pentestLab": "Pentest Lab",
+    "vmLab": "Vulnerability Manager",
+    "roleAdmin": "Administrator",
+    "roleProf": "Professor",
+    "roleStudent": "Student"
   },
   "auth": {
     "loginTitle": "Login to University Class Management",
@@ -286,5 +298,171 @@
     "backupCodesDesc": "Save these backup codes in a secure location. Each code can be used once if you lose access to your authenticator app.",
     "setupComplete": "MFA Setup Complete",
     "alreadySetup": "MFA is already configured for your account."
+  },
+  "login": {
+    "demoAccounts": "Demo Accounts",
+    "demoAdmin": "Administrator: admin / admin123",
+    "demoProf": "Professor: prof_jones / prof123",
+    "demoStudent": "Student: alice_student / student123",
+    "subtitle": "Application Security Teaching Platform",
+    "formTitle": "Login"
+  },
+  "sca": {
+    "studentLab": {
+      "title": "Static Code Analysis Lab",
+      "subtitle": "Review each finding, classify it, and document your reasoning — then submit when you are ready.",
+      "findingsSubmitted": "findings submitted",
+      "complete": "complete",
+      "startReview": "Start Review",
+      "continueReview": "Continue",
+      "viewEdit": "View / Edit",
+      "draftSaved": "Draft saved",
+      "submitted": "Submitted",
+      "progress": "{count} of {total} completed"
+    },
+    "findingDetail": {
+      "backToLab": "SCA Lab",
+      "location": "Location",
+      "codeSnippet": "Code Snippet",
+      "description": "Description",
+      "remediationGuidance": "Remediation Guidance",
+      "yourReview": "Your Review",
+      "submittedOn": "Submitted on",
+      "classification": "Classification",
+      "selectOption": "-- select --",
+      "yourNotes": "Your Notes",
+      "proposedRemediation": "Proposed Remediation",
+      "saveDraft": "Save Draft",
+      "submit": "Submit",
+      "studentReviews": "Student Reviews",
+      "vulnerabilityManager": "Vulnerability Manager",
+      "importedToVM": "Imported to VM as",
+      "notImported": "This finding has not yet been imported to the vulnerability manager.",
+      "pushToVM": "Push to VM",
+      "references": "References",
+      "tool": "Tool"
+    },
+    "instructor": {
+      "title": "Static Code Analysis — Instructor Dashboard",
+      "findingsOverview": "Findings Overview",
+      "studentProgressMatrix": "Student Progress Matrix",
+      "finding": "Finding",
+      "file": "File",
+      "severity": "Severity",
+      "reviews": "Reviews",
+      "vm": "VM",
+      "submitted": "submitted",
+      "confirmed": "confirmed",
+      "fp": "FP",
+      "inVM": "In VM",
+      "pushToVM": "Push to VM",
+      "importing": "Importing...",
+      "student": "Student",
+      "status": "Status",
+      "completion": "Completion",
+      "classProgress": "Class Progress",
+      "studentsStarted": "Students Started",
+      "avgCompletion": "Average Completion",
+      "overallPace": "Overall Pace"
+    },
+    "studentDetail": {
+      "backToDashboard": "SCA Dashboard",
+      "reviewsTitle": "SCA Reviews: {username}",
+      "student": "Student",
+      "reviewsSubmitted": "Reviews Submitted",
+      "finding": "Finding",
+      "severity": "Severity",
+      "classification": "Classification",
+      "status": "Status",
+      "notes": "Notes",
+      "notStarted": "Not started",
+      "view": "View"
+    },
+    "common": {
+      "truePositive": "True Positive",
+      "truePositiveDesc": "True Positive (confirmed vulnerability)",
+      "falsePositive": "False Positive",
+      "needsInvestigation": "Needs Further Investigation",
+      "saving": "Saving...",
+      "savedDraft": "Draft saved.",
+      "submittedSuccess": "Submitted!",
+      "errorSaving": "Error saving.",
+      "networkError": "Network error — please try again.",
+      "findings": "findings",
+      "students": "students",
+      "reviewsSubmitted": "reviews submitted"
+    },
+    "guided": {
+      "introBannerTitle": "How to approach this exercise",
+      "introBannerText": "For each finding, read the code, identify whether the vulnerability is real, and document your reasoning. There are no wrong answers — what matters is the quality of your analysis.",
+      "dismiss": "Got it"
+    },
+    "difficulty": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "advanced": "Advanced"
+    },
+    "findings": {
+      "1": {
+        "title": "Hardcoded Session Secret",
+        "description": "The Express session secret is hardcoded in source code. Anyone with code access can forge session cookies, leading to authentication bypass.",
+        "remediation": "Move the secret to an environment variable (SESSION_SECRET). Generate a cryptographically random 64-byte value for production."
+      },
+      "2": {
+        "title": "Hardcoded AES Encryption Key",
+        "description": "The AES-256 encryption key is hardcoded. Compromise of the key allows decryption of all encrypted PII (SSNs, grades) in the database.",
+        "remediation": "Load the key from an environment variable (ENCRYPTION_KEY). Use a key derivation function (PBKDF2/Argon2) if deriving from a passphrase."
+      },
+      "3": {
+        "title": "Plaintext Credentials Logged to Console",
+        "description": "Plaintext passwords are written to the console/log on every login attempt. Log aggregation systems (Splunk, CloudWatch) will store and expose credentials.",
+        "remediation": "Remove the password from the log statement. Log only the username and outcome (success/failure)."
+      },
+      "4": {
+        "title": "Plaintext Password Comparison",
+        "description": "Passwords are stored and compared in plaintext. A database breach exposes every user's password immediately.",
+        "remediation": "Hash passwords with bcrypt/argon2 on registration. Compare using bcrypt.compare() at login. Migrate existing users on next login."
+      },
+      "5": {
+        "title": "Audit Logging Defaults to OFF",
+        "description": "Audit logging is disabled by default. Security-relevant events (logins, privilege changes, data access) are not recorded, preventing incident detection and forensics.",
+        "remediation": "Change the default to audit_logging: 1. Document the intentional-off toggle in the Security Panel as a teaching tool only."
+      },
+      "6": {
+        "title": "IDOR: No Ownership Check on Enrollment Access",
+        "description": "The endpoint uses the student ID from the URL path rather than the authenticated session. Students can read any other student's enrollment records by changing the ID in the URL.",
+        "remediation": "Replace req.params.studentId with req.session.userId. Verify resource ownership before returning data."
+      },
+      "7": {
+        "title": "No CSRF Protection on State-Changing Requests",
+        "description": "POST/PUT/DELETE routes have no CSRF token validation. An attacker can craft a malicious page that triggers authenticated state-changing actions on behalf of a logged-in user.",
+        "remediation": "Add the csurf middleware (or a modern equivalent like csrf-csrf). Include the token in all forms and AJAX requests."
+      },
+      "8": {
+        "title": "Rate Limiting Only on Login Route",
+        "description": "Rate limiting is only applied to the login endpoint. Password reset, MFA verification, and API endpoints remain vulnerable to automated brute-force attacks.",
+        "remediation": "Apply rate limiting globally or to all sensitive endpoints. Use different limits per endpoint based on sensitivity."
+      },
+      "9": {
+        "title": "No HTTP Security Headers",
+        "description": "The application does not set security headers (CSP, X-Frame-Options, HSTS, X-Content-Type-Options). This leaves it vulnerable to clickjacking, MIME-sniffing, and XSS amplification.",
+        "remediation": "Add the helmet middleware: app.use(helmet()). Configure Content-Security-Policy for the application's specific sources."
+      },
+      "10": {
+        "title": "Path Traversal in Backup Download",
+        "description": "The backup filename comes directly from the URL without validation. An attacker with admin access can request ../../etc/passwd or any other file on the server.",
+        "remediation": "Validate that the resolved path starts with BACKUP_DIR: assert(filepath.startsWith(BACKUP_DIR)). Reject requests with path separators in the filename."
+      },
+      "11": {
+        "title": "Outdated express-session with Known Vulnerabilities",
+        "description": "The project uses an older version of express-session. Dependencies should be kept current to include security patches.",
+        "remediation": "Run npm audit fix. Pin to the latest stable version. Add npm audit to the CI pipeline to catch regressions."
+      },
+      "12": {
+        "title": "Session Cookie Missing secure Flag",
+        "description": "The session cookie does not have the secure flag set. Over an HTTP connection the session token is transmitted in plaintext and can be intercepted by a network attacker.",
+        "remediation": "Set secure: process.env.NODE_ENV === \"production\" so the flag is active in production HTTPS deployments while remaining usable in local HTTP dev."
+      }
+    }
   }
 }
