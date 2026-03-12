@@ -1,331 +1,299 @@
-# Domain Pitfalls
+# Pitfalls Research
 
-**Domain:** Classroom SCA lab deployment -- Codespaces, EJS i18n, non-technical student UX
+**Domain:** Adding inline code snippets, instructor answer key, documentation, and code quality optimization to an existing educational SCA lab
 **Researched:** 2026-03-12
-**Context:** 30+ non-technical HEC Montreal students, no TA, tonight's class, SCA module focus
+**Confidence:** HIGH (all findings verified against codebase)
 
 ---
 
 ## Critical Pitfalls
 
-Mistakes that will break the class or cause significant student frustration.
+### Pitfall 1: Inline Code Snippets Rendered Without HTML Escaping Create XSS in a Security Lab
 
-### Pitfall 1: Zero EJS Templates Use the `t()` Translation Function
+**What goes wrong:**
+The current `finding-detail.ejs` renders the existing single-line `code_snippet` field via `<%= finding.code_snippet %>` inside a `<pre>` tag (line 53). EJS `<%=` auto-escapes HTML entities, which is correct. When expanding to multi-line code snippets (5-10 lines), developers naturally switch to `<%-` (unescaped) to preserve formatting, or wrap the snippet in a `<code>` tag with innerHTML for syntax highlighting. The moment you use unescaped output for code that contains `<script>`, `<img onerror=`, or HTML angle brackets, you introduce XSS -- in a security education platform. The irony would be devastating to credibility.
 
-**What goes wrong:** The i18n infrastructure exists (`utils/i18n.js`, `fr.json`, `en.json`, `languageMiddleware`) and is loaded on every request. But **zero views** call `t()`. Every single string in every EJS template is hardcoded in English. Simply adding French keys to `fr.json` will not change what students see -- the templates themselves must be modified to call `<%= t('key.path') %>` instead of raw English strings.
+Several of the 12 seed findings contain angle brackets or HTML-significant characters. Finding 7 references "No CSRF middleware configured" which is benign, but any future snippet containing `<script>` tags or template literals with `${}` inside EJS would break rendering or create injection.
 
-**Evidence:** `grep -r "t(" views/` returns zero hits for translation function calls. All 32 EJS files contain raw English strings: "Static Code Analysis Lab", "Submit", "Save Draft", "findings submitted", "Classification", "True Positive (confirmed vulnerability)", etc.
+**Why it happens:**
+Multi-line code with syntax highlighting feels like it needs raw HTML output. Developers reach for `<%-` or build HTML strings with span-based coloring, bypassing EJS escaping.
 
-**Why it happens:** The i18n system was built as infrastructure but never wired into templates. The middleware makes `t()` available via `res.locals.t`, but no template author ever replaced hardcoded strings with `t()` calls.
+**How to avoid:**
+1. Continue using `<%= %>` (escaped) for all code snippet content inside `<pre><code>` blocks
+2. For syntax highlighting without external dependencies: use CSS-only styling on the `<pre>` block (dark theme already exists at line 53 of finding-detail.ejs) and a simple EJS helper that wraps the vulnerable line in a `<mark>` tag using string replacement AFTER escaping
+3. Never use `<%-` for any user-facing data, even seed data -- treat seed data as untrusted
+4. Test with a snippet containing `<script>alert(1)</script>` to verify escaping works
 
-**Consequences:** Students see an entirely English interface despite being French-speaking. For non-technical HEC Montreal students, this creates confusion and disengagement on the very first interaction.
+**Warning signs:**
+- Any `<%-` tag in the code snippet rendering area
+- Code snippets rendering as blank or broken (HTML entities being interpreted)
+- Syntax highlighting that requires building raw HTML strings
 
-**Prevention:**
-1. Replace hardcoded strings in SCA views (`student-lab.ejs`, `finding-detail.ejs`, `instructor.ejs`, `student-detail.ejs`) with `<%= t('sca.keyName') %>` calls
-2. Replace hardcoded strings in shared views (`header.ejs`, `login.ejs`, `error.ejs`, `footer.ejs`)
-3. Add all corresponding keys to `fr.json` under an `sca` namespace
-4. Focus on the student-facing flow first: login -> dashboard -> SCA lab -> finding detail -> review form
-
-**Detection:** Before deploying, search all SCA-path views for any raw English string that is not inside a `t()` call.
-
-**Phase:** Must be addressed in the i18n/translation phase. This is the single most impactful workstream.
-
-**Confidence:** HIGH -- verified by direct codebase grep.
-
----
-
-### Pitfall 2: Language Defaults to English, Not French
-
-**What goes wrong:** The `languageMiddleware` in `utils/i18n.js` line 75 defaults to English when no session language is set: `const lang = req.session && req.session.language ? req.session.language : 'en'`. New sessions (every student's first visit) will render English even after templates are translated.
-
-**Evidence:** Line 75 of `utils/i18n.js`: `const lang = req.session && req.session.language ? req.session.language : 'en';`. There is no mechanism to set the language to French automatically -- the only way is via `POST /auth/set-language`, which requires a deliberate API call.
-
-**Why it happens:** The system was designed with an English default and optional French, but tonight's class requires the opposite.
-
-**Consequences:** Even after all templates are wired to `t()`, students will see English because no session language is set. The professor would need to instruct 30+ students to manually change their language, which defeats the purpose.
-
-**Prevention:** Change the default on line 75 from `'en'` to `'fr'`:
-```javascript
-const lang = req.session && req.session.language ? req.session.language : 'fr';
-```
-
-**Detection:** Log in as a new user and verify the interface renders in French without any manual language selection.
-
-**Phase:** Must be addressed alongside the i18n template work. Single line change but easy to forget.
-
-**Confidence:** HIGH -- verified by reading source code.
+**Phase to address:**
+Phase 1 (Inline Code Snippets) -- must be the first architectural decision before any template work begins.
 
 ---
 
-### Pitfall 3: `<html lang="en">` Hardcoded in All Layouts
+### Pitfall 2: Adding New Fields to Seed Data Breaks Existing Student Databases on Re-seed
 
-**What goes wrong:** All four HTML entry points (`header.ejs`, `login.ejs`, `error.ejs`, `mfa-verify.ejs`) have `<html lang="en">` hardcoded. Even with French content, screen readers and browser spell-checkers will treat the page as English. More importantly, browser auto-translate features may trigger and create a confusing double-translation.
+**What goes wrong:**
+The v1.1 features require adding new data to the 12 SCA findings: multi-line `code_snippet` content (currently single-line), and potentially new fields for the answer key (e.g., `expected_classification`, `instructor_reasoning`). The `seedDatabase()` function in `utils/seedData.js` starts by running `DELETE FROM` on all tables (lines 7-12), then re-inserts everything. If a Codespaces instance has already been used in class (students have submitted reviews), re-seeding **destroys all student work** stored in `sca_student_reviews`.
 
-**Evidence:** `grep 'html lang=' views/` shows four files, all set to `"en"`.
+The JSON-file database (`config/database.js`) loads data from `database/data.json` at startup. The seed function only runs when `isDatabaseSeeded()` returns false. But if a developer runs `seedDatabase()` manually to pick up new snippet data, or if the seed-check logic changes, all 12 team instances lose their student data.
 
-**Prevention:** Change to `<html lang="<%= typeof currentLang !== 'undefined' ? currentLang : 'fr' %>">` in all four files. For `login.ejs` and `error.ejs` (which render outside the authenticated layout), hardcode `lang="fr"` since there is no language toggle and all students are French-speaking.
+**Why it happens:**
+Seed data updates feel safe because "it's just reference data." But the seed function is destructive -- it wipes all tables, not just the ones being updated. There is no migration path for updating existing findings without losing reviews.
 
-**Detection:** View page source in browser and verify the `lang` attribute matches the displayed language.
+**How to avoid:**
+1. Do NOT modify `seedDatabase()` to add new fields -- it is a nuclear option that destroys everything
+2. Instead, store multi-line code snippets and answer key data as **static data structures** in the route file or a new data module (e.g., `utils/scaSnippets.js`), keyed by finding ID
+3. These static structures get merged at render time in the route handler, never touching the database
+4. The existing `DIFFICULTY_MAP` constant in `routes/sca.js` (line 8) is the proven pattern -- finding-level enrichment at route level without DB changes
+5. If DB schema changes are truly needed later, write a migration function that updates individual records, not a full reseed
 
-**Phase:** Address during template translation.
+**Warning signs:**
+- Any modification to `seedDatabase()` or the `scaFindings` array in `seedData.js`
+- Adding columns to the `INSERT INTO sca_findings` statement
+- Running seed during development while Codespaces instances are active
 
-**Confidence:** HIGH -- direct file evidence.
+**Phase to address:**
+Phase 1 (Inline Code Snippets) and Phase 2 (Answer Key) -- the data architecture decision must be made before either feature starts.
 
 ---
 
-### Pitfall 4: Codespaces Port Visibility Defaults to Private
+### Pitfall 3: Answer Key Accidentally Exposed to Students Through Shared Routes
 
-**What goes wrong:** All forwarded ports in Codespaces default to "private" visibility. This means only the Codespace owner can access them via GitHub authentication. If the professor starts the classroom manager and 12 team instances, students on other machines **cannot access their team's port** without the professor manually changing each port's visibility.
+**What goes wrong:**
+The current SCA route architecture in `routes/sca.js` uses a single `GET /sca/findings/:id` endpoint (line 139) that serves both students and instructors, with role-based rendering in the EJS template. If the answer key data (expected classification, reasoning, discussion points) is passed to the template as part of the finding object or as a separate variable, it will be present in the page source for ALL users -- students included. Even if the EJS template conditionally renders `<% if (user.role !== 'student') { %>`, the data is still in the HTML source if it was passed via a JavaScript variable or hidden element.
 
-**Evidence:** GitHub documentation confirms "All forwarded ports are private by default." The `devcontainer.json` specifies `forwardPorts` for ports 3000-3012 but does not set visibility. The `onAutoForward: "silent"` for team ports only controls the VS Code notification, not the port's network accessibility.
+This is explicitly listed as out of scope in PROJECT.md: "Solution guide visible to students -- instructor references SOLUTION-GUIDE.md during discussion."
 
-**Why it happens:** Codespaces has no `devcontainer.json` property to pre-set port visibility to "public". This must be done manually via the VS Code Ports panel or the `gh codespace ports visibility` CLI command after the Codespace starts.
+**Why it happens:**
+The simplest implementation adds answer key fields to the finding object and conditionally shows them in EJS. This works visually but the data is still server-rendered into the page. Students who view source or inspect the DOM see everything.
 
-**Consequences:** Students arrive, click their team URL, and get a 404 or authentication wall. Class time is wasted troubleshooting access. With 13 ports (dashboard + 12 teams), manually changing visibility takes significant time.
-
-**Prevention:**
-1. Add a post-start script or README instruction to run:
-   ```bash
-   gh codespace ports visibility 3000:public 3001:public 3002:public 3003:public 3004:public 3005:public 3006:public 3007:public 3008:public 3009:public 3010:public 3011:public 3012:public -c $CODESPACE_NAME
+**How to avoid:**
+1. **Never pass answer key data to the template when the user is a student.** The role check must happen in the route handler (`routes/sca.js`), not the template
+2. In the `GET /sca/findings/:id` route, only merge answer key data when `user.role !== 'student'`:
+   ```javascript
+   if (user.role !== 'student') {
+     localizedFinding.answerKey = ANSWER_KEYS[finding.id];
+   }
    ```
-2. Alternatively, use `portsAttributes` with organization-level policies that allow public ports
-3. Document this step prominently in the instructor setup checklist
-4. Test from a different browser/incognito window before class to verify access
+3. Alternatively, serve the answer key on a separate instructor-only route (e.g., `GET /sca/findings/:id/answer-key`) with `requireRole(['admin', 'professor'])` middleware
+4. The existing SOLUTION-GUIDE.md is a Markdown file in the repo root -- students with Codespaces access can read it. Consider whether the in-app answer key partially replaces this file or supplements it
 
-**Detection:** After launching, open a team URL in an incognito/private window (not signed into GitHub). If you get a login wall, ports are still private.
+**Warning signs:**
+- Answer key data passed unconditionally in `res.render()` calls
+- Answer key fields present in the `finding` object that gets passed to all templates
+- Any `<script>` block in EJS that serializes the finding object to JSON (would include answer key)
 
-**Phase:** Must be verified during Codespaces setup/verification phase.
-
-**Confidence:** HIGH -- confirmed by GitHub documentation.
-
----
-
-### Pitfall 5: Codespaces Session Cookies Fail with Secure Flag + Port Forwarding
-
-**What goes wrong:** The `server.js` session configuration (line 51) sets `secure: !!startupSecuritySettings.https_enabled`. If HTTPS is enabled in the security settings, the `secure` cookie flag is set. Codespaces port forwarding uses HTTPS on the external URL but proxies to HTTP internally. If a student or the instructor toggles HTTPS in the security panel and restarts, cookies may stop working -- the internal server sees HTTP but the cookie has `secure: true`, causing sessions to silently fail. Students click "Login" and get bounced back to the login page with no error.
-
-**Evidence:** `server.js` line 44-53 shows the session cookie `secure` flag is set at startup based on the security settings database value. The `trust proxy` setting is not configured in Express, which means Express will not honor the `X-Forwarded-Proto` header from Codespaces' reverse proxy.
-
-**Why it happens:** Codespaces adds an HTTPS reverse proxy in front of your HTTP server. Without `app.set('trust proxy', 1)`, Express does not know the original request was HTTPS, so `secure` cookies may behave unpredictably.
-
-**Consequences:** Login appears to work (POST succeeds) but the session cookie is not stored by the browser, so the user is immediately redirected back to login. This is extremely confusing for non-technical students who will assume the credentials are wrong.
-
-**Prevention:**
-1. Ensure HTTPS is NOT enabled in the security settings for classroom use (it is off by default -- do not toggle it)
-2. Consider adding `app.set('trust proxy', 1)` if Codespaces use is expected
-3. Test login flow in the actual Codespaces environment before class, not just locally
-
-**Detection:** After deploying to Codespaces, log in and verify you reach the dashboard. Check that the session cookie exists in browser DevTools > Application > Cookies.
-
-**Phase:** Codespaces verification phase.
-
-**Confidence:** MEDIUM -- based on known Express/Codespaces proxy behavior; exact impact depends on security settings state at boot.
+**Phase to address:**
+Phase 2 (Instructor Answer Key) -- the route-level gating pattern must be established before any template work.
 
 ---
 
-### Pitfall 6: SCA Seed Data Is English-Only
+### Pitfall 4: Code Snippet Expansion Breaks the Student Lab Card Layout
 
-**What goes wrong:** The 12 SCA findings seeded in `utils/seedData.js` have English titles, descriptions, remediation text, and code snippet context. Even if the UI chrome is translated to French, the actual content students analyze -- finding titles like "Hardcoded Session Secret", descriptions like "The Express session secret is hardcoded in source code" -- remains in English.
+**What goes wrong:**
+The current `student-lab.ejs` renders an inline review form for each finding (line 96-128) that includes a single-line code snippet in a `<pre>` block (line 99). When expanding to 5-10 lines of syntax-highlighted code, this `<pre>` block will dominate the card, pushing the classification form below the fold. With 12 findings each showing a multi-line snippet, the page becomes extremely long and students lose orientation. The inline form pattern that works for a 1-line snippet becomes unwieldy at 5-10 lines.
 
-**Evidence:** `seedData.js` lines 179-251 contain all 12 SCA findings with hardcoded English strings for title, description, remediation, and false_positive_reason fields.
+Additionally, the finding-detail page (`finding-detail.ejs`) uses a 2-column grid layout (line 34: `grid-template-columns:2fr 1fr`). A 10-line code block in the left column will be fine on wide screens but will overflow or compress on smaller Codespaces browser panels where the viewport may be narrow.
 
-**Why it happens:** Seed data was written once in English. The i18n system only covers UI strings in `fr.json`, not database content.
+**Why it happens:**
+Expanding a 1-line snippet to 10 lines seems like a simple content change, but it fundamentally changes the visual weight of the code block relative to other elements.
 
-**Consequences:** Students see a French UI wrapper around English security analysis content. This creates a jarring bilingual experience. For non-technical students, the English security terminology (CWE descriptions, remediation guidance) may be difficult to parse.
+**How to avoid:**
+1. In `student-lab.ejs`, show only the **vulnerable line** (1 line, as today) in the card-level inline form. Reserve the full multi-line snippet for the `finding-detail.ejs` page only
+2. In `finding-detail.ejs`, use a scrollable `<pre>` with `max-height: 300px; overflow-y: auto` to contain long snippets
+3. Highlight the vulnerable line within the multi-line context using a background color highlight (e.g., `background: rgba(255, 0, 0, 0.1)`) rather than only showing the vulnerable line
+4. Test the layout at the Codespaces browser panel width (~1200px typical, can be as narrow as 900px with sidebar open)
 
-**Prevention:**
-1. Translate the seed data fields (title, description, remediation) to French directly in `seedData.js`
-2. Keep technical terms (CWE numbers, file paths, code snippets) in English as these are universal
-3. Alternatively, add a `description_fr` / `remediation_fr` column and use the language setting to choose which to display -- but this is more complex and risky for tonight
+**Warning signs:**
+- Student-lab page requires excessive scrolling to reach all 12 findings
+- Code blocks overflowing their containers horizontally
+- Finding-detail page right column (review form) pushed below the code block on narrow viewports
 
-**Detection:** After seeding, open the SCA student lab and verify finding titles and descriptions are in French.
-
-**Phase:** Seed data enhancement phase. This is high-impact because students spend most of their time reading finding content, not UI chrome.
-
-**Confidence:** HIGH -- direct file evidence.
-
----
-
-## Moderate Pitfalls
-
-Issues that cause friction or confusion but have workarounds.
-
-### Pitfall 7: Login Page Hardcoded English with No Translation Hooks
-
-**What goes wrong:** The `login.ejs` is a standalone HTML page (not using the `header.ejs` partial) with its own `<html>`, `<head>`, and `<body>` tags. All text is hardcoded: "HEC Montreal", "Application Security Learning Platform", "Username", "Password", "Login", "Default Accounts", "Login Failed". Even if `header.ejs` and other partials are translated, the login page -- the very first thing students see -- remains English.
-
-**Evidence:** `login.ejs` does not include any partials and does not use `t()`. It is a self-contained HTML file.
-
-**Prevention:** Either:
-1. Rewrite `login.ejs` to use `t()` calls (the middleware runs before rendering, so `t` is available even on unauthenticated routes)
-2. Or simply replace the English strings directly with French strings in the template (simpler, since there will be no language toggle)
-
-**Detection:** Load the login page and verify all text is French.
-
-**Phase:** Template translation phase -- should be the first view translated since it is the first thing students see.
+**Phase to address:**
+Phase 1 (Inline Code Snippets) -- layout decisions must be made alongside the snippet data structure.
 
 ---
 
-### Pitfall 8: Error Page Displays English Errors from Routes
+### Pitfall 5: Missing French Translations for New UI Elements Breaks Consistency
 
-**What goes wrong:** The `error.ejs` template displays `<%= message %>` which comes from route handlers. Throughout `routes/sca.js` and other route files, error messages are hardcoded in English: `'Finding not found'`, `'Student not found'`, `'Invalid classification'`. Even with a translated error page UI, the error message body will be English.
+**What goes wrong:**
+v1.0 established a complete French UI with ~136 i18n keys in `fr.json`. The v1.1 features will add new UI elements: snippet-related labels (e.g., "Ligne vulnerable," "Contexte du code"), answer key labels (e.g., "Classification attendue," "Points de discussion," "Raisonnement"), and any new section headers. If these new strings are added in English or hardcoded directly in templates, the UI becomes a jarring mix of French and English.
 
-**Evidence:** `routes/sca.js` line 92: `res.status(404).render('error', { message: 'Finding not found', error: { status: 404 } })`. Similar patterns in `routes/auth.js` line 28: `res.render('login', { error: 'Invalid username or password' })`.
+The v1.0 key decision was explicit: "All ~136 keys added upfront in Phase 1. Phases 2-4 only wire templates, never add keys." This pattern should be repeated for v1.1.
 
-**Prevention:** Replace route-level error strings with `t()` calls:
-```javascript
-res.render('login', { error: req.res.locals.t('auth.invalidCredentials') });
-```
-Or since the `t` function is available via the i18n module directly:
-```javascript
-const { t } = require('../utils/i18n');
-// Then in route: t('fr', 'auth.invalidCredentials')
-```
+**Why it happens:**
+Developers add the feature first, verify it works, then plan to "translate later." But with the no-new-dependencies constraint and EJS templates, every hardcoded English string requires a separate pass to extract into `fr.json`. The translation step gets deferred or forgotten.
 
-**Detection:** Trigger a 404 or login error and verify the message appears in French.
+**How to avoid:**
+1. Add ALL new i18n keys to `fr.json` (and `en.json`) BEFORE writing any template code, following the v1.0 pattern
+2. New keys needed (estimate):
+   - `sca.findingDetail.vulnerableLine` -- "Ligne vulnérable"
+   - `sca.findingDetail.codeContext` -- "Contexte du code"
+   - `sca.findingDetail.lineNumber` -- "Ligne {n}"
+   - `sca.answerKey.title` -- "Clé de réponse"
+   - `sca.answerKey.expectedClassification` -- "Classification attendue"
+   - `sca.answerKey.reasoning` -- "Raisonnement"
+   - `sca.answerKey.discussionPoints` -- "Points de discussion"
+   - `sca.answerKey.instructorOnly` -- "Visible uniquement par l'instructeur"
+3. Use Quebec French conventions: "ligne vulnerable" not "ligne de code vulnerable," terminology consistent with existing 136 keys
+4. Grep all modified EJS files for any raw English string before considering a phase complete
 
-**Phase:** Error handling polish phase.
+**Warning signs:**
+- English strings visible in any student-facing or instructor-facing view
+- New `t()` calls in templates that return the key path itself (meaning the key is missing from fr.json)
+- i18n fallback warnings in server console: `Translation missing: fr.sca.answerKey.title`
 
----
-
-### Pitfall 9: Hardcoded English in JavaScript Alert/Confirm Dialogs
-
-**What goes wrong:** The SCA views contain JavaScript `alert()`, `confirm()`, and inline message strings in English. Examples from `finding-detail.ejs`: `confirm('Push "<%= finding.title %>" to the Vulnerability Manager?')`, `alert('Imported to VM! Reloading...')`, `alert('Network error')`. From `student-lab.ejs`: `msg.textContent = 'Saving...'`, `msg.textContent = 'Network error - please try again.'`.
-
-**Evidence:** Multiple `alert()` and `confirm()` calls in SCA view JavaScript blocks, all with English strings.
-
-**Prevention:**
-1. Replace inline strings with data attributes or a `window.__translations` object populated from server-side `t()` calls
-2. Or simply hardcode French strings in the JavaScript since there is no language toggle
-3. Focus on student-facing views first: `student-lab.ejs` feedback messages ("Saving...", "Submitted!", "Draft saved.", "Network error")
-
-**Detection:** Perform a save/submit action in the SCA lab and verify feedback messages appear in French.
-
-**Phase:** Template translation phase -- easy to miss because these strings are in `<script>` blocks, not in the HTML body.
+**Phase to address:**
+Phase 1 (before template work begins) -- add all keys upfront as the very first task, mirroring v1.0 approach.
 
 ---
 
-### Pitfall 10: Sidebar Navigation Labels Are Hardcoded English
+### Pitfall 6: Code Quality Refactoring Breaks the Smoke Test or Changes Behavior
 
-**What goes wrong:** The `header.ejs` sidebar navigation contains hardcoded English labels: "Dashboard", "Classes", "Security Panel", "Audit Logs", "MFA Setup", "Backups", "My Classes", "My Enrollments", "Static Analysis", "Dynamic Analysis", "Vuln Management", "Pentest Lab", "Security Labs", "Main", "Administration", "Teaching", "Learning", "Logout", "Security Status".
+**What goes wrong:**
+The v1.1 milestone includes "AI-driven code quality optimization." The smoke test (`scripts/smoke-test.js`) validates all 13 ports, French content presence, and authenticated student journey. It checks for specific French strings in the HTML responses (e.g., "Connexion"). Refactoring that reorganizes routes, renames files, changes response structure, or alters HTML class names can silently break the smoke test or, worse, change runtime behavior in ways the smoke test does not catch.
 
-**Evidence:** `header.ejs` lines 459-541 contain approximately 25+ hardcoded English navigation strings.
+The codebase is ~11,800 LOC across 6,870 JS + 4,928 EJS. A broad refactoring pass risks introducing regressions in the custom SQL-to-JSON database adapter (`config/database.js` executeSQL function), which uses string matching on SQL query patterns (e.g., `if (sql.includes('FROM sca_findings'))`). Renaming or restructuring queries can break this brittle adapter.
 
-**Prevention:** Replace each with `<%= t('nav.keyName') %>` or `<%= t('common.keyName') %>` calls. Add corresponding keys to `fr.json`. Some keys already exist in `fr.json` (e.g., `nav.security`, `nav.auditLogs`, `nav.classes`) but many are missing (e.g., "Security Labs", "Static Analysis", "Learning", "Logout").
+**Why it happens:**
+"Code quality" feels low-risk because you are not changing behavior. But the JSON database adapter is pattern-matched to specific SQL strings, and the smoke test is pattern-matched to specific HTML content. Both are fragile to structural changes.
 
-**Detection:** Log in and check every sidebar label is in French.
+**How to avoid:**
+1. Run `npm test` before and after EVERY refactoring commit -- not just at the end
+2. Never refactor the `executeSQL` function in `config/database.js` without understanding that it pattern-matches SQL strings -- any query restructuring needs corresponding adapter updates
+3. Refactoring scope should be limited to:
+   - Extracting repeated code into functions
+   - Consolidating duplicated CSS styles across EJS templates
+   - Improving variable naming and code organization
+   - NOT restructuring routes, database queries, or response formats
+4. Do not refactor and add features in the same commit -- separate concerns make regression tracking possible
 
-**Phase:** Template translation phase.
+**Warning signs:**
+- Smoke test failing after a "simple" refactoring change
+- Database queries returning `undefined` or empty arrays after query text changes
+- EJS template errors after file renames or moves
 
----
-
-### Pitfall 11: npm install Slow on First Codespace Boot
-
-**What goes wrong:** The `devcontainer.json` runs `npm install && node scripts/setup.js` as `postCreateCommand`. The `npm install` step installs `bcrypt` (which requires native compilation), `selfsigned`, and other dependencies. On first Codespace creation, this can take 2-5 minutes. Combined with the container image pull, total boot time can exceed 5-10 minutes. If the professor starts the Codespace at class start rather than pre-warming it, students wait with nothing to do.
-
-**Evidence:** `devcontainer.json` postCreateCommand: `"npm install && node scripts/setup.js"`. `bcrypt` in `package.json` requires native bindings compilation, which is the slowest part.
-
-**Prevention:**
-1. Create the Codespace **before** class (at least 30 minutes ahead) to ensure `postCreateCommand` has completed
-2. Verify the Codespace is fully booted by checking the terminal output for "Setup completed successfully!"
-3. Run `npm start` manually and verify all 12 instances come online before sharing URLs with students
-4. Consider pre-building: run `npm install` once and commit `node_modules` or use a Codespaces prebuild configuration
-
-**Detection:** Check the Codespace terminal for setup completion messages. Run `npm test` (smoke test) to verify.
-
-**Phase:** Codespaces verification phase -- pre-class setup checklist.
+**Phase to address:**
+Phase 4 (Code Quality) -- must be the LAST phase, after all features are complete and tested. Never refactor in parallel with feature work.
 
 ---
 
-### Pitfall 12: autoResetOnStart Is False -- Stale Data on Restart
+## Technical Debt Patterns
 
-**What goes wrong:** `classroom.config.json` has `"autoResetOnStart": false`. If the professor stops and restarts the classroom manager (e.g., after a code change), all team instances retain their previous database state. This means student data from a previous test run or debugging session persists, creating confusing stale state for the actual class.
+Shortcuts that seem reasonable but create long-term problems.
 
-**Evidence:** `classroom.config.json` line 11: `"autoResetOnStart": false`. The `classroom-manager.js` line 935-940 checks this flag and only wipes instance data when true.
+| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
+|----------|-------------------|----------------|-----------------|
+| Hardcoding multi-line snippets directly in `seedData.js` | Single source of truth | Destroys student data on reseed; bloats seed file | Never -- use a separate static data module |
+| Storing answer key in the finding database record | Simple query, one object | Exposes answer to students if role check is missed; requires DB migration | Never -- use route-level data injection |
+| Adding a syntax highlighting library (Prism.js, highlight.js) | Professional code rendering | Violates no-new-dependencies constraint; adds CDN dependency or bundle | Never for v1.1 -- use CSS-only `<pre>` styling |
+| Inlining 10-line snippets in student-lab card view | Students see code without navigation | Cards become unusably tall, 12 x 10 lines = 120 lines of code on one page | Never -- show full snippet only on finding-detail page |
+| Skipping `en.json` updates when adding `fr.json` keys | Faster -- French is the only active language | English fallback breaks if FR key is missing; future EN toggle becomes impossible | Acceptable for v1.1 IF en.json gets matching keys added simultaneously |
 
-**Prevention:**
-1. Set `"autoResetOnStart": true` before tonight's class so each restart gives fresh seeded databases
-2. Alternatively, use the dashboard's "Reset All Instances" button before class starts
-3. After making code changes, restart with auto-reset to ensure students get the French translations from the updated seed data
+## Integration Gotchas
 
-**Detection:** After restarting the classroom manager, log into a team instance and verify the database has fresh seed data (check that no previous student reviews exist).
+Common mistakes when connecting new features to the existing system.
 
-**Phase:** Pre-class configuration.
+| Integration Point | Common Mistake | Correct Approach |
+|-------------------|----------------|------------------|
+| `localize()` function in `utils/i18n.js` | Trying to localize new fields (snippet context, answer key) through the same overlay mechanism | `localize()` only overlays `title`, `description`, `remediation` (line 95). New fields need either new localize support or should be stored pre-translated in the static data module |
+| `DIFFICULTY_MAP` pattern in `routes/sca.js` | Not realizing this is the established pattern for finding-level enrichment | Follow this exact pattern for snippets and answer keys: constant object keyed by finding ID, merged at route handler time |
+| Finding detail route rendering | Passing the entire enriched finding object to `res.render()` including instructor-only fields | Conditionally build the template data object based on `user.role` before passing to `res.render()` |
+| EJS `<script>` blocks with French strings | Adding new client-side JS that uses English strings instead of EJS-baked constants | Follow the established pattern: `const MSG_FOO = '<%= t("key") %>';` at top of script block (see instructor.ejs line 143) |
+| Smoke test French content checks | Adding new French UI elements that the smoke test does not verify | Update smoke test assertions to include new French strings, especially any new section headers visible on the finding-detail page |
+| `student-lab.ejs` inline form code snippet | Replacing the 1-line snippet with the full multi-line snippet | Keep 1-line vulnerable-line preview in student-lab cards; full snippet only on finding-detail page |
 
----
+## Performance Traps
 
-## Minor Pitfalls
+Patterns that work at small scale but fail as usage grows.
 
-### Pitfall 13: Security Status Bar Shows English Labels
+| Trap | Symptoms | Prevention | When It Breaks |
+|------|----------|------------|----------------|
+| Loading all 12 multi-line snippets into the student-lab page | Page becomes slow on Codespaces where bandwidth is limited | Only load snippets on finding-detail page, not the list view | With 12 x 10-line snippets (1-2KB each), unlikely to be a real problem, but it hurts layout more than performance |
+| N+1 lookups if snippet data is stored in DB and queried per-finding | Route handler makes 12 individual queries instead of one | Use static data module (zero DB queries for snippets) | Not applicable if using the recommended static approach |
+| Large answer key objects serialized into every instructor page load | Instructor dashboard becomes slow with 12 findings x full reasoning text | Only load answer key data on finding-detail page for instructors, not the overview matrix | At 12 findings this is negligible, but good practice |
 
-**What goes wrong:** The security status bar in `header.ejs` (lines 548-571) shows badges like "MFA: ON", "RBAC: OFF", "Passwords: Encrypted", "Data: Plaintext", "HTTPS", "Logging: ON", "Rate Limit: ON". These are hardcoded English strings even though `fr.json` already has translations for these concepts under `security.status` and `security.panel`.
+## Security Mistakes
 
-**Prevention:** Replace with `t()` calls using the existing `security.status.on`/`security.status.off` keys.
+Domain-specific security issues beyond general web security.
 
----
+| Mistake | Risk | Prevention |
+|---------|------|------------|
+| Answer key data in page source for students | Students see expected answers, defeating the exercise's pedagogical purpose | Route-level role gating: never pass answer key to template for student role |
+| SOLUTION-GUIDE.md readable via Codespaces file explorer | Students can open the repo file tree and read the full solution guide | This is a known accepted risk (it is in the repo). The in-app answer key should add value beyond what SOLUTION-GUIDE.md provides (e.g., per-finding inline reasoning, discussion prompts) |
+| Code snippets showing real file paths and line numbers | Students could try to navigate to the actual vulnerable file in Codespaces | This is intentional -- the SCA lab is designed to map findings to the real codebase. Not a bug. |
+| Refactoring that accidentally fixes a vulnerability used as a teaching example | A code quality pass might "fix" the hardcoded secrets or add input validation, removing the teaching material | Never modify files that contain intentional vulnerabilities during code quality work: `server.js` session secret, `utils/encryption.js` AES key, `routes/auth.js` plaintext comparison, `routes/admin.js` path traversal |
 
-### Pitfall 14: "Application Security" Subtitle in Header Is English
+## UX Pitfalls
 
-**What goes wrong:** The sidebar header in `header.ejs` line 452 says `"Application Security"` as a subtitle. This should be "Securite applicative" or "Securite des applications" for French-speaking students.
+Common user experience mistakes in this domain.
 
-**Prevention:** Replace with a `t()` call or hardcode the French string.
+| Pitfall | User Impact | Better Approach |
+|---------|-------------|-----------------|
+| Multi-line code snippet without line numbers | Students cannot reference "line 44" when discussing findings with the instructor | Add line numbers as a CSS counter or inline prefix (e.g., `44 | const secret = ...`) in the `<pre>` block |
+| Vulnerable line not visually distinct in multi-line context | Students spend time finding the relevant line in a 10-line block | Highlight the vulnerable line with a distinct background color and/or a left-border marker |
+| Answer key visible immediately without collapsible toggle | Instructor sees answer before forming their own assessment; clutters the page | Use a `<details><summary>` collapsible element for the answer key, collapsed by default |
+| Mixing English security terms with French UI | Students confused by inconsistent language (e.g., "True Positive" button but French description) | Keep security terms that are industry-standard in English (CWE, CVSS, severity levels) but translate pedagogical terms to French (classification labels, instructions, hints) -- this is the v1.0 established pattern |
+| Code snippets with no file context | Students see 10 lines of code but do not know what the file does or where these lines sit in the broader file | Add a brief 1-line file description above the snippet (e.g., "server.js -- Configuration principale du serveur Express") |
 
----
+## "Looks Done But Isn't" Checklist
 
-### Pitfall 15: Login Page Shows English Demo Account Instructions
+Things that appear complete but are missing critical pieces.
 
-**What goes wrong:** `login.ejs` shows "Default Accounts:" with English labels "Admin:", "Professor:", "Student:" and the credential pairs. Non-technical students may not understand these are the accounts they should use.
+- [ ] **Inline snippets:** Code renders correctly -- verify it also renders correctly when the snippet contains HTML angle brackets (`<`, `>`), template literals, and single/double quotes
+- [ ] **Inline snippets:** Vulnerable line is highlighted -- verify the highlight works when the vulnerable line is the FIRST or LAST line of the snippet (edge cases)
+- [ ] **Inline snippets:** Line numbers display -- verify line numbers match the actual file line numbers (not 1-based from snippet start). Finding 1 references line 44 of server.js; the snippet should show lines ~40-48, not lines 1-9
+- [ ] **Answer key:** Data is hidden from students -- verify by logging in as `alice_student` and viewing page source on a finding-detail page to confirm no answer key data is present
+- [ ] **Answer key:** French translations exist for ALL 12 findings' answer key text -- verify no English leaks through
+- [ ] **Answer key:** Each finding has expected classification, reasoning, AND discussion points -- verify none are placeholder or empty
+- [ ] **Code quality:** `npm test` passes after refactoring -- run the full smoke test, not just a single page check
+- [ ] **Code quality:** Intentional vulnerabilities are preserved -- verify all 12 SCA findings still map to real code (hardcoded secret still hardcoded, plaintext comparison still plaintext, etc.)
+- [ ] **Documentation:** README reflects v1.1 features -- verify it mentions inline snippets and answer key, not just the v1.0 feature set
+- [ ] **Documentation:** SOLUTION-GUIDE.md is updated if the answer key changes the instructor workflow -- verify the guide references the in-app answer key feature
+- [ ] **i18n:** Every new string in every modified EJS file uses `t()` -- grep for raw English strings in modified files
+- [ ] **i18n:** `en.json` has matching keys for every new `fr.json` key -- the fallback system needs English equivalents
 
-**Prevention:** Translate the "Default Accounts" section to French. Consider renaming to "Comptes de demonstration" with clearer instructions like "Utilisez ces identifiants pour vous connecter:".
+## Recovery Strategies
 
----
+When pitfalls occur despite prevention, how to recover.
 
-### Pitfall 16: Date Formatting Uses English Locale
+| Pitfall | Recovery Cost | Recovery Steps |
+|---------|---------------|----------------|
+| Student data lost from accidental reseed | HIGH | No built-in recovery. Must restore from Codespaces backup or git stash of `database/data.json`. Prevention is the only strategy. |
+| Answer key exposed to students | MEDIUM | Redeploy with fixed role-gating. Students who already saw the answers may need to be told -- pedagogical impact is moderate since SCA triage is formative, not graded. |
+| Broken smoke test after refactoring | LOW | Revert the refactoring commit. Run `npm test` to confirm clean state. Refactor again in smaller increments. |
+| XSS in code snippet rendering | MEDIUM | Fix the escaping immediately. Audit all `<%-` usage in SCA templates. The irony of XSS in a security lab will be a teaching moment if handled transparently. |
+| English strings leaked into French UI | LOW | Add missing keys to `fr.json`, redeploy. Use `grep -r "TODO\|FIXME\|English" views/sca/` to find remaining issues. |
+| Intentional vulnerability accidentally fixed | HIGH | Identify which finding was affected. Revert the specific fix. Verify the seed data still maps to real vulnerable code. Re-run smoke test. |
 
-**What goes wrong:** `server.js` line 68 defines `formatDate` using `new Date(dateStr).toLocaleString()` which defaults to the server's locale (likely `en-US` in a Codespaces container). Dates will appear as "3/12/2026, 7:30:00 PM" instead of the French format "12/03/2026 a 19h30".
+## Pitfall-to-Phase Mapping
 
-**Prevention:** Pass the locale explicitly: `d.toLocaleString('fr-CA')` for Quebec French date formatting.
+How roadmap phases should address these pitfalls.
 
----
-
-## Phase-Specific Warnings
-
-| Phase Topic | Likely Pitfall | Mitigation |
-|-------------|---------------|------------|
-| i18n translation | Templates do not use `t()` at all (Pitfall 1) | Must rewrite templates, not just add JSON keys |
-| i18n translation | Language defaults to English (Pitfall 2) | Change one line in `utils/i18n.js` |
-| i18n translation | `<html lang="en">` hardcoded (Pitfall 3) | Update 4 files |
-| i18n translation | JS alert/confirm strings are English (Pitfall 9) | Must translate script blocks too |
-| i18n translation | Login page is standalone, not using partials (Pitfall 7) | Separate translation effort from main views |
-| Seed data enhancement | SCA findings are English content (Pitfall 6) | Translate seedData.js fields |
-| Codespaces verification | Port visibility defaults private (Pitfall 4) | Must run `gh codespace ports visibility` command |
-| Codespaces verification | Session cookies + proxy (Pitfall 5) | Do not enable HTTPS in security panel |
-| Codespaces verification | Slow first boot (Pitfall 11) | Pre-warm Codespace 30+ min before class |
-| Pre-class configuration | autoResetOnStart is false (Pitfall 12) | Set to true before deploying |
-| Error handling | Route error messages are English (Pitfall 8) | Translate error strings in route handlers |
-| UX polish | Date formatting is English locale (Pitfall 16) | Pass `fr-CA` locale to `toLocaleString()` |
-
-## Priority Ranking for Tonight
-
-Given the time pressure (class is tonight), pitfalls should be addressed in this order:
-
-1. **Pitfall 1 + 2 + 3** (i18n wiring) -- Without this, nothing displays in French. Highest impact.
-2. **Pitfall 6** (seed data) -- Students spend 90% of their time reading finding content, not UI chrome.
-3. **Pitfall 7** (login page) -- First impression; sets the tone.
-4. **Pitfall 4** (port visibility) -- Without this, students literally cannot access the app.
-5. **Pitfall 12** (autoResetOnStart) -- One config line, prevents stale data.
-6. **Pitfall 10** (sidebar navigation) -- Visible throughout the session.
-7. **Pitfall 9** (JS feedback messages) -- Students see these during the core workflow.
-8. **Pitfall 5** (session cookies) -- Risk mitigation; just avoid enabling HTTPS.
-9. **Pitfalls 13-16** (minor polish) -- Nice to have but not blocking.
+| Pitfall | Prevention Phase | Verification |
+|---------|------------------|--------------|
+| XSS in snippet rendering | Phase 1 (Snippets) | Test snippet containing `<script>` tags renders as text, not executable HTML |
+| Seed data destruction | Phase 1 (Snippets) | Verify `seedData.js` is NOT modified; snippets stored in static module |
+| Answer key student exposure | Phase 2 (Answer Key) | Log in as student, view-source on finding-detail page, confirm no answer key data |
+| Broken card layout | Phase 1 (Snippets) | Visual check at 1200px and 900px viewport width on student-lab and finding-detail |
+| Missing French translations | Phase 1 (before templates) | All new i18n keys added to both fr.json and en.json before any EJS work |
+| Smoke test regression | Phase 4 (Code Quality) | `npm test` passes before AND after every refactoring commit |
+| Intentional vulns removed | Phase 4 (Code Quality) | Checklist: verify all 12 SCA findings still map to real vulnerable code in the actual codebase files |
+| `localize()` not covering new fields | Phase 1 (Snippets) | Verify snippet context labels use `t()` calls, not `localize()` overlay |
 
 ## Sources
 
-- GitHub Codespaces port forwarding documentation: https://docs.github.com/en/codespaces/developing-in-a-codespace/forwarding-ports-in-your-codespace
-- GitHub Codespaces port visibility restriction: https://docs.github.com/en/codespaces/managing-codespaces-for-your-organization/restricting-the-visibility-of-forwarded-ports
-- Port forwarding troubleshooting: https://docs.github.com/en/codespaces/troubleshooting/troubleshooting-port-forwarding-for-github-codespaces
-- Codespaces port visibility first boot issue: https://github.com/orgs/community/discussions/156546
-- GitHub Classroom Codespaces FAQ: https://github.com/orgs/community/discussions/145312
-- Express-session secure cookie issue: https://github.com/expressjs/session/issues/983
-- EJS variable undefined errors: https://github.com/tj/ejs/issues/232
-- Direct codebase analysis of all files listed above (HIGH confidence)
+- Direct codebase analysis: `routes/sca.js`, `views/sca/finding-detail.ejs`, `views/sca/student-lab.ejs`, `views/sca/instructor.ejs`
+- Database architecture: `config/database.js` (JSON-file DB with SQL pattern matching)
+- Seed data structure: `utils/seedData.js` (12 SCA findings with destructive reseed)
+- i18n system: `utils/i18n.js`, `config/translations/fr.json` (~136 keys, `localize()` overlays 3 fields only)
+- Existing patterns: `DIFFICULTY_MAP` in `routes/sca.js` (route-level constant enrichment), `SOLUTION-GUIDE.md` (existing instructor reference)
+- v1.0 key decisions from `PROJECT.md`: no new dependencies, all i18n keys upfront, localize() overlays title/description/remediation only
+
+---
+*Pitfalls research for: v1.1 milestone -- inline snippets, answer key, docs, code quality*
+*Researched: 2026-03-12*

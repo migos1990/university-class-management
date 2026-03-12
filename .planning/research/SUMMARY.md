@@ -1,173 +1,163 @@
 # Project Research Summary
 
-**Project:** HEC Montreal SCA Lab Production Release
-**Domain:** Educational SCA (Static Code Analysis) lab for university application security course
+**Project:** HEC Montreal SCA Lab -- v1.1 Polish & Pedagogy
+**Domain:** Incremental feature additions (inline code snippets, instructor answer key, code quality) to an educational SCA lab platform
 **Researched:** 2026-03-12
 **Confidence:** HIGH
 
 ## Executive Summary
 
-This project is a production-readiness push for a server-rendered Express/EJS classroom platform that runs 12 team instances inside a single GitHub Codespace. The platform already has a complete SCA workflow -- 12 pre-seeded findings mapped to real CWE vulnerabilities in the codebase itself, a student triage workflow (classify, annotate, submit), an instructor review matrix, and orchestrated multi-instance deployment. The core gap is straightforward but pervasive: the entire interface is in English (zero EJS templates call the existing `t()` translation function), the default language is English, and the SCA seed data content is English-only. This must be fixed for 30+ French-speaking HEC Montreal students tonight.
+The v1.1 milestone adds four capabilities to an already-shipped educational SCA lab: (1) multi-line inline code snippets with vulnerable-line highlighting in the finding detail view, (2) an instructor answer key for in-class discussion, (3) updated documentation, and (4) code quality optimization via ESLint/Prettier. The existing Express 4.18 / EJS 3.1 / Node.js 22 stack is proven and stable after v1.0. The research across all four areas converges on a single theme: this is enrichment work on a working system, not structural change. Every feature integrates into existing patterns -- seed data enrichment, route-level data injection, role-gated views, and the i18n translation system.
 
-The recommended approach is strictly additive: no new dependencies, no architectural changes, no restructuring. The i18n infrastructure is already solid (custom `utils/i18n.js` with nested dot-notation keys, parameter interpolation, and English fallback). The work is (1) adding ~100 French translation keys to `fr.json`, (2) replacing hardcoded English strings in ~8 EJS templates with `t()` calls, (3) flipping the default language from `'en'` to `'fr'`, (4) enriching SCA seed data with French fields, and (5) enhancing the instructor dashboard with polling-based class progress stats. Every pattern needed already exists in the codebase -- this is extension work, not invention.
+The recommended approach uses Prism.js via CDN (zero npm dependencies) for syntax-highlighted code blocks with its native `data-line` attribute mapping directly to the existing `finding.line_number` field. The instructor answer key follows the established `DIFFICULTY_MAP` pattern: static data keyed by finding ID, merged at route time, gated behind `requireRole(['admin', 'professor'])`. ESLint 9 and Prettier 3 are added as devDependencies only, completing the already-configured VS Code extensions in devcontainer.json. The STACK and ARCHITECTURE research are in tension on one point -- whether to use Prism.js CDN or CSS-only rendering for code snippets -- but STACK's recommendation of Prism.js is the stronger choice because its `data-line` plugin eliminates custom vulnerable-line highlighting code entirely.
 
-The primary risks are Codespaces port visibility (ports default to private, blocking student access entirely) and the sheer volume of string replacements across templates (a typo in a translation key shows the raw key instead of French text). Both are mitigable: port visibility requires a single CLI command before class, and translation key errors are cosmetic rather than functional. The session cookie + Codespaces proxy interaction is a secondary risk avoided by not enabling HTTPS in the security panel.
+The critical risks are: (1) introducing XSS by switching to unescaped EJS output for code snippets in a security education platform -- ironic and reputation-damaging; (2) destroying student data by modifying the destructive `seedDatabase()` function; and (3) leaking the answer key to students through template-level rather than route-level role gating. All three are avoidable through architectural discipline: keep `<%= %>` escaping (or let Prism.js handle rendering), store new snippet data outside the seed function using the `DIFFICULTY_MAP` route-enrichment pattern, and gate answer key data in the route handler before it reaches the template.
 
 ## Key Findings
 
 ### Recommended Stack
 
-No new dependencies. The entire implementation uses the existing Express 4.18 / EJS 3.1 / Node.js 22 stack with the custom `utils/i18n.js` module. The i18n system already supports nested dot-notation keys (`sca.lab.title`), `{param}` interpolation, and automatic English fallback. Real-time dashboard updates use the existing `setInterval + fetch` polling pattern already proven in the classroom-manager dashboard and instructor broadcast system.
+No new production dependencies. Two additions: Prism.js loaded from CDN for browser-side syntax highlighting, and ESLint 9 + Prettier 3 as devDependencies for code quality tooling. See [STACK.md](STACK.md) for full rationale.
 
-**Core technologies (all existing, no changes):**
-- **Express 4.18 + EJS 3.1:** Server-rendered monolith with `t()` translation helper injected into all views via `res.locals`
-- **Custom i18n module (`utils/i18n.js`):** Loads JSON translation files at startup, supports nested keys and parameter interpolation
-- **HTTP polling (setInterval + fetch):** Dashboard updates every 20-60s, matching two existing patterns in the codebase
-- **Codespaces devcontainer:** Port forwarding for 13 ports, `postCreateCommand` for npm install + setup, `postStartCommand` for auto-start
+**Core technologies:**
+- **Prism.js 1.29.0 via CDN:** Syntax highlighting with native `data-line` vulnerable-line callout, `data-start` for real line numbers, okaidia dark theme matching existing `#282c34` code blocks -- ~15 KB total, zero npm impact
+- **ESLint 9 + eslint-config-prettier 10:** Flat config format (project uses CommonJS), rules tuned to existing patterns (`no-console: off`, `eqeqeq: error`), completes the already-declared VS Code extensions
+- **Prettier 3.4:** `singleQuote: true`, `printWidth: 120` (matching existing code conventions), `semi: true` -- config based on actual codebase analysis
 
-**Critical version requirements:** None. Everything is locked by the existing devcontainer image.
+**Explicitly rejected:** highlight.js (no native line-highlight), CodeMirror/Monaco (editor libraries, not display), Shiki (requires Node.js runtime), TypeScript (11,800 LOC rewrite for zero classroom benefit), husky/lint-staged (solo instructor project), any CSS framework (inline styles are the convention).
 
 ### Expected Features
 
-**Must have (P0 -- class fails without these):**
-- Full French translation of 4 SCA views (~80 strings) and 3 shared views (~45 strings)
-- Default language flipped to French (one-line change in `utils/i18n.js`)
-- Classification labels in French ("Vrai positif", "Faux positif", "Necessite une investigation")
-- French AJAX feedback messages in save/submit flow
-- French error messages on SCA routes
-- Codespaces first-boot reliability verification (seeding, port forwarding, team isolation)
+See [FEATURES.md](FEATURES.md) for the full landscape including dependency graph.
 
-**Should have (P1 -- makes the class impactful):**
-- Enriched SCA seed data with French descriptions, business-impact framing, educational context
-- Guided workflow intro banner explaining the task in French
-- Live class progress stats on instructor dashboard (aggregate completion, students started/completed)
-- Class consensus indicators per finding (distribution of student classifications for discussion)
+**Must have (P0 -- defines the v1.1 milestone):**
+- Multi-line code snippets (5-10 lines) replacing single-line snippets in finding detail
+- Vulnerable line visually called out within the snippet (background highlight + left border)
+- Line numbers in code snippets corresponding to actual file line numbers
+- Instructor answer key view (role-gated, French, with expected classification + reasoning + discussion prompts for all 12 findings)
+- Updated README reflecting v1.1 features
 
-**Defer (P2 -- future sessions):**
-- Contextual hints per finding (requires enriched seed data first)
-- Finding difficulty indicators
-- Instructor broadcast message form
-- Severity distribution visuals
-- Grading/scoring (tonight is formative, not summative)
-- WebSocket real-time updates (polling is sufficient for 30 students)
-- Language toggle UI (all students speak French)
-- Mobile responsive design (students are on laptops)
+**Should have (P1 -- high value, low risk):**
+- Syntax coloring via Prism.js (keywords, strings, comments differentiated)
+- Answer key inline within finding-detail view (collapsible instructor-only section)
+- Answer key comparison badges on student review (green check / red X vs expected)
+
+**Defer (v2+):**
+- Live code editor, auto-grading, student-visible solutions, comprehensive JSDoc/TypeScript migration, CSS framework adoption
 
 ### Architecture Approach
 
-The architecture is an additive-only modification strategy across three independent layers: (1) Translation Data (JSON files + seed data), (2) View Integration (EJS templates call `t()`), and (3) Dashboard Enhancement (new API fields + client-side polling). These layers have clear dependencies -- Layer 2 requires Layer 1 to exist, Layer 3 is independent -- but the modified files are distinct across layers, enabling parallel work on shared UI translation and SCA-specific translation.
+The architecture is additive-only with two independent work streams that can execute in parallel. See [ARCHITECTURE.md](ARCHITECTURE.md) for component boundaries, data flows, and anti-patterns.
 
 **Major components:**
-1. **Translation JSON (`config/translations/fr.json`)** -- Store all French UI strings under `sca.*` and `nav.*` namespaces; purely additive to existing 290-key file
-2. **SCA view templates (`views/sca/*.ejs`)** -- Replace ~80 hardcoded English strings with `<%= t('sca.xxx') %>` calls
-3. **Shared UI templates (`views/partials/header.ejs`, `views/login.ejs`)** -- Replace ~45 hardcoded English strings; login.ejs is standalone (no partials) and needs separate treatment
-4. **SCA seed data (`utils/seedData.js`)** -- Add `fr_title`, `fr_description`, `fr_remediation` fields to 12 findings; views use `localize()` helper
-5. **Enhanced `/api/summary` endpoint** -- Add `consensus`, `draft_count`, `class_stats` fields to existing JSON response for instructor dashboard polling
-6. **Classroom dashboard SCA section** -- New `renderSCADetail()` function following established pattern in `classroom-manager.js`
+1. **Seed data enrichment (`utils/seedData.js`)** -- Expand `code_snippet` to multi-line, add `code_snippet_start_line` and `code_snippet_vuln_line` fields to the 12 findings
+2. **Enhanced code block rendering (`views/sca/finding-detail.ejs`)** -- Replace plain `<pre>` with Prism.js `<pre class="line-numbers" data-line="...">` or CSS-based line-numbered block with vulnerable-line highlighting
+3. **Static answer key data (`data/sca-answer-key.json` + i18n keys)** -- 12 expected classifications in JSON, rich text (reasoning, discussion points) in `fr.json` under `sca.answerKey.*`
+4. **Answer key route and view (`GET /sca/answer-key`)** -- Role-gated route, new EJS template reusing existing card/badge patterns, linked from instructor dashboard
+5. **Code quality tooling (`eslint.config.js` + `.prettierrc`)** -- Config files + npm scripts, run after all features complete
+
+**Key architectural decisions:**
+- Answer key data gated at route level (never passed to template for student role), not template level
+- Code snippets stay escaped (`<%= %>`) when using CSS-only approach; or use Prism.js which handles its own rendering safely
+- Student-lab cards show only the vulnerable line (1 line), not the full multi-line snippet -- prevents layout bloat
+- `localize()` function left unchanged; code snippets are source code and must NOT be translated
 
 ### Critical Pitfalls
 
-1. **Templates never call `t()` (CRITICAL)** -- Zero EJS templates use the translation function. Adding keys to `fr.json` alone changes nothing. Every hardcoded English string in every template must be replaced with a `t()` call. This is the single largest workstream.
-2. **Codespaces port visibility defaults to private (CRITICAL)** -- Students on other machines cannot access team ports unless the professor manually sets them to public. Must run `gh codespace ports visibility 3000:public ... 3012:public -c $CODESPACE_NAME` before class.
-3. **Language defaults to English (CRITICAL)** -- `utils/i18n.js` line 75 defaults to `'en'`. Even after template translation, all students see English on first load. One-line fix but easy to forget.
-4. **SCA seed data is English-only (HIGH)** -- Students spend 90% of their time reading finding content (titles, descriptions, remediation), not UI chrome. A French UI wrapper around English security content creates a jarring bilingual experience.
-5. **Session cookies may fail in Codespaces (MEDIUM)** -- If HTTPS is enabled in the security panel, the `secure` cookie flag + Codespaces proxy causes silent login failures. Prevention: do not enable HTTPS in security settings.
-6. **`autoResetOnStart` is false (MEDIUM)** -- Stale data from test runs persists across restarts. Set to `true` in `classroom.config.json` before deploying.
+See [PITFALLS.md](PITFALLS.md) for the complete set including recovery strategies and "looks done but isn't" checklist.
+
+1. **XSS via unescaped code snippet output** -- Switching from `<%= %>` to `<%- %>` for multi-line rendering creates injection risk in a security education platform. Prevention: use Prism.js (handles its own escaping) or keep `<%= %>` with CSS-only styling. Test with a snippet containing `<script>alert(1)</script>`.
+2. **Seed data destruction on reseed** -- `seedDatabase()` runs `DELETE FROM` on all tables before re-inserting. Modifying it to add new fields risks destroying student reviews on active Codespaces instances. Prevention: use route-level enrichment (the `DIFFICULTY_MAP` pattern) or accept that seed changes only apply to fresh instances.
+3. **Answer key leaked to students** -- Passing answer key data unconditionally in `res.render()` exposes it in page source even when the template conditionally hides it. Prevention: role check in the route handler, never in the template alone.
+4. **Card layout broken by multi-line snippets** -- 12 cards each with 10-line snippets makes student-lab unusably long. Prevention: show only the vulnerable line in card view; full snippet on finding-detail only.
+5. **Missing French translations** -- New UI elements added in English break the French-first experience. Prevention: add ALL new i18n keys before writing any template code, following the v1.0 pattern.
 
 ## Implications for Roadmap
 
-Based on research, the work divides into 5 phases with clear dependency ordering.
+Based on research, the work divides into 4 phases. Two feature streams (snippets and answer key) are independent and could theoretically parallelize, but they share template files and should be sequenced to avoid merge conflicts. Code quality must come last.
 
-### Phase 1: Translation Foundation
-**Rationale:** All subsequent translation work depends on (a) French being the default language and (b) translation keys existing in the JSON files. This phase is invisible to users but unlocks everything.
-**Delivers:** i18n infrastructure ready for template integration -- default language flipped, ~100 translation keys added, `localize()` helper for seed data, `<html lang>` fix
-**Addresses:** Default language switch (P0), translation key creation, `localize()` helper, `<html lang="en">` fix
-**Avoids:** Pitfall 2 (English default), Pitfall 3 (`<html lang="en">`), and ensures Pitfall 1 can be resolved in subsequent phases
+### Phase 1: i18n Keys + Inline Code Snippets
+**Rationale:** Multi-line snippets are the headline v1.1 feature and a prerequisite for syntax highlighting. i18n keys must be added before any template work (v1.0 lesson learned). Combining these ensures the data and translation layers are ready before any rendering changes.
+**Delivers:** All new French translation keys in `fr.json`/`en.json`; expanded multi-line `code_snippet` data with `code_snippet_start_line` and `code_snippet_vuln_line` fields; Prism.js CDN tags in header/footer; line-numbered syntax-highlighted code block in finding-detail with vulnerable-line callout; compact vulnerable-line preview in student-lab cards.
+**Addresses:** P0 features (multi-line snippets, vulnerable line highlight, line numbers) + P1 feature (syntax coloring via Prism.js)
+**Avoids:** Pitfall 1 (XSS -- Prism.js handles escaping), Pitfall 2 (seed data destruction -- use route-level enrichment OR accept fresh-instance-only seeding), Pitfall 4 (card layout -- show only vulnerable line in cards), Pitfall 5 (missing French -- keys added first)
 
-### Phase 2: Shared UI Translation (Login + Navigation)
-**Rationale:** Login is the first thing students see; sidebar navigation is visible on every page. These create the French-first impression. Also, header.ejs is included by every authenticated page -- validating this integration point early catches breakage before SCA-specific work begins.
-**Delivers:** French login page, French sidebar navigation, French error page, French student/professor dashboards
-**Addresses:** Login page translation (P0), header sidebar translation (P0), error page translation (P0), dashboard translation
-**Avoids:** Pitfall 7 (standalone login page), Pitfall 10 (sidebar English), Pitfall 14 (header subtitle), Pitfall 15 (demo account instructions)
+### Phase 2: Instructor Answer Key
+**Rationale:** Independent of snippet work but benefits from Phase 1's enhanced code display in the answer key view. The answer key data structure and role-gating pattern must be established before any template work to prevent student exposure.
+**Delivers:** `data/sca-answer-key.json` with 12 classifications; ~40 i18n keys for answer key content (reasoning, discussion points, common mistakes); `GET /sca/answer-key` route with role gating; `answer-key.ejs` template; link from instructor dashboard; optional inline answer section in finding-detail for instructor role.
+**Addresses:** P0 feature (instructor answer key) + P1 features (inline answer key in finding-detail, comparison badges)
+**Avoids:** Pitfall 3 (answer key exposure -- route-level gating, not template-level)
 
-### Phase 3: SCA Student Experience
-**Rationale:** This is where students spend 90% of their time. The student lab view and finding detail view are the core learning interface. Seed data enrichment belongs here because students read finding content more than UI chrome.
-**Delivers:** Fully French SCA student workflow (lab listing, finding detail, review form, save/submit feedback), enriched seed data with French fields, guided workflow intro banner
-**Addresses:** SCA view translation (P0), classification labels in French (P0), AJAX feedback messages (P0), French error messages (P0), seed data enrichment (P1), guided workflow banner (P1)
-**Avoids:** Pitfall 1 (templates not using `t()`), Pitfall 6 (English seed data), Pitfall 9 (JS alert/confirm strings)
+### Phase 3: Documentation and README
+**Rationale:** Must follow feature work so documentation reflects the actual shipped state. Low complexity but depends on knowing the final feature set.
+**Delivers:** Updated README reflecting v1.1 features (inline snippets, answer key, code quality tooling); architecture decision records if desired.
+**Addresses:** P0 feature (updated README) + P2 (architecture decision records)
+**Avoids:** No critical pitfalls, but must accurately describe the final state.
 
-### Phase 4: SCA Instructor Experience
-**Rationale:** Less urgent than student-facing pages but needed for class monitoring. Depends on Phase 3 because instructor views display the same translation keys and seed data. Dashboard enhancement follows the existing polling pattern exactly.
-**Delivers:** French instructor dashboard, class progress stats, consensus indicators, enhanced classroom-manager SCA section
-**Addresses:** Instructor.ejs translation (P0), student-detail.ejs translation, live class progress stats (P1), class consensus indicators (P1), enhanced `/api/summary` endpoint
-**Avoids:** Pitfall 12 (stale data -- set `autoResetOnStart: true`)
-
-### Phase 5: Codespaces Verification and Polish
-**Rationale:** Must be done last because it tests the full integrated experience. Includes deployment verification, error path testing, and minor polish. This is the "does it actually work in the real classroom?" gate.
-**Delivers:** Verified Codespaces deployment, public port access, end-to-end French workflow confirmation, date formatting, security status bar translation
-**Addresses:** Port visibility verification (P0), session cookie testing, first-boot seeding, pre-class checklist, minor polish (date locale, security badges)
-**Avoids:** Pitfall 4 (private ports), Pitfall 5 (session cookies), Pitfall 11 (slow boot), Pitfall 12 (stale data)
+### Phase 4: Code Quality Optimization
+**Rationale:** Must be the absolute last phase. Refactoring in parallel with feature work creates merge conflicts and makes regression tracking impossible. The JSON database adapter uses SQL string pattern matching -- restructuring queries can silently break it. Intentional vulnerabilities in the codebase must NOT be "fixed" during code quality work.
+**Delivers:** ESLint 9 + Prettier 3 configured and running; `npm run lint` and `npm run format` scripts; linting/formatting pass across codebase; duplicated CSS extraction; dead code removal; consistent error handling patterns.
+**Addresses:** P2 feature (code quality optimization)
+**Avoids:** Pitfall 6 (smoke test regression -- run `npm test` before and after every commit), security mistake (accidentally fixing intentional vulnerabilities used as teaching examples)
 
 ### Phase Ordering Rationale
 
-- Phase 1 must precede all others: translation keys and default language are prerequisites for every template change. Without them, `t()` calls resolve to raw key strings.
-- Phase 2 before Phase 3: students encounter login and navigation before the SCA lab. Also, header.ejs is included by every authenticated page -- a syntax error there breaks everything. Better to validate early.
-- Phase 3 before Phase 4: instructor views reference the same translation namespace and seed data as student views. Building student views first establishes the keys and patterns that instructor views reuse.
-- Phases 2 and 3 can partially overlap: they modify different files (shared UI vs. SCA views), so parallel work is safe.
-- Phase 5 must be last: it tests the integrated result of all prior phases.
+- Phase 1 first because multi-line snippets are the core deliverable and i18n keys are a prerequisite for all template work.
+- Phase 2 after Phase 1 because the answer key view reuses the enhanced code block rendering.
+- Phase 3 after Phases 1-2 because documentation must describe the final feature set.
+- Phase 4 strictly last because refactoring after feature-complete avoids merge conflicts and ensures the smoke test baseline is stable.
+- Phases 1 and 2 could theoretically parallelize (they modify different routes/views) but share `finding-detail.ejs` -- sequential is safer.
 
 ### Research Flags
 
 Phases likely needing deeper research during planning:
-- **Phase 3 (SCA Student Experience):** The seed data French field integration needs care -- the JSON database is schema-free so new fields store automatically, but the INSERT statements in `seedData.js` must align parameters correctly. The `localize()` helper pattern needs validation against the actual finding object structure. Also, writing pedagogically effective French security descriptions requires domain expertise.
-- **Phase 5 (Codespaces Verification):** Port visibility behavior must be tested in the actual Codespace. The `gh codespace ports visibility` command may need to run from outside the Codespace. Test with an incognito browser to confirm public access.
+- **Phase 1 (Snippets):** The Prism.js CDN integration is straightforward but the seed data expansion for 12 findings requires reading each actual source file to extract accurate 5-10 line snippets with correct line numbers. This is content authoring work, not engineering research. The STACK and ARCHITECTURE files disagree on whether to use Prism.js CDN or CSS-only -- resolve during phase planning (recommendation: Prism.js CDN, per STACK.md reasoning).
+- **Phase 2 (Answer Key):** The 12 answer key entries (reasoning, discussion points, common mistakes) require pedagogical domain expertise in French. Content must be derived from the existing SOLUTION-GUIDE.md but rewritten as concise French instructor notes.
 
 Phases with standard patterns (skip research-phase):
-- **Phase 1 (Translation Foundation):** One-line default change, additive JSON edits, simple middleware helper. Fully documented patterns.
-- **Phase 2 (Shared UI Translation):** Repetitive `t()` call replacements. Pattern is identical across all templates. The STACK.md research provides the complete translation key structure.
-- **Phase 4 (Instructor Experience):** Follows established polling and dashboard rendering patterns already proven in `classroom-manager.js`.
+- **Phase 3 (Documentation):** README update is a writing task with no technical research needed.
+- **Phase 4 (Code Quality):** ESLint 9 flat config and Prettier 3 setup are well-documented. The STACK.md already provides complete config files ready to use.
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | All recommendations based on direct codebase analysis. No new dependencies. Every technology already exists and works. |
-| Features | HIGH | Feature landscape grounded in codebase capabilities, educational research on non-technical student engagement, and competitor analysis. Clear P0/P1/P2 prioritization. |
-| Architecture | HIGH | Architecture is additive-only on a working monolith. All integration points verified against source code. Data flows traced through actual middleware chain. |
-| Pitfalls | HIGH | 16 pitfalls identified, all verified by direct code evidence or official documentation. Priority ranking aligned with class-night time pressure. |
+| Stack | HIGH | All recommendations verified against codebase analysis. Prism.js CDN availability confirmed. ESLint/Prettier versions compatible with Node 22. No speculative technology choices. |
+| Features | HIGH | Feature landscape grounded in existing codebase capabilities and SOLUTION-GUIDE.md content. Clear P0/P1/P2 prioritization with explicit anti-features. Dependency graph verified. |
+| Architecture | HIGH | Architecture is additive-only on a proven v1.0 system. All integration points verified against actual source code. Data flows traced through the middleware chain. New files estimated at 2-3, modified files at 7. |
+| Pitfalls | HIGH | 6 critical pitfalls identified, all verified by direct code evidence. Recovery strategies provided. "Looks done but isn't" checklist covers edge cases (HTML angle brackets in snippets, first/last line vulnerability highlight, student view-source for answer key). |
 
 **Overall confidence:** HIGH
 
-All four research streams converge on the same conclusion: this is a well-architected platform that needs surface-level translation and minor enhancement, not structural changes. The risk profile is low because every change is additive and every pattern is already proven in the codebase.
+All four research streams converge: this is well-scoped enrichment of a working system. Every pattern needed (seed data enrichment, route-level data injection, role-gated views, i18n keys, CSS styling) already exists in the codebase. The risk profile is low because changes are additive and patterns are proven.
 
 ### Gaps to Address
 
-- **Codespaces port visibility in practice:** The `devcontainer.json` cannot pre-set port visibility to "public." The `gh codespace ports visibility` CLI command is documented but must be tested in the actual Codespace before class. Consider adding this to a `postStartCommand` script if the CLI is available inside the container.
-- **Seed data French content quality:** The French translations for 12 SCA finding descriptions need domain expertise in both application security and Quebec French technical terminology. Machine-translated security content may use incorrect terms. The existing `fr.json` uses appropriate Quebec French ("Televerser", "courriel") which is a good reference.
-- **`express-session` + Codespaces proxy interaction:** The analysis suggests avoiding HTTPS in security settings, but the exact behavior of `secure` cookies behind the Codespaces reverse proxy should be tested empirically. Adding `app.set('trust proxy', 1)` is a safe defensive measure.
-- **12-instance memory footprint:** The default 4-core/16GB Codespace should handle 13 Node.js processes, but this has not been load-tested with 30 concurrent students. If memory is tight, reducing `TEAM_COUNT` to 6 is the fallback.
-- **Instructor classroom-manager dashboard:** This dashboard is entirely English HTML with no i18n -- deprioritized since only the professor sees it, but noted for completeness.
+- **STACK vs ARCHITECTURE disagreement on syntax highlighting approach:** STACK.md recommends Prism.js via CDN. ARCHITECTURE.md recommends CSS-only (no Prism.js). FEATURES.md lists Prism.js as an anti-feature. Resolution needed during Phase 1 planning. Recommendation: go with Prism.js CDN per STACK.md -- the `data-line` attribute alone justifies it, and CDN loading is not a "dependency" in the npm sense.
+- **Seed data modification strategy:** PITFALLS.md warns against modifying `seedDatabase()` (destructive reseed). ARCHITECTURE.md proposes modifying it with new fields. Resolution: if v1.1 is deployed to fresh Codespaces instances (not upgrading mid-class), seed data modification is safe. If upgrading existing instances, use the route-level enrichment pattern instead. Clarify deployment model during Phase 1 planning.
+- **Content authoring for 12 findings:** Both the multi-line code snippets and the French answer key content require manual authoring work. This is not a technical gap but a time/effort gap. Each finding needs: (a) 5-10 lines of accurate source code extracted from the actual file, (b) French reasoning explaining the vulnerability, (c) French discussion prompts, (d) common student mistakes. Budget this as significant effort.
+- **Prism.js theme compatibility:** The okaidia theme should match the existing `#282c34` dark background, but this needs visual verification. If the theme clashes with existing inline styles, custom CSS overrides may be needed.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- Direct codebase analysis -- all critical files read and verified: `utils/i18n.js`, `config/translations/fr.json`, `views/sca/*.ejs`, `views/partials/header.ejs`, `views/login.ejs`, `scripts/classroom-manager.js`, `.devcontainer/devcontainer.json`, `server.js`, `routes/sca.js`, `utils/seedData.js`, `config/database.js`, `classroom.config.json`, `package.json`
-- GitHub Codespaces port forwarding documentation -- https://docs.github.com/en/codespaces/developing-in-a-codespace/forwarding-ports-in-your-codespace
-- GitHub Codespaces port visibility restrictions -- https://docs.github.com/en/codespaces/managing-codespaces-for-your-organization/restricting-the-visibility-of-forwarded-ports
-- Express-session secure cookie behavior -- https://github.com/expressjs/session/issues/983
+- Direct codebase analysis of all modified/new files: `utils/seedData.js`, `routes/sca.js`, `views/sca/finding-detail.ejs`, `views/sca/student-lab.ejs`, `views/sca/instructor.ejs`, `config/database.js`, `config/translations/fr.json`, `utils/i18n.js`, `.devcontainer/devcontainer.json`, `package.json`
+- Prism.js official documentation -- https://prismjs.com/ (line-highlight plugin, line-numbers plugin, CDN availability)
+- ESLint 9 flat config documentation -- https://eslint.org/docs/latest/use/configure/configuration-files
+- Prettier 3 options documentation -- https://prettier.io/docs/en/options.html
+- Existing SOLUTION-GUIDE.md in repository (expected classifications, teaching flow, grading rubric)
 
 ### Secondary (MEDIUM confidence)
-- OWASP Application Security Curriculum -- educational framework for security training
-- OWASP Security Shepherd -- classroom-mode security training with user-specific solution keys
-- PentesterLab Code Review Exercise -- guided code review training with progressive difficulty
-- Secure Code Warrior -- developer security training platform patterns
-- ACM study on gamification in university cybersecurity courses -- real-world problem-solving tasks preferred over leaderboards
-- Real-time student progress monitoring best practices -- instructor dashboard patterns
-- Vulnerability triage best practices -- false positive vs true positive classification industry approach
+- OWASP Security Shepherd -- classroom-mode security training patterns
+- OWASP Secure Coding Dojo Code Review 101 -- structured code review with inline display
+- Snyk Code SAST tool UX -- highlighted affected code lines with context
+- SAST tools feature comparison (guru99.com) -- standard UI patterns for code review tools
+- highlight.js vs Prism.js comparison -- https://github.com/highlightjs/highlight.js/issues/3625
+- CSS-only syntax highlighting approaches (ft-syntax-highlight) -- validation of pre-rendered approach
+- Server-side code highlighting performance analysis (remysharp.com)
 
 ### Tertiary (LOW confidence)
-- Codespaces port visibility first-boot community discussion -- https://github.com/orgs/community/discussions/156546
-- GitHub Classroom Codespaces FAQ -- https://github.com/orgs/community/discussions/145312
+- yeswehack/vulnerable-code-snippets -- pattern reference for presenting vulnerable code with highlighted sections
 
 ---
 *Research completed: 2026-03-12*

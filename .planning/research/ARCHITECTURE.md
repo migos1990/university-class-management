@@ -1,478 +1,573 @@
 # Architecture Patterns
 
-**Domain:** SCA Lab Production Readiness -- i18n, UX, and Dashboard Integration
+**Domain:** Integration of inline code snippets, instructor answer key, and code quality improvements into existing SCA lab
 **Researched:** 2026-03-12
+**Milestone:** v1.1 Polish & Pedagogy
 **Confidence:** HIGH (based on direct codebase analysis, no external dependencies)
-
-## Current Architecture Summary
-
-The app is a server-rendered Express/EJS monolith with a classroom-manager orchestrator. Key facts for integration planning:
-
-| Component | Location | Role |
-|-----------|----------|------|
-| i18n middleware | `utils/i18n.js` | Loads `config/translations/{en,fr}.json`, exposes `t()` helper to all EJS views via `res.locals.t` |
-| Language middleware | `server.js:59` | Sets language from `req.session.language`, defaults to `'en'` |
-| SCA routes | `routes/sca.js` | Student lab + instructor dashboard, all strings hardcoded in English in EJS |
-| SCA views | `views/sca/*.ejs` | 4 templates: `student-lab`, `instructor`, `finding-detail`, `student-detail` |
-| Shared views | `views/partials/header.ejs`, `views/login.ejs`, `views/error.ejs` | All strings hardcoded in English |
-| Classroom manager | `scripts/classroom-manager.js` | Spawns team instances, serves instructor dashboard on port 3000, polls `/api/summary` every 60s |
-| Summary API | `server.js:126-224` | `/api/summary` returns SCA progress per-student (submitted_count) |
-| Seed data | `utils/seedData.js` | 12 SCA findings with English titles/descriptions/remediation |
-| Translation files | `config/translations/{en,fr}.json` | Extensive French translations for admin/auth/nav/dashboard but ZERO SCA-specific keys |
-
-## Recommended Architecture
-
-### Integration Strategy: Additive-Only Modifications
-
-Every change must be additive -- never restructure existing working code. The app works; it just speaks English where it needs to speak French, and the instructor needs better class-wide visibility.
-
-Three integration layers, each independent:
-
-```
-Layer 1: Translation Data (JSON files + seed data)
-   |
-   v
-Layer 2: View Integration (EJS templates use t() calls)
-   |
-   v
-Layer 3: Dashboard Enhancement (new API fields + polling JS)
-```
-
-### Component Boundaries
-
-| Component | Responsibility | Communicates With | Modified Files |
-|-----------|---------------|-------------------|----------------|
-| Translation JSON | Store all French strings for SCA domain | Read by `utils/i18n.js` at startup | `config/translations/fr.json`, `config/translations/en.json` |
-| Language default | Set session language to `'fr'` for all users | `utils/i18n.js` middleware | `utils/i18n.js` (1-line change) |
-| SCA view templates | Replace hardcoded English with `t()` calls | Translation JSON via `res.locals.t` | `views/sca/*.ejs` (4 files) |
-| Shared UI templates | Replace hardcoded English in header/login/error | Translation JSON via `res.locals.t` | `views/partials/header.ejs`, `views/login.ejs`, `views/error.ejs` |
-| Dashboard templates | Replace hardcoded English in student/professor dashboards | Translation JSON via `res.locals.t` | `views/student/dashboard.ejs`, `views/professor/dashboard.ejs` |
-| SCA seed data | Add French fields to finding objects | Read by `views/sca/*.ejs` | `utils/seedData.js` |
-| Summary API | Add richer SCA progress data | Consumed by classroom-manager | `server.js` `/api/summary` endpoint |
-| Classroom dashboard | Display SCA-specific live stats | Polls `/api/class-overview` | `scripts/classroom-manager.js` |
-
-## Data Flow
-
-### Flow 1: French Translation Resolution (Existing Mechanism)
-
-```
-1. Server starts -> utils/i18n.js loads config/translations/fr.json into memory
-2. Request arrives -> languageMiddleware reads req.session.language
-3. res.locals.t = (key, params) => t(lang, key, params)  // bound to 'fr'
-4. EJS template calls: <%= t('sca.lab.title') %>
-5. i18n.js navigates fr.json: sca -> lab -> title -> "Analyse de code statique"
-6. If key missing in fr.json, falls back to en.json, then returns raw key
-```
-
-**Critical detail:** The `t()` function is already available in ALL views via `res.locals.t`. No middleware changes needed to use it. The only work is (a) adding keys to the JSON files and (b) replacing hardcoded strings in EJS with `<%= t('key') %>` calls.
-
-### Flow 2: Default Language Change
-
-```
-Current:  utils/i18n.js line 75: const lang = req.session.language || 'en'
-Needed:   utils/i18n.js line 75: const lang = req.session.language || 'fr'
-```
-
-One-line change. Session language is never explicitly set anywhere in the codebase (there is no language toggle UI), so every user gets the default. Changing `'en'` to `'fr'` makes the entire app French by default.
-
-### Flow 3: SCA Seed Data Enrichment
-
-Two approaches for translating finding-level content (titles, descriptions, remediation):
-
-**Approach A -- Dual-language fields in seed data (RECOMMENDED):**
-```
-Add fr_title, fr_description, fr_remediation to each SCA finding in seedData.js
-EJS templates check: finding.fr_title || finding.title
-```
-
-**Why this, not the translation JSON:** SCA finding content is dynamic, DB-stored data -- not UI chrome. Putting 12 multi-paragraph French descriptions into the translation JSON would bloat it and couple DB content to UI translation infrastructure. The seed data already owns this content.
-
-**Why not Approach B (translation JSON):** The `t()` function resolves static UI labels. Finding descriptions are educational content that belongs with the finding data itself, not the UI translation layer. Mixing them would make the translation file unwieldy (12 findings x 3 fields = 36 long-form entries).
-
-### Flow 4: Student Progress Tracking (Existing)
-
-```
-Student browser                    Student instance (port 300x)
-     |                                     |
-     | POST /sca/findings/:id/review       |
-     |------------------------------------>|
-     |                                     | db.prepare('INSERT/UPDATE sca_student_reviews')
-     |                                     | saveDatabase() -> data.json
-     |                                     |
-
-Classroom manager (port 3000)      Student instance (port 300x)
-     |                                     |
-     | GET /api/summary (every 60s)        |
-     |------------------------------------>|
-     |                                     | Query sca_findings + sca_student_reviews
-     |                                     | Calculate per-student submitted_count
-     |    <-- JSON: sca.per_student[] -----|
-     |                                     |
-     | Render in dashboard HTML            |
-```
-
-**Current data returned by /api/summary for SCA:**
-```javascript
-sca: {
-  total_findings: 12,
-  avg_completion_pct: 0,    // % of all students x all findings that are submitted
-  per_student: [
-    { username: 'alice_student', submitted_count: 0 },
-    { username: 'bob_student', submitted_count: 0 },
-    // ...
-  ]
-}
-```
-
-### Flow 5: Enhanced Instructor Dashboard (Proposed Addition)
-
-To give the instructor class-wide SCA visibility without WebSockets (explicitly out of scope), extend the existing polling architecture:
-
-```
-Enhanced /api/summary response for SCA:
-sca: {
-  total_findings: 12,
-  avg_completion_pct: 25,
-  per_student: [
-    {
-      username: 'alice_student',
-      submitted_count: 3,
-      draft_count: 2,           // NEW: findings with saved drafts
-      last_activity: '...'      // NEW: timestamp of last review action
-    },
-    // ...
-  ],
-  consensus: {                  // NEW: class-wide agreement indicators
-    1: { confirmed: 4, false_positive: 1, needs_investigation: 0 },
-    2: { confirmed: 3, false_positive: 0, needs_investigation: 2 },
-    // ... per finding_id
-  },
-  class_stats: {                // NEW: aggregate stats
-    total_submitted: 15,
-    total_drafts: 8,
-    students_started: 5,
-    students_completed: 1       // all 12 submitted
-  }
-}
-```
-
-**No new endpoints needed.** The existing `/api/summary` response is already consumed by the classroom-manager's `fetchSummary()` and cached in `summaryCache[]`. Adding fields to the response object is backward-compatible.
-
-The classroom-manager dashboard (`dashboardHTML()` in `scripts/classroom-manager.js`) can then render an SCA-specific section using the existing `renderLabProgress()` pattern, with per-team SCA detail.
-
-## Patterns to Follow
-
-### Pattern 1: Translation Key Namespacing
-
-**What:** Organize SCA translation keys under `sca.*` namespace in the JSON files, mirroring the existing `dashboard.*`, `auth.*`, `security.*` pattern.
-
-**When:** Every UI string replacement in SCA views.
-
-**Structure:**
-```json
-{
-  "sca": {
-    "lab": {
-      "title": "Laboratoire d'analyse de code statique",
-      "subtitle": "Examinez chaque constatation, classez-la et documentez votre raisonnement -- puis soumettez.",
-      "findingsSubmitted": "constatations soumises",
-      "complete": "termine"
-    },
-    "review": {
-      "classification": "Classification",
-      "selectPlaceholder": "-- selectionner --",
-      "confirmed": "Vrai positif (vulnerabilite confirmee)",
-      "falsePositive": "Faux positif",
-      "needsInvestigation": "Necessite une enquete approfondie",
-      "yourNotes": "Vos notes d'analyse",
-      "notesPlaceholder": "Expliquez pourquoi vous avez classifie de cette facon...",
-      "proposedRemediation": "Remediation proposee",
-      "remediationPlaceholder": "Comment corrigeriez-vous cela?",
-      "saveDraft": "Enregistrer le brouillon",
-      "submit": "Soumettre",
-      "submitted": "Soumis",
-      "draftSaved": "Brouillon enregistre"
-    },
-    "instructor": {
-      "title": "Analyse de code statique -- Tableau de bord instructeur",
-      "findingsOverview": "Apercu des constatations",
-      "studentProgress": "Matrice de progression des etudiants",
-      "pushToVM": "Envoyer au VM",
-      "inVM": "Dans le VM",
-      "reviews": "evaluations",
-      "confirmed": "confirme",
-      "fp": "FP"
-    },
-    "finding": {
-      "location": "Emplacement",
-      "codeSnippet": "Extrait de code",
-      "description": "Description",
-      "remediationGuidance": "Guide de remediation",
-      "references": "References",
-      "studentReviews": "Evaluations des etudiants",
-      "yourReview": "Votre evaluation",
-      "vulnerabilityManager": "Gestionnaire de vulnerabilites"
-    },
-    "severity": {
-      "Critical": "Critique",
-      "High": "Eleve",
-      "Medium": "Moyen",
-      "Low": "Faible"
-    },
-    "status": {
-      "submitted": "soumis",
-      "notStarted": "Non commence",
-      "startReview": "Commencer l'evaluation",
-      "continue": "Continuer",
-      "viewEdit": "Voir / Modifier"
-    }
-  }
-}
-```
-
-### Pattern 2: Bilingual Seed Data Fields
-
-**What:** Add `fr_*` fields alongside existing English fields in seed data, letting views pick the right language.
-
-**When:** SCA finding titles, descriptions, and remediation guidance.
-
-**Example in seedData.js:**
-```javascript
-[1, 'Hardcoded Session Secret',
-  // ... existing fields ...
-  'Semgrep', 'Move the secret to an environment variable...', null,
-  // NEW French fields appended:
-  'Secret de session code en dur',
-  'Le secret de session Express est code en dur dans le code source. Toute personne ayant acces au code peut forger des cookies de session, menant a un contournement d\'authentification.',
-  'Deplacez le secret vers une variable d\'environnement (SESSION_SECRET). Generez une valeur aleatoire cryptographiquement securisee de 64 octets pour la production.'
-],
-```
-
-**View access pattern:**
-```ejs
-<%= currentLang === 'fr' && finding.fr_title ? finding.fr_title : finding.title %>
-```
-
-Or cleaner with a helper added to `res.locals`:
-```javascript
-// In server.js middleware, after languageMiddleware
-res.locals.localize = (obj, field) => {
-  const frField = 'fr_' + field;
-  return (res.locals.currentLang === 'fr' && obj[frField]) ? obj[frField] : obj[field];
-};
-```
-```ejs
-<%= localize(finding, 'title') %>
-```
-
-### Pattern 3: Polling-Based Dashboard Refresh (Existing Pattern)
-
-**What:** The classroom-manager already polls `/api/summary` every 60s and `/health` every 30s. The client-side JS (`fetchOverview()`) re-renders all dashboard sections from the JSON response.
-
-**When:** Adding any new dashboard section for SCA.
-
-**Follow the existing pattern exactly:**
-1. Add data to the `/api/summary` response in `server.js`
-2. Add a `renderSCAProgress()` function in `classroom-manager.js` (server-side HTML)
-3. Add a `renderSCAProgressDOM()` function in the `<script>` block (client-side DOM update)
-4. The 60s polling interval is sufficient for a classroom setting
-
-**Do NOT introduce WebSockets.** The project explicitly lists this as out of scope, and the polling architecture works well for 12 teams with 30-second and 60-second intervals.
-
-## Anti-Patterns to Avoid
-
-### Anti-Pattern 1: Restructuring the i18n System
-
-**What:** Replacing the simple `t()` function with a full i18n library (i18next, etc.) or changing the JSON structure.
-
-**Why bad:** Adds a dependency (violates constraint), risks breaking the existing translations that already work for admin/auth/dashboard, and introduces unnecessary complexity for a one-night deployment.
-
-**Instead:** Use the existing `t()` system as-is. It supports nested keys, parameter interpolation via `{paramName}`, and English fallback. That is everything needed.
-
-### Anti-Pattern 2: Putting Finding Content in Translation JSON
-
-**What:** Adding SCA finding descriptions (12 findings x ~100 words each) to `config/translations/fr.json`.
-
-**Why bad:** Translation JSON is for UI chrome (labels, buttons, headings). Finding content is educational material that is stored in the database and seeded at startup. Mixing these concerns makes both files harder to maintain, and requires translating content that should live with its data.
-
-**Instead:** Add `fr_title`, `fr_description`, `fr_remediation` fields to the seed data objects. Views use the `localize()` helper to pick the right field based on `currentLang`.
-
-### Anti-Pattern 3: Adding Real-Time WebSocket Infrastructure
-
-**What:** Installing socket.io or ws for live dashboard updates.
-
-**Why bad:** Explicitly out of scope. The classroom-manager already has a working polling architecture (30s health, 60s summary). Adding WebSockets introduces a new dependency, new failure modes, and complexity for marginal benefit in a classroom of 12 teams.
-
-**Instead:** Reduce the summary polling interval from 60s to 30s if faster updates are desired. The overhead of 12 HTTP requests every 30 seconds is negligible.
-
-### Anti-Pattern 4: Modifying the Database Schema
-
-**What:** Altering `config/database.js` to add new tables or change the SQL-like query interface.
-
-**Why bad:** The database module is a 1128-line monolith with string-matching SQL parsing. Any structural change risks breaking existing queries. The SCA tables (`sca_findings`, `sca_student_reviews`) already have all the fields needed.
-
-**Instead:** Add `fr_*` fields to the seed data INSERT statements. The JSON database stores whatever fields you put in -- there is no schema enforcement. New fields on existing collections are automatically persisted.
-
-### Anti-Pattern 5: Creating a Language Toggle UI
-
-**What:** Building a dropdown or flag-based language switcher.
-
-**Why bad:** Explicitly out of scope ("Defaulting to French is simpler and sufficient"). Adds UI complexity, session management concerns, and testing surface for zero benefit when all students speak French.
-
-**Instead:** Change the default language from `'en'` to `'fr'` in `utils/i18n.js` line 75. Done.
-
-## Integration Points (Detailed)
-
-### Integration Point 1: Default Language Switch
-
-**File:** `utils/i18n.js`
-**Line:** 75
-**Change:** `'en'` to `'fr'`
-**Risk:** LOW -- English fallback still works if any French key is missing
-**Dependencies:** None
-**Test:** Login page should show French labels after change
-
-### Integration Point 2: Translation JSON Extension
-
-**Files:** `config/translations/fr.json`, `config/translations/en.json`
-**Change:** Add `sca` section with ~60 keys, add `nav` section updates for French sidebar labels
-**Risk:** LOW -- missing keys fall back to English; new keys are purely additive
-**Dependencies:** None (loaded at startup, no restart needed in dev)
-**Test:** Spot-check a few `t('sca.lab.title')` calls render correctly
-
-### Integration Point 3: SCA View Template Modifications
-
-**Files:** `views/sca/student-lab.ejs`, `views/sca/instructor.ejs`, `views/sca/finding-detail.ejs`, `views/sca/student-detail.ejs`
-**Change:** Replace ~80 hardcoded English strings with `<%= t('sca.xxx') %>` calls
-**Risk:** MEDIUM -- a typo in a key name shows the raw key instead of French text; functional but ugly
-**Dependencies:** Integration Point 2 (translation keys must exist)
-**Test:** Load each page, verify no raw key strings visible
-
-### Integration Point 4: Shared UI Template Modifications
-
-**Files:** `views/partials/header.ejs`, `views/login.ejs`, `views/error.ejs`, `views/student/dashboard.ejs`, `views/professor/dashboard.ejs`
-**Change:** Replace hardcoded English strings in navigation, login form, error messages, dashboards
-**Risk:** MEDIUM -- header.ejs is included by every authenticated page; a syntax error breaks everything
-**Dependencies:** Integration Point 2
-**Test:** Login, navigate through sidebar, trigger a 404 -- all should show French
-
-### Integration Point 5: Seed Data French Fields
-
-**File:** `utils/seedData.js`
-**Change:** Add `fr_title`, `fr_description`, `fr_remediation` to each of the 12 SCA finding INSERT calls
-**Risk:** MEDIUM -- requires careful SQL parameter alignment with `config/database.js` INSERT handler
-**Dependencies:** Must also update the INSERT handler in `config/database.js` to store the new fields (or rely on the JSON storage being schema-free -- which it is)
-**Test:** After re-seeding, verify `finding.fr_title` exists in the finding objects
-
-### Integration Point 6: Localize Helper
-
-**File:** `server.js` (in the middleware block around line 62)
-**Change:** Add `res.locals.localize` helper function
-**Risk:** LOW -- purely additive
-**Dependencies:** None
-**Test:** Use `localize(finding, 'title')` in a view and verify it returns French when `currentLang === 'fr'`
-
-### Integration Point 7: Enhanced /api/summary
-
-**File:** `server.js` (lines 165-175 in the `/api/summary` handler)
-**Change:** Add `draft_count`, `last_activity`, `consensus`, and `class_stats` fields to the SCA section
-**Risk:** LOW -- additive fields on existing JSON response; classroom-manager ignores unknown fields
-**Dependencies:** None
-**Test:** `curl localhost:300x/api/summary | jq '.sca'` should show new fields
-
-### Integration Point 8: Classroom Dashboard SCA Section
-
-**File:** `scripts/classroom-manager.js`
-**Change:** Add `renderSCADetail()` and `renderSCADetailDOM()` functions following the existing pattern
-**Risk:** LOW-MEDIUM -- the dashboard is a self-contained HTML document; adding a section follows the established pattern
-**Dependencies:** Integration Point 7 (needs enhanced summary data)
-**Test:** Start classroom manager, verify SCA section appears with team progress
-
-## Suggested Build Order
-
-The following order respects dependencies and minimizes risk:
-
-### Phase 1: Foundation (no visual changes yet)
-
-1. **Change default language** (`utils/i18n.js` line 75: `'en'` -> `'fr'`)
-2. **Add SCA keys to `fr.json` and `en.json`** (additive, no views touch this yet)
-3. **Add `localize()` helper to `server.js`** (additive middleware)
-
-*Rationale:* These three changes are invisible to users. Nothing breaks. They create the infrastructure all subsequent work depends on.
-
-### Phase 2: Shared UI Translation (login + navigation)
-
-4. **Translate `login.ejs`** (first thing students see; French login = immediate confidence)
-5. **Translate `header.ejs` sidebar** (navigation labels, section titles)
-6. **Translate `error.ejs`** (safety net for 404/500 in French)
-7. **Translate `student/dashboard.ejs` and `professor/dashboard.ejs`**
-
-*Rationale:* The login page and sidebar are the first and most persistent UI elements. Getting these right immediately makes the app feel French. Do this before SCA-specific views because students hit these first.
-
-### Phase 3: SCA Student Experience
-
-8. **Add French fields to seed data** (`seedData.js` -- `fr_title`, `fr_description`, `fr_remediation`)
-9. **Translate `student-lab.ejs`** (the main student working page)
-10. **Translate `finding-detail.ejs`** (where students do the actual review work)
-11. **Add guided workflow hints** (contextual French tips in the review form)
-
-*Rationale:* This is the core student experience. After login and navigation are French, this is where students spend 90% of their time.
-
-### Phase 4: SCA Instructor Experience
-
-12. **Translate `instructor.ejs`** (SCA dashboard with review matrix)
-13. **Translate `student-detail.ejs`** (individual student review view)
-14. **Enhance `/api/summary`** (add consensus, drafts, class_stats)
-15. **Add SCA detail section to classroom-manager dashboard**
-
-*Rationale:* The instructor dashboard is less urgent than student-facing pages but needed for class monitoring. The enhanced summary data feeds the classroom-level view.
-
-### Phase 5: Polish and Verification
-
-16. **End-to-end walkthrough** (login as student, complete one finding review, verify all French)
-17. **Error path testing** (invalid login, 404, network errors -- all French)
-18. **Codespaces boot verification** (clean instance, auto-seed, French by default)
-
-*Rationale:* Final verification pass. This is the "does it actually work in the real classroom?" phase.
-
-### Dependency Graph
-
-```
-Phase 1 (Foundation)
-  |
-  +-- Phase 2 (Shared UI) -- depends on translation keys existing
-  |
-  +-- Phase 3 (SCA Student) -- depends on translation keys + seed data
-  |     |
-  |     +-- Phase 4 (SCA Instructor) -- depends on student views working
-  |           |
-  |           +-- Phase 5 (Polish) -- depends on everything else
-```
-
-Phases 2 and 3 can be done in parallel since they modify different files. Phase 4 depends on Phase 3 (same translation keys, same seed data changes). Phase 5 is sequential after everything else.
-
-## Scalability Considerations
-
-| Concern | 1 team (dev) | 12 teams (class) | 50+ teams (future) |
-|---------|-------------|------------------|---------------------|
-| Translation loading | Negligible (2 JSON files in memory) | Same -- loaded once per process | Same |
-| Summary polling | 1 request/60s | 12 requests/60s (staggered) | May need batching or longer interval |
-| Seed data size | 12 findings + fr fields | Same per instance | Same |
-| Dashboard rendering | Instant | ~12 cards, fast | Grid may need pagination |
-
-For tonight's 12-team class, there are zero scalability concerns. The polling architecture handles this load trivially.
-
-## Sources
-
-- Direct codebase analysis (HIGH confidence -- all claims verified against source code)
-- `utils/i18n.js` -- translation loading and `t()` function implementation
-- `server.js` -- middleware registration, `/api/summary` endpoint
-- `scripts/classroom-manager.js` -- polling intervals, dashboard HTML generation
-- `config/translations/fr.json` -- existing translation structure and coverage
-- `views/sca/*.ejs` -- current hardcoded English strings requiring translation
-- `.planning/codebase/ARCHITECTURE.md` -- existing architectural documentation
-- `.planning/PROJECT.md` -- project constraints and scope decisions
 
 ---
 
-*Architecture research: 2026-03-12*
+## Executive Summary
+
+The v1.1 features integrate cleanly into the existing Express/EJS architecture with minimal structural changes. The codebase follows a clear pattern: seed data in `utils/seedData.js` feeds a JSON-file DB, routes in `routes/sca.js` query and shape data, EJS templates in `views/sca/` render it, and i18n in `config/translations/fr.json` provides French text via the `t()` helper. All three new features (inline code snippets, instructor answer key, documentation) follow this same flow with zero new dependencies required.
+
+The key architectural insight: the code snippet data already exists in seed data (`code_snippet` field), but it is a single line. Expanding it to 5-10 lines with line-number context and vulnerable-line highlighting is a **data enrichment + template styling** task, not a structural change. The instructor answer key is a **new data layer + new route + new view**, gated behind professor/admin role checks already in place. Code quality is a **refactoring** pass with no user-facing architecture changes.
+
+---
+
+## Current Architecture (As-Is)
+
+### Component Map
+
+```
+server.js
+  |-- languageMiddleware (utils/i18n.js)    -- sets res.locals.t() and res.locals.currentLang
+  |-- routes/sca.js                          -- all SCA endpoints, exports { router, importToVM }
+  |     |-- GET /sca                         -- student-lab or instructor dashboard (role-switched)
+  |     |-- GET /sca/stats                   -- live polling JSON (instructor only)
+  |     |-- GET /sca/findings/:id            -- finding detail (shared, role-aware)
+  |     |-- POST /sca/findings/:id/review    -- student submit/save review
+  |     |-- GET /sca/student/:studentId      -- instructor: view one student's reviews
+  |     |-- POST /sca/import-to-vm/:id       -- instructor: push finding to VM
+  |
+  |-- views/sca/
+  |     |-- student-lab.ejs                  -- card list of 12 findings with inline review forms
+  |     |-- finding-detail.ejs               -- full detail page (code, description, form/reviews)
+  |     |-- instructor.ejs                   -- findings table, student matrix, stats polling
+  |     |-- student-detail.ejs               -- instructor view of one student's reviews
+  |
+  |-- utils/seedData.js                      -- 12 SCA findings seeded on first boot
+  |-- config/database.js                     -- JSON file DB with SQL-like prepare/run/get/all API
+  |-- config/translations/fr.json            -- ~136 keys, sca.findings.{id}.{field} for localization
+  |-- utils/i18n.js                          -- t(), localize(), languageMiddleware
+```
+
+### Data Flow: Finding Detail
+
+```
+1. Browser requests GET /sca/findings/1
+2. routes/sca.js:139 queries db.sca_findings for id=1
+3. localize(finding, lang) overlays French title/description/remediation from fr.json
+4. DIFFICULTY_MAP adds difficulty level
+5. Template receives: { finding, myReview, allReviews, vmEntry }
+6. finding-detail.ejs renders: badges, location, code_snippet, description, hints, form
+```
+
+### Existing Code Snippet Handling
+
+The `code_snippet` field in seed data is currently a **single line** of code:
+```
+"secret: 'university-secret-key-change-in-production'"
+```
+
+It renders in `finding-detail.ejs` line 53 as:
+```html
+<pre style="background:#282c34; color:#abb2bf; padding:1rem; ..."><%= finding.code_snippet %></pre>
+```
+
+And in `student-lab.ejs` line 99 as a compact preview:
+```html
+<pre style="margin:0.5rem 0 0; ..."><%= f.code_snippet %></pre>
+```
+
+**No syntax highlighting, no line numbers, no vulnerable-line callout.** This is the primary gap.
+
+---
+
+## Recommended Architecture (To-Be)
+
+### Feature 1: Inline Code Snippets (Enhanced)
+
+**Strategy:** Enrich the seed data `code_snippet` field with multi-line context, add `code_snippet_start_line` and `code_snippet_vuln_line` fields, and use pure CSS for rendering (no new dependencies like highlight.js -- constraint: no new dependencies).
+
+#### Data Layer Changes
+
+**File:** `utils/seedData.js` -- MODIFY the 12 `scaFindings` entries
+
+Add two new fields per finding:
+- `code_snippet_start_line` (integer): the starting line number of the snippet
+- `code_snippet_vuln_line` (integer): the line within the snippet that contains the vulnerability (1-indexed relative to snippet)
+
+Expand `code_snippet` from one line to 5-10 lines of surrounding context.
+
+**Example for Finding 1 (Hardcoded Session Secret, server.js:44):**
+```javascript
+[1, 'Hardcoded Session Secret', 'server.js', 44,
+  `const startupSecuritySettings = getSecuritySettings();
+app.use(session({
+  secret: 'university-class-management-secret-key-change-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24,
+    httpOnly: true,
+    secure: !!startupSecuritySettings.https_enabled
+  }
+}));`,
+  // code_snippet_start_line: 43, code_snippet_vuln_line: 3
+  ...
+]
+```
+
+**File:** `config/database.js` -- MODIFY the INSERT handler for `sca_findings`
+
+Add storage for the two new fields. The existing handler at line ~577 creates an object from params -- add `code_snippet_start_line` and `code_snippet_vuln_line` as params[12] and params[13] (after `false_positive_reason`).
+
+#### Template Layer Changes
+
+**File:** `views/sca/finding-detail.ejs` -- MODIFY the code snippet section (line 52-53)
+
+Replace the plain `<pre>` with a numbered, highlighted-line code block:
+
+```html
+<h3 style="margin-bottom:0.5rem;"><%= t('sca.findingDetail.codeSnippet') %></h3>
+<div class="code-block">
+  <% const lines = finding.code_snippet.split('\n');
+     const startLine = finding.code_snippet_start_line || finding.line_number;
+     const vulnLine = finding.code_snippet_vuln_line || 1;
+  %>
+  <% lines.forEach((line, i) => {
+    const lineNum = startLine + i;
+    const isVuln = (i + 1) === vulnLine;
+  %>
+  <div class="code-line <%= isVuln ? 'code-line-vuln' : '' %>">
+    <span class="code-line-num"><%= lineNum %></span>
+    <span class="code-line-text"><%= line %></span>
+  </div>
+  <% }) %>
+</div>
+```
+
+**CSS (add to finding-detail.ejs `<style>` block):**
+```css
+.code-block {
+  background: #282c34;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+.code-line {
+  display: flex;
+  padding: 0 1rem;
+  line-height: 1.6;
+}
+.code-line-num {
+  color: #636d83;
+  min-width: 3ch;
+  text-align: right;
+  padding-right: 1rem;
+  user-select: none;
+  flex-shrink: 0;
+}
+.code-line-text {
+  color: #abb2bf;
+  white-space: pre;
+}
+.code-line-vuln {
+  background: rgba(224, 108, 117, 0.15);
+  border-left: 3px solid #e06c75;
+}
+.code-line-vuln .code-line-text {
+  color: #e06c75;
+  font-weight: 600;
+}
+```
+
+**File:** `views/sca/student-lab.ejs` -- MODIFY the compact preview (line 97-100)
+
+Keep the existing compact view but show just the vulnerable line (not the full multi-line snippet) for the card preview:
+
+```html
+<div style="background:#282c34; border-radius:6px; padding:0.5rem 0.75rem; margin-bottom:0.75rem; overflow-x:auto;">
+  <code style="color:#e06c75; font-size:0.8rem; white-space:pre;">
+    L<%= f.line_number %>: <%= f.code_snippet.split('\n')[(f.code_snippet_vuln_line || 1) - 1] || f.code_snippet.split('\n')[0] %>
+  </code>
+</div>
+```
+
+#### i18n Impact
+
+**None.** The `sca.findingDetail.codeSnippet` key already exists ("Extrait de code"). No new translation keys needed for this feature.
+
+#### No-New-Dependencies Approach
+
+Pure CSS provides adequate "syntax highlighting" for the pedagogical use case:
+- Dark background (#282c34 -- One Dark theme)
+- Monospace font
+- Red highlight on vulnerable line
+- Line numbers
+
+This is sufficient for 5-10 lines of JavaScript. Full syntax highlighting (keyword coloring) would require a library like highlight.js or Prism. That is explicitly out of scope per the "no new dependencies" constraint. If desired later, highlight.js is 100% client-side and could be loaded from a CDN without an npm dependency.
+
+---
+
+### Feature 2: Instructor Answer Key
+
+**Strategy:** Add a new data file `data/sca-answer-key.json` with the 12 expected answers, a new route `GET /sca/answer-key`, and a new view `views/sca/answer-key.ejs`. Gate behind professor/admin role. The data already exists in SOLUTION-GUIDE.md -- this makes it accessible in the UI during live class discussion.
+
+#### Data Layer
+
+**New file:** `data/sca-answer-key.json`
+
+Keep the JSON file minimal -- just classification enums:
+```json
+{
+  "1": { "expectedClassification": "confirmed" },
+  "2": { "expectedClassification": "confirmed" },
+  "3": { "expectedClassification": "confirmed" },
+  "4": { "expectedClassification": "confirmed" },
+  "5": { "expectedClassification": "confirmed" },
+  "6": { "expectedClassification": "confirmed" },
+  "7": { "expectedClassification": "confirmed" },
+  "8": { "expectedClassification": "confirmed" },
+  "9": { "expectedClassification": "confirmed" },
+  "10": { "expectedClassification": "confirmed" },
+  "11": { "expectedClassification": "needs_investigation" },
+  "12": { "expectedClassification": "confirmed" }
+}
+```
+
+**Rationale for separate JSON file (not in DB or seed data):**
+- The answer key is **instructor-only reference data**, never modified at runtime
+- It does not need DB queries, counters, or update handlers
+- Keeping it as a static JSON file loaded at startup is consistent with how `config/translations/` files work
+- It avoids modifying the database.js handler (which is already complex at ~1100 lines)
+
+**i18n:** All rich text (reasoning, discussion points, common mistakes) lives in the translation files under `sca.answerKey.{id}.*`. This keeps the JSON file small while enabling bilingual content.
+
+Translation keys to add to `fr.json` under `sca.answerKey`:
+```json
+"answerKey": {
+  "title": "Corrige de l'instructeur",
+  "subtitle": "Reference pour la discussion en classe -- visible uniquement par l'instructeur",
+  "expectedClassification": "Classification attendue",
+  "reasoning": "Raisonnement",
+  "discussionPoints": "Points de discussion",
+  "commonMistakes": "Erreurs frequentes des etudiants",
+  "1": {
+    "reasoning": "Le secret de session est code en dur dans le code source...",
+    "discussionPoints": "Que faudrait-il a un attaquant pour exploiter cela ?|En quoi cela differe entre developpement et production ?",
+    "commonMistakes": "Certains etudiants classent comme faux positif pensant que c'est un environnement de developpement."
+  },
+  ...12 findings...
+}
+```
+
+This adds ~40 new translation keys (4 structural + 3 per finding).
+
+#### Route Layer
+
+**File:** `routes/sca.js` -- ADD new route
+
+```javascript
+// --- GET /sca/answer-key --- Instructor answer key for class discussion
+router.get('/answer-key', requireAuth, requireRole(['admin', 'professor']), (req, res) => {
+  const lang = req.session.language || 'fr';
+  const findings = db.prepare('SELECT * FROM sca_findings').all();
+  const answerKey = require('../data/sca-answer-key.json');
+
+  const enriched = findings.map(f => ({
+    ...localize(f, lang),
+    difficulty: DIFFICULTY_MAP[f.id] || 'medium',
+    expected: answerKey[String(f.id)] || {}
+  }));
+
+  res.render('sca/answer-key', {
+    title: t(lang, 'sca.answerKey.title'),
+    findings: enriched
+  });
+});
+```
+
+**Route conflict analysis:** The new `GET /answer-key` does NOT conflict with `GET /findings/:id` because they have different path prefixes (`/answer-key` vs `/findings/:id`). Safe to add anywhere in the file.
+
+#### View Layer
+
+**New file:** `views/sca/answer-key.ejs`
+
+Layout: A single-page reference showing all 12 findings with:
+- Finding title, severity, CWE badge
+- Expected classification (color-coded badge)
+- Reasoning text from t()
+- Discussion points as a bullet list (split on `|` delimiter)
+- Common student mistakes callout
+- Code snippet (reuse the enhanced multi-line display from Feature 1)
+
+This view is instructor-only. It reuses existing CSS patterns (`.card`, `.badge-sm`, `.sev-*` classes).
+
+#### Navigation
+
+**File:** `views/sca/instructor.ejs` -- ADD a link to the answer key
+
+Add a button/link near the page header:
+```html
+<a href="/sca/answer-key" style="..." class="btn btn-primary">
+  <%= t('sca.answerKey.title') %>
+</a>
+```
+
+This is visible only on the instructor dashboard (which is already gated to professor/admin roles).
+
+---
+
+### Feature 3: Code Quality Optimization
+
+**Strategy:** Refactoring pass across the codebase with no architecture changes. Focus areas based on code review:
+
+#### Identified Patterns to Improve
+
+1. **Duplicated CSS across EJS views**: The `.sev-Critical`, `.sev-High`, etc. badge styles are copy-pasted in `student-lab.ejs`, `finding-detail.ejs`, `instructor.ejs`, and `student-detail.ejs`. Extract to a `public/css/sca.css` file or into `header.ejs`.
+
+2. **Duplicated difficulty map logic**: `diffColors`/`diffLabel` appear in EJS inline code in both `student-lab.ejs` and `finding-detail.ejs`. The route already computes `difficulty` -- pass the label and color from the route instead.
+
+3. **Inline styles**: Most EJS templates use extensive `style="..."` attributes. While functional, extracting common patterns to CSS classes improves readability. Low-priority polish.
+
+4. **Magic strings**: Classification values (`'confirmed'`, `'false_positive'`, `'needs_investigation'`) appear as string literals in multiple files. Extract to a shared constant.
+
+5. **Route file organization**: `routes/sca.js` is 237 lines and well-organized. Adding the answer-key route keeps it under 280 lines -- still manageable. No need to split.
+
+#### What NOT to Change
+
+- Do not restructure the database layer (config/database.js is 1100+ lines but stable)
+- Do not add a build step or CSS preprocessor
+- Do not restructure the EJS template hierarchy
+- Do not modify the i18n architecture (localize() pattern is clean)
+
+---
+
+## Component Boundaries
+
+| Component | Responsibility | Communicates With |
+|-----------|---------------|-------------------|
+| `utils/seedData.js` | Seeds 12 SCA findings with enhanced code snippets | `config/database.js` |
+| `data/sca-answer-key.json` | Static instructor answer data (classifications) | `routes/sca.js` (require) |
+| `config/translations/fr.json` | Answer key reasoning, discussion points (French) | `utils/i18n.js` via t() |
+| `config/translations/en.json` | Answer key reasoning, discussion points (English) | `utils/i18n.js` via t() |
+| `routes/sca.js` | New `/answer-key` route, enhanced finding data | `views/sca/answer-key.ejs` |
+| `views/sca/finding-detail.ejs` | Enhanced code block with line numbers and vuln highlight | receives `finding` from route |
+| `views/sca/student-lab.ejs` | Compact vulnerable-line preview in cards | receives `findings` from route |
+| `views/sca/answer-key.ejs` | New instructor answer key page | receives `findings` + answer key |
+| `views/sca/instructor.ejs` | Link to answer key page | navigates to `/sca/answer-key` |
+
+---
+
+## New vs Modified Files
+
+### New Files (2-3)
+
+| File | Purpose | Lines (est.) |
+|------|---------|-------------|
+| `data/sca-answer-key.json` | 12 expected classifications | ~15 |
+| `views/sca/answer-key.ejs` | Instructor answer key view | ~120 |
+| `public/css/sca.css` (optional) | Shared SCA styles extracted from EJS | ~60 |
+
+### Modified Files (7)
+
+| File | What Changes | Scope |
+|------|-------------|-------|
+| `utils/seedData.js` | Expand code_snippet to 5-10 lines, add 2 new fields per finding | Lines 179-251 (data only) |
+| `config/database.js` | Handle 2 new fields in sca_findings INSERT | ~3 lines in handler |
+| `routes/sca.js` | Add GET /answer-key route | ~20 new lines |
+| `views/sca/finding-detail.ejs` | Replace `<pre>` with line-numbered code block | Lines 52-53 become ~20 lines |
+| `views/sca/student-lab.ejs` | Update compact snippet to show vuln line | Lines 97-100 become ~8 lines |
+| `views/sca/instructor.ejs` | Add answer key link in header | ~3 lines |
+| `config/translations/fr.json` | Add ~40 keys for answer key content | Under sca.answerKey.* |
+
+### Unchanged Files
+
+| File | Why Unchanged |
+|------|--------------|
+| `server.js` | No new routes mounted (answer-key is under /sca router) |
+| `utils/i18n.js` | localize() and t() need no changes |
+| `middleware/auth.js` | requireAuth unchanged |
+| `middleware/rbac.js` | requireRole unchanged |
+| `views/partials/header.ejs` | Sidebar already links to /sca |
+
+---
+
+## Data Flow: Enhanced Code Snippet
+
+```
+1. Boot: seedData.js inserts finding with multi-line code_snippet,
+   code_snippet_start_line=43, code_snippet_vuln_line=3
+
+2. Request: GET /sca/findings/1
+   - routes/sca.js fetches finding from DB
+   - localize() overlays French title/description/remediation
+     (code_snippet stays English -- it is actual source code)
+   - Template receives finding with all fields
+
+3. Render: finding-detail.ejs
+   - Splits code_snippet by \n
+   - Iterates lines with computed line numbers (start_line + index)
+   - Applies .code-line-vuln class to the vulnerable line
+   - Result: numbered code block with red-highlighted vulnerable line
+```
+
+## Data Flow: Answer Key
+
+```
+1. Boot: data/sca-answer-key.json loaded once via require()
+
+2. Request: GET /sca/answer-key (professor/admin only)
+   - Route loads all 12 findings from DB
+   - Merges answer-key data per finding
+   - localize() provides French finding text
+   - t('sca.answerKey.{id}.reasoning') provides French reasoning
+   - Template receives enriched array
+
+3. Render: answer-key.ejs
+   - Shows all 12 findings in order
+   - Expected classification badge (confirmed/FP/needs investigation)
+   - Reasoning, discussion points, common mistakes
+   - Code snippet (reuses enhanced rendering)
+```
+
+---
+
+## Patterns to Follow
+
+### Pattern 1: Data Enrichment via Seed Data
+
+**What:** Add new fields to existing seed data rather than creating new tables/collections.
+**When:** The data is static, pre-determined, and directly associated with existing entities.
+**Why:** Avoids adding complexity to the JSON-file DB layer (already 1100+ lines).
+
+```javascript
+// In seedData.js -- add fields to existing array entries
+[1, 'Hardcoded Session Secret', 'server.js', 44,
+  `multi-line\ncode\nsnippet`,     // expanded code_snippet
+  'Hardcoded Credentials', 'CWE-798', 'Critical',
+  'Description...', 'Semgrep', 'Remediation...', null,
+  43,                               // code_snippet_start_line (NEW)
+  3                                 // code_snippet_vuln_line (NEW)
+]
+```
+
+### Pattern 2: Static Reference Data as JSON File
+
+**What:** Instructor-only reference data lives in a standalone JSON file loaded via `require()`.
+**When:** Data is read-only, never modified at runtime, small enough to fit in memory.
+**Why:** Avoids adding DB handlers, counters, and update logic for data that never changes.
+
+```javascript
+// In routes/sca.js
+const answerKey = require('../data/sca-answer-key.json');
+// Used directly in route handler -- no DB query needed
+```
+
+### Pattern 3: Rich Text in Translation Files
+
+**What:** Longer instructional text (reasoning, discussion points) goes into `fr.json` / `en.json`, not into the data file.
+**When:** Content needs to be bilingual and is text-heavy.
+**Why:** Consistent with existing `sca.findings.{id}.description` pattern. Keeps the data file minimal.
+
+```javascript
+// In the EJS template
+<%= t('sca.answerKey.' + finding.id + '.reasoning') %>
+```
+
+### Pattern 4: CSS-Only Code Rendering
+
+**What:** Line-numbered code blocks with vulnerability highlighting using pure CSS.
+**When:** Displaying 5-10 lines of code with a specific line called out.
+**Why:** Zero dependencies. Adequate for the pedagogical use case. The dark theme with red highlight provides clear visual contrast.
+
+---
+
+## Anti-Patterns to Avoid
+
+### Anti-Pattern 1: Adding highlight.js or Prism as a Dependency
+
+**What:** Adding a JS syntax highlighting library for code snippets.
+**Why bad:** Violates the "no new dependencies" constraint. Adds complexity for coloring keywords when the pedagogical value is in identifying the vulnerable line, not reading syntax-highlighted code.
+**Instead:** Use CSS-only dark theme with vulnerable-line red highlight.
+
+### Anti-Pattern 2: Storing Answer Key in the Database
+
+**What:** Creating a new `sca_answer_key` collection in the JSON DB.
+**Why bad:** The answer key is static reference data. Adding it to the DB means adding INSERT/UPDATE/SELECT handlers in `config/database.js` (already 1100+ lines). It would never be modified at runtime.
+**Instead:** Use a static JSON file loaded via `require()`.
+
+### Anti-Pattern 3: Making Answer Key Visible to Students
+
+**What:** Showing expected classifications anywhere students can see.
+**Why bad:** PROJECT.md explicitly states this is out of scope: "Solution guide visible to students -- instructor references SOLUTION-GUIDE.md during discussion."
+**Instead:** Gate behind `requireRole(['admin', 'professor'])` and do not link from student-visible views.
+
+### Anti-Pattern 4: Modifying the localize() Function
+
+**What:** Changing `localize()` to overlay new fields like `code_snippet`.
+**Why bad:** `code_snippet` contains actual source code -- it must NOT be translated. The existing `localize()` overlays only `title`, `description`, and `remediation`. Code stays in the original language because it is code.
+**Instead:** Leave `localize()` unchanged.
+
+### Anti-Pattern 5: Creating a Separate CSS Build Pipeline
+
+**What:** Adding PostCSS, SCSS, or a bundler to manage duplicated styles.
+**Why bad:** Adds build complexity to a project with zero build steps.
+**Instead:** If extracting CSS, use a static `public/css/sca.css` file loaded via `<link>` tag.
+
+---
+
+## Suggested Build Order
+
+This ordering is based on dependency analysis:
+
+### Phase 1: Seed Data Enrichment (code snippets)
+**Depends on:** Nothing
+**Blocks:** Template changes that render multi-line snippets
+
+1. Expand all 12 `code_snippet` values in `utils/seedData.js` to 5-10 lines
+2. Add `code_snippet_start_line` and `code_snippet_vuln_line` fields
+3. Update `config/database.js` INSERT handler for the 2 new fields
+4. Test: restart server, verify findings load correctly via `/sca`
+
+### Phase 2: Enhanced Code Block Templates
+**Depends on:** Phase 1 (multi-line data must exist)
+
+1. Add CSS for `.code-block`, `.code-line`, `.code-line-vuln` to `finding-detail.ejs`
+2. Replace the `<pre>` tag with the line-numbered code block
+3. Update compact preview in `student-lab.ejs`
+4. Test: verify all 12 findings render correctly, vuln line is highlighted
+
+### Phase 3: Instructor Answer Key
+**Depends on:** Phase 1 (uses enriched finding data), Phase 2 (reuses code block rendering)
+
+1. Create `data/sca-answer-key.json` with 12 classifications
+2. Add ~40 translation keys to `fr.json` and `en.json`
+3. Add `GET /sca/answer-key` route in `routes/sca.js`
+4. Create `views/sca/answer-key.ejs`
+5. Add link button on `views/sca/instructor.ejs`
+6. Test: access as professor, verify all 12 answers render, verify students cannot access
+
+### Phase 4: Code Quality & Documentation
+**Depends on:** Phases 1-3 complete (refactor after features are in)
+
+1. Extract duplicated SCA CSS into shared location
+2. Extract classification constants to shared module
+3. Update README.md
+4. Run smoke test (`npm test`) to verify nothing breaks
+
+---
+
+## Risk Assessment
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|-----------|--------|------------|
+| Multi-line code_snippet breaks existing compact preview | Medium | Low | Test student-lab.ejs card rendering after data change |
+| Answer key route conflicts with :id param | None | N/A | Routes have distinct prefixes (/answer-key vs /findings/:id) |
+| New DB fields break existing queries | Low | Medium | Existing queries use SELECT * so new fields included automatically |
+| Code quality refactoring introduces regressions | Low | Medium | Run smoke test after each change; refactor last |
+| Translation keys missing for some findings | Low | Low | t() returns the key string as fallback; visually obvious |
+| Deleting existing DB required for new seed fields | Low | Medium | Only affects dev -- Codespaces instances rebuild from scratch |
+
+---
+
+## Sources
+
+- Direct codebase analysis of all files listed in the Component Map
+- Existing SOLUTION-GUIDE.md section 15 (SCA findings table with expected classifications)
+- PROJECT.md v1.1 milestone requirements and constraints
+- Confidence: HIGH -- all analysis based on reading the actual codebase, no external research needed

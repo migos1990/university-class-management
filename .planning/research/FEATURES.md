@@ -1,193 +1,231 @@
-# Feature Research
+# Feature Landscape
 
-**Domain:** Educational SCA (Static Code Analysis) hands-on lab for university application security course
+**Domain:** Inline code snippets, instructor answer key, documentation updates, and code quality optimization for an educational SCA lab platform
 **Researched:** 2026-03-12
-**Confidence:** HIGH
+**Milestone:** v1.1 Polish & Pedagogy
 
 ## Context
 
-This analysis covers features needed to make the HEC Montreal SCA lab module production-ready for tonight's 30+ student class. The platform already has a working SCA workflow: 12 pre-seeded findings mapped to real CWE vulnerabilities in the codebase, a student review workflow (classify, notes, remediation, save draft, submit), an instructor dashboard with a review matrix, and team-based Codespaces deployment. The gap is that all SCA views are in English, the seed data descriptions are thin, and there are no guided cues for non-technical students.
+This analysis covers only the four NEW features for v1.1. Everything from v1.0 is shipped and working: 12 SCA findings with file paths, line numbers, CWEs; student finding detail view with classification workflow; instructor dashboard with review matrix and live stats; full French UI with localize() helper; Codespaces deployment with 12 team instances. The v1.1 milestone adds inline code snippets in the finding detail view, an instructor answer key for the 12 findings, updated README/docs, and AI-driven code quality optimization.
 
-The feature landscape is assessed through the lens of: what makes a vulnerability triage exercise effective for non-technical French-speaking students, with a single instructor and no TA, in a single evening session.
+## Table Stakes
 
-## Feature Landscape
+Features that users expect given the existing platform. Missing any of these makes the v1.1 milestone feel incomplete.
 
-### Table Stakes (Must Have for Tonight's Class to Work)
+| Feature | Why Expected | Complexity | Dependencies on Existing |
+|---------|--------------|------------|--------------------------|
+| Multi-line code snippets (5-10 lines) replacing current single-line snippets | Current `code_snippet` field is a single line of code (e.g., `"secret: 'university-secret-key-change-in-production'"`). Students see one line with no context. Any security code review tool shows surrounding context. Without it, students cannot verify the finding against the actual code flow. | MEDIUM | Requires updating all 12 `code_snippet` values in `utils/seedData.js`. The `finding-detail.ejs` already renders `finding.code_snippet` inside a `<pre>` block with dark theme (`background:#282c34; color:#abb2bf`). No schema change needed -- just longer string values. |
+| Vulnerable line visually called out within the snippet | When showing 5-10 lines, the specific vulnerable line must be visually distinct (background highlight, arrow marker, or bold). Otherwise students stare at 10 lines of code with no idea which line matters. Every SAST tool (Semgrep, Snyk Code, SonarQube) highlights the flagged line differently from context lines. | LOW | Can be achieved with CSS-only approach: wrap the vulnerable line in a `<span>` with a distinct background color. No JS needed. The seed data could use a marker convention (e.g., `>>> line <<<` or a separate `vulnerable_line_index` field). |
+| Line numbers in the code snippet | When code shows multiple lines, students need line numbers to match what they see in the actual file. The finding already displays `file_path:line_number` at the top -- the snippet line numbers must correspond. | LOW | Rendered via CSS `counter-increment` on each line or pre-computed in the seed data string. No new dependencies. Works within the existing `<pre>` block. |
+| Instructor answer key view (role-gated) | SOLUTION-GUIDE.md already exists with expected classifications and reasoning for all 12 findings. But the instructor must leave the app to consult a markdown file. An in-app answer key accessible only to professor/admin roles is the natural next step. The teaching flow (SOLUTION-GUIDE.md lines 643-668) explicitly describes the instructor reviewing student work and leading discussion -- an in-app reference eliminates context-switching. | MEDIUM | Requires a new route (e.g., `GET /sca/answer-key`) gated by `requireRole(['admin', 'professor'])`. A new EJS template. Data can be stored as a JSON object in the route file or as new fields in the seed data. Must be in French to match the rest of the UI. |
+| Answer key per-finding: expected classification, reasoning, discussion points | The SOLUTION-GUIDE.md already provides expected classification for each of the 12 findings (lines 628-641). The answer key should include: (1) expected classification (confirmed/FP/needs investigation), (2) reasoning explaining why, (3) discussion prompts for the instructor to use in class review. | MEDIUM | Data structure: could be a `ANSWER_KEY` constant object in `routes/sca.js` keyed by finding ID, or new i18n keys under `sca.answerKey.<findingId>`. The latter is better because it keeps French text in the translation system and avoids hardcoded strings in route code. |
+| Updated README reflecting v1.1 state | README must accurately describe the current feature set. Post-v1.0, the README likely describes an earlier state. Students and future instructors reading the README should understand what the platform does today. | LOW | Read current README, update sections for new features. No code dependencies. |
 
-Features without which the class experience fails or degrades severely.
+## Differentiators
 
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| Full French translation of all SCA views (student-lab, finding-detail, instructor, student-detail) | Students are French-speaking; English-only interface creates cognitive friction and slows comprehension. The rest of the app partially uses the i18n system but SCA views have zero French strings. | MEDIUM | 4 EJS templates need all hardcoded English replaced with `t()` calls. ~80-100 strings across student-lab.ejs, finding-detail.ejs, instructor.ejs, student-detail.ejs. Must add `sca` section to fr.json. |
-| French translation of shared UI (header, footer, login) | The sidebar says "Dashboard", "Logout", "Static Analysis" in English. Login page is entirely English. Students see these first and will be confused. | MEDIUM | Header has ~20 hardcoded English strings (nav labels, section titles, security badges). Login has ~10 strings. Footer is minimal. The i18n infrastructure exists but these views do not use it. |
-| Default language set to French | The i18n middleware defaults to English (`req.session.language || 'en'`). Every student would see English on first load. | LOW | One-line change in `utils/i18n.js`: change default from `'en'` to `'fr'`. |
-| Smooth save/submit flow with French feedback messages | Current AJAX feedback is in English ("Saving...", "Submitted!", "Draft saved.", "Network error"). Non-technical students need clear French confirmations. | LOW | ~6 strings in the inline JavaScript of student-lab.ejs and finding-detail.ejs need to use translated values or be replaced with French strings. |
-| Friendly French error messages | Error page says "Finding not found" in English. 404s and validation errors need French text so students do not hit dead ends. | LOW | Error view already partially uses i18n. SCA route error messages (line 92, 159) are hardcoded English. |
-| Classification labels in French | Dropdown options say "True Positive (confirmed vulnerability)", "False Positive", "Needs Further Investigation" in English. These are the core learning concepts. | LOW | ~6 option labels across student-lab.ejs and finding-detail.ejs. Critical for comprehension: students need to understand triage categories in their language. |
-| Codespaces first-boot reliability | Students must access their team instance immediately. If seeding fails or the port is not visible, the entire team is blocked. | LOW | Verify that `seedDatabase()` runs correctly on first boot per instance, DATA_DIR isolation works, and ports 3001-3012 are forwarded. This is testing/verification rather than new code. |
+Features that elevate the platform beyond functional. Not strictly required but would make the v1.1 milestone meaningfully better for teaching.
 
-### Differentiators (Would Make the Lab Memorable and Engaging)
+| Feature | Value Proposition | Complexity | Dependencies on Existing |
+|---------|-------------------|------------|--------------------------|
+| Syntax coloring in code snippets (keyword/string/comment differentiation) | Dark background with monochrome text (current state) is functional but flat. Even minimal syntax coloring -- strings in green, keywords in blue, comments in gray -- makes code more readable and teaches students to "read" code visually. | LOW-MEDIUM | **Two approaches, recommend server-side HTML:** (1) Pre-render colored `<span>` tags directly in seed data strings -- zero runtime cost, zero dependencies, full control. (2) Use highlight.js server-side in the route to wrap `code_snippet` before passing to template. Approach 1 is preferred because of the "no new dependencies" constraint and only 12 static snippets to color. |
+| Answer key inline within finding detail (instructor-only collapsible section) | Instead of a separate answer key page, show a collapsible "Corrige" section at the bottom of each finding-detail view when the user is professor/admin. This keeps the instructor in the same view as student reviews, enabling them to compare student reasoning against the expected answer without navigating away. | LOW | Already role-gated: `finding-detail.ejs` lines 80-101 show student reviews only for non-student roles. A similar `<% if (user.role !== 'student') { %>` block can render the answer key. Data passed from the route via the existing `res.render()` call. |
+| Answer key comparison indicators (student vs expected) | On the instructor's per-student review view, show whether each student's classification matches the expected answer. A simple green check / red X next to each classification. Helps the instructor quickly spot students who need help without mentally comparing against the solution guide. | LOW | Requires passing the answer key data alongside student reviews in `GET /sca/student/:studentId`. Render as a badge next to each classification. |
+| Code quality pass: consistent EJS template patterns | Current EJS templates have inconsistent patterns: some use inline styles, some duplicate CSS across views, some use `<%= %>` where `<%- %>` might be appropriate. A consistency pass makes the codebase more maintainable for future semesters. | MEDIUM | No functional change. Refactoring within existing files. Risk: any EJS change could break rendering. Must verify with smoke test after each change. |
+| Code quality pass: route organization and error handling | `routes/sca.js` is clean (237 lines) but other route files may benefit from consistent error handling patterns, removal of dead code, and consistent response formats. | MEDIUM | No functional change. Must be careful not to change behavior. Smoke test is the safety net. |
+| Documentation: architecture decision records for v1.1 changes | Document why specific approaches were chosen (e.g., pre-rendered HTML for syntax highlighting instead of client-side library). Helps future instructors or developers understand the rationale. | LOW | Markdown files in `.planning/`. No code dependencies. |
 
-Features that transform the exercise from "fill out a form" into an impactful learning experience. Not required, but high-value.
+## Anti-Features
 
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| Enriched SCA seed data (richer descriptions, educational context) | Current finding descriptions are 1-2 sentences. Non-technical students need more context: why this matters, what the business impact is, what a real attacker could do. Richer descriptions turn each finding into a mini-lesson. | MEDIUM | Rewrite 12 finding descriptions, remediation text, and code snippet context in `utils/seedData.js`. Add business-impact framing. Consider adding French descriptions directly or a `description_fr` field. |
-| Contextual hints/tips in the student review form | A small "Hint" or "Conseil" expandable section per finding giving students a starting point for analysis. Research shows scaffolded guidance is the primary differentiator for non-technical student success in security exercises. Students who are stuck will not raise their hand in a 30-person class. | MEDIUM | Could be a `hint` or `analysis_hint` field in the SCA findings seed data, rendered as a collapsible section in the finding-detail view. Alternatively, a static tip per severity level or category. |
-| Live class progress stats on instructor dashboard | Current instructor dashboard shows per-finding review counts but no aggregate class stats (e.g., "18/30 students have submitted at least 1 finding", "class is 43% complete", "average time per finding"). The instructor needs at-a-glance awareness to pace the class. | LOW-MEDIUM | Aggregate query on `sca_student_reviews` joined with user count. Display as stat cards at the top of instructor.ejs. Polling-based refresh (every 30s) is sufficient per PROJECT.md. |
-| Class consensus indicator per finding | Show the instructor what percentage of students classified each finding as "confirmed" vs "false positive" vs "needs investigation". Enables the instructor to identify findings where students disagree and use those for class discussion. This is the highest-impact teaching feature: the "aha moment" happens when the class debates a contentious finding. | LOW | Data already exists in the matrix. Compute distribution percentages and render as small bar charts or percentage text per finding in the instructor overview table. |
-| Severity distribution visual | A small breakdown card showing how many findings are Critical/High/Medium/Low, helping students see the distribution before diving in. Frames the exercise as realistic triage, not just classification. | LOW | Simple count from the existing `findings` array, rendered as colored badges at the top of student-lab.ejs. |
-| Guided workflow intro banner | A dismissible card at the top of the student lab view explaining what students should do, how to approach each finding, and what good analysis looks like. Research on security education shows that clear task framing is essential for non-technical students. | LOW | A static French-language banner at the top of student-lab.ejs with 3-4 bullet points. Dismissible with a simple JS toggle. |
-| Finding difficulty indicators | Mark findings as easier or harder to triage, so students can start with accessible ones and build confidence before tackling ambiguous cases. Aligns with scaffolded learning research. | LOW | Add a `difficulty` field to seed data ("Facile", "Moyen", "Avance") and display as a badge. Straightforward findings (hardcoded credentials) are easy; ambiguous ones (outdated dependency, rate limiting scope) are harder. |
-| Instructor broadcast message to all students | The header already has a broadcast banner that polls `/api/instructor-message`. The instructor can send a French message to all teams ("Concentrez-vous sur les constats de severite Critical d'abord"). Useful for pacing the class without walking to each team. | LOW | Infrastructure already exists in header.ejs. Just needs to be wired to a simple POST endpoint or a form on the instructor dashboard. Verify the endpoint exists. |
+Features to explicitly NOT build for v1.1. These are tempting but would violate constraints or add unnecessary risk.
 
-### Anti-Features (Deliberately NOT Building Given Time Pressure)
-
-Features that seem good but would risk tonight's class if attempted.
-
-| Feature | Why Requested | Why Problematic | Alternative |
-|---------|---------------|-----------------|-------------|
-| Real-time WebSocket updates on instructor dashboard | Feels more responsive than polling | Adds a dependency (socket.io or ws), complicates the server, risk of connection issues in Codespaces network. Polling at 30s intervals is more than sufficient for a 2-hour class. | Use `setInterval(fetch, 30000)` polling on the instructor dashboard. Already works in header broadcast. |
-| Grading/scoring system | Natural for an academic setting | Tonight's exercise is formative, not summative. Adding scores changes student behavior (gaming for points instead of thoughtful analysis). Research shows gamification via leaderboards is less valued by students than real-world problem-solving tasks. | Instructor reviews submissions qualitatively. Can add scoring in a future iteration. |
-| Language toggle UI (EN/FR switch) | Seems user-friendly | All students are French-speaking. A toggle adds UI complexity, testing burden, and risk of half-translated states. Defaulting to French is simpler and sufficient. | Hard-default to French. Remove or hide language switching. |
-| Auto-grading or "correct answer" comparison | Would give instant feedback | SCA triage is inherently subjective. There is no single "correct" classification for every finding (a vulnerable dependency might be "confirmed" or "needs investigation" depending on context). Auto-grading would teach the wrong lesson: that security analysis has one right answer. | Use class consensus indicators to surface disagreement. Let the instructor lead discussion on ambiguous findings. |
-| Mobile responsive design | Some students might use phones | PROJECT.md explicitly states students use laptops. Responsive CSS changes risk breaking the carefully laid-out tables and forms. | Not needed. Students are on laptops in a classroom. |
-| New npm dependencies | tempting for many features | Constraint: no new dependencies (time pressure + stability). Every new package is an install step, a compatibility risk, and a Codespaces build-time increase. | Work within Express/EJS/vanilla JS as stated in constraints. |
-| Solution guide visible to students | Students might want to check their work | Premature answers undermine the learning exercise. The SOLUTION-GUIDE.md already exists for the instructor to reference during discussion. | Keep solution guide instructor-only. Use hints instead of answers. |
-| DAST/Pentest/VM module polish | Other modules exist and could be improved | Tonight is SCA-only. Touching other modules risks regressions in the SCA flow. Focus prevents sprawl. | Explicitly out of scope per PROJECT.md. |
-| Elaborate animations or UI polish | Would make the app feel more professional | High risk, low learning impact. CSS animations can break in Codespaces browsers, and time spent on polish is time not spent on content and translation. | Keep the current clean, functional design. Focus on content quality. |
+| Anti-Feature | Why Tempting | Why Avoid | What to Do Instead |
+|--------------|-------------|-----------|-------------------|
+| Client-side syntax highlighting library (Prism.js, highlight.js CDN) | Would give beautiful, automatic syntax coloring for any language | Violates the "no new dependencies" constraint. CDN dependency means Codespaces instances need internet access at render time. Adds client-side JS weight. Only 12 static code snippets -- overkill. | Pre-render colored `<span>` tags in the seed data. 12 snippets is a small enough set to hand-color the HTML. Zero runtime cost, zero dependencies. |
+| Live code editor in finding detail | Students could edit and test code fixes in the browser | Massive scope increase. Requires a code editor library (CodeMirror, Monaco), sandboxed execution, and dramatically changes the pedagogical model. This is a different product. | Keep the current read-only code display. Students analyze and classify; they do not fix code in this exercise. |
+| Auto-grading against the answer key | Tempting to show students a score when they submit | Explicitly out of scope per PROJECT.md: "Auto-grading or 'correct answer' comparison -- SCA triage is subjective." The exercise is formative. Showing right/wrong answers changes student behavior toward gaming for marks instead of thoughtful analysis. Finding #11 (outdated dependency) deliberately has "Needs Investigation" as the expected answer -- there is no single correct classification. | Keep the answer key instructor-only. Let the instructor lead discussion on ambiguous findings. |
+| Student-visible solution explanations post-submission | Show students the expected answer after they submit | Undermines the class discussion phase. The teaching flow explicitly has the instructor review submissions and then lead a group discussion. Revealing answers before discussion removes the "aha moment." | Instructor references the in-app answer key during live class discussion. Students learn from the discussion, not from a reveal screen. |
+| Separate answer key database table | Store answer key data in the JSON database alongside findings | Over-engineering for 12 static records that never change at runtime. Adds schema complexity, migration concerns, and seed data changes. The answer key is reference material, not user-generated data. | Store as a constant in route code or as i18n keys. Both are simpler and sufficient. |
+| Comprehensive JSDoc or TypeScript migration | Would improve code quality significantly | Scope explosion. The codebase is ~11,800 LOC of working JavaScript. A type migration or full JSDoc pass is a multi-day effort that does not serve the v1.1 pedagogical goals. | Focus code quality on consistency (naming, error handling, dead code removal) rather than type systems. Add JSDoc only to new functions created for v1.1. |
+| README auto-generation from code | Tempting to auto-generate docs from code comments | Over-engineering. The README needs a human-written update that explains the product, not API documentation. | Hand-write a clear, concise README update reflecting the current feature set. |
 
 ## Feature Dependencies
 
 ```
-[Default Language to French]
-    (no dependencies, immediate change)
+[Multi-line Code Snippets]
+    updates seed data in utils/seedData.js (12 code_snippet values)
+    no other feature depends on this -- can be done independently
 
-[SCA View French Translation]
-    requires [Default Language to French] (so translations are actually displayed)
-    requires [Classification Labels in French] (part of the same translation work)
-    requires [French Error Messages] (error states must also be translated)
+[Vulnerable Line Highlight]
+    requires [Multi-line Code Snippets] (meaningless with single-line snippets)
+    updates finding-detail.ejs rendering logic
+    may need a `vulnerable_line_index` field or marker convention in seed data
 
-[Shared UI French Translation (header, login, footer)]
-    requires [Default Language to French]
+[Line Numbers in Snippet]
+    requires [Multi-line Code Snippets] (meaningless with single-line snippets)
+    CSS-only change in finding-detail.ejs
 
-[Enriched SCA Seed Data]
-    (independent, can be done in parallel with translations)
-    enhances [Contextual Hints/Tips] (richer data makes hints more meaningful)
+[Syntax Coloring] (differentiator)
+    requires [Multi-line Code Snippets] (coloring applied to the multi-line content)
+    if pre-rendered HTML approach: changes seed data strings to include <span> tags
+    if pre-rendered: finding-detail.ejs must use <%- %> (unescaped) instead of <%= %> for code_snippet
 
-[Contextual Hints/Tips]
-    requires [Enriched SCA Seed Data] (hints reference finding descriptions)
-    requires [SCA View French Translation] (hints must be in French)
+[Instructor Answer Key View]
+    independent of code snippet work
+    requires new route + new EJS template
+    requires French i18n keys for answer key content
+    requires role gating (already established pattern)
 
-[Live Class Progress Stats]
-    (independent of translation work)
-    enhances [Instructor Dashboard]
+[Answer Key Per-Finding Data]
+    requires [Instructor Answer Key View] (no view = no place to render it)
+    data source: SOLUTION-GUIDE.md lines 628-641 + teaching flow reasoning
 
-[Class Consensus Indicators]
-    (independent of translation work)
-    enhances [Instructor Dashboard]
-    enhances [Live Class Progress Stats] (consensus + progress together give full picture)
+[Answer Key Inline in Finding Detail] (differentiator)
+    requires [Answer Key Per-Finding Data]
+    modifies finding-detail.ejs (instructor-only section)
+    can coexist with standalone answer key page
 
-[Guided Workflow Intro Banner]
-    requires [SCA View French Translation] (banner must be in French)
+[Updated README]
+    independent of all code changes
+    should be done LAST so it reflects final state
 
-[Finding Difficulty Indicators]
-    requires [Enriched SCA Seed Data] (difficulty metadata added to seed data)
-
-[Instructor Broadcast Message]
-    enhances [Live Class Progress Stats] (instructor sees stats, then broadcasts guidance)
+[Code Quality Optimization]
+    independent of feature work
+    should be done AFTER feature work to avoid merge conflicts
+    must verify with smoke test (npm test) after each change
 ```
 
-### Dependency Notes
+### Dependency Summary
 
-- **SCA View Translation requires Default Language**: Translations must actually render. If language defaults to English, `t()` calls will pull English strings and nothing changes.
-- **Contextual Hints requires Enriched Seed Data**: Hints are only valuable if they reference rich, pedagogically sound descriptions. Thin 1-sentence descriptions cannot support meaningful hints.
-- **Live Class Stats and Consensus are independent**: These are purely instructor-side features that do not depend on translation work. They can be built in parallel.
-- **Guided Workflow Banner requires SCA Translation**: The banner is part of the student-lab view and must be in French. It makes no sense to add an English banner.
+Two independent work streams:
+1. **Code Snippet Stream:** Multi-line snippets -> vulnerable line highlight + line numbers -> (optional) syntax coloring
+2. **Answer Key Stream:** Answer key data + route + template -> (optional) inline in finding detail
 
-## MVP Definition
+These streams have zero dependencies on each other and can be built in parallel. README and code quality are independent cleanup tasks done last.
 
-### Must Ship Tonight (P0)
+## MVP Recommendation
 
-Minimum viable experience -- what is needed for 30 students to successfully complete the SCA lab in French.
+### Must Build (P0) -- Defines the v1.1 milestone
 
-- [ ] Default language set to French -- 1-line change, unlocks all other translations
-- [ ] SCA views fully translated to French -- student-lab, finding-detail, instructor, student-detail
-- [ ] Shared UI translated to French -- header sidebar, login page, error page
-- [ ] Classification labels in French -- "Vrai positif", "Faux positif", "Necessite une investigation"
-- [ ] French feedback messages in AJAX save/submit flow -- "Sauvegarde...", "Soumis!", "Brouillon enregistre."
-- [ ] French error messages on SCA routes -- "Constat introuvable" instead of "Finding not found"
-- [ ] Codespaces first-boot verification -- confirm seeding, port forwarding, and team isolation
+1. **Multi-line code snippets (5-10 lines) with vulnerable line called out** -- This is the headline feature of v1.1. Current single-line snippets provide inadequate context for code review. Every finding needs surrounding code so students can understand the vulnerability in context. The vulnerable line needs a distinct visual treatment (background highlight).
 
-### Should Ship Tonight if Time Allows (P1)
+2. **Line numbers in code snippets** -- Essential companion to multi-line display. Students reference `file_path:line_number` and need the snippet lines to correspond.
 
-Features that meaningfully improve learning outcomes and instructor experience.
+3. **Instructor answer key (in-app, role-gated)** -- Replaces the need to consult SOLUTION-GUIDE.md externally. Must include expected classification, reasoning, and discussion prompts for all 12 findings. Must be in French.
 
-- [ ] Enriched SCA seed data -- richer descriptions, business impact context, educational framing
-- [ ] Guided workflow intro banner in French -- explains the task and how to approach analysis
-- [ ] Live class progress stats on instructor dashboard -- aggregate completion metrics
-- [ ] Class consensus indicators per finding -- distribution of student classifications
+4. **Updated README** -- Reflect the v1.1 feature set accurately.
 
-### Add After Tonight (P2)
+### Should Build (P1) -- High value, low risk
 
-Features to consider for future class sessions.
+5. **Syntax coloring via pre-rendered HTML spans** -- Makes code snippets significantly more readable. Low complexity with the pre-rendered approach (12 static snippets to prepare). No dependencies added.
 
-- [ ] Contextual hints per finding -- scaffolded analysis guidance
-- [ ] Finding difficulty indicators -- help students prioritize easier findings first
-- [ ] Instructor broadcast message integration -- form on instructor dashboard to send messages
-- [ ] Severity distribution visual -- framing card on student lab view
-- [ ] Per-finding time tracking -- how long students spend analyzing each finding
+6. **Answer key inline in finding detail view** -- Eliminates navigation for the instructor. Collapsible section keeps the UI clean.
 
-## Feature Prioritization Matrix
+7. **Answer key comparison badges on student review** -- Quick visual for instructor to spot classification mismatches.
 
-| Feature | User Value | Implementation Cost | Priority |
-|---------|------------|---------------------|----------|
-| Default language to French | HIGH | LOW | P0 |
-| SCA views French translation | HIGH | MEDIUM | P0 |
-| Shared UI French translation | HIGH | MEDIUM | P0 |
-| Classification labels in French | HIGH | LOW | P0 |
-| French AJAX feedback messages | HIGH | LOW | P0 |
-| French error messages | MEDIUM | LOW | P0 |
-| Codespaces boot verification | HIGH | LOW | P0 |
-| Enriched SCA seed data | HIGH | MEDIUM | P1 |
-| Guided workflow intro banner | HIGH | LOW | P1 |
-| Live class progress stats | MEDIUM | LOW | P1 |
-| Class consensus indicators | MEDIUM | LOW | P1 |
-| Contextual hints per finding | MEDIUM | MEDIUM | P2 |
-| Finding difficulty indicators | LOW | LOW | P2 |
-| Instructor broadcast form | LOW | LOW | P2 |
-| Severity distribution visual | LOW | LOW | P2 |
+### Defer (P2) -- Code quality and docs
 
-**Priority key:**
-- P0: Must ship for tonight's class to function
-- P1: Should ship to make tonight's class impactful
-- P2: Nice to have, defer to future sessions
+8. **Code quality optimization** -- Important but does not affect the user experience. Should be done after features to avoid merge conflicts. Scope carefully: focus on consistency patterns, not wholesale refactoring.
 
-## Competitor Feature Analysis
+9. **Architecture decision records** -- Useful for future semesters but not user-facing.
 
-| Feature | OWASP Security Shepherd | PentesterLab | Secure Code Warrior | Our Approach |
-|---------|------------------------|--------------|---------------------|--------------|
-| Vulnerability classification exercise | Lessons + challenges with layman-term explanations | Guided code review with step-by-step walkthroughs | Role-based training with coding labs | 12 real findings in the actual codebase, student classifies + explains reasoning |
-| Scaffolded guidance | Lessons before each challenge | Video walkthroughs + written hints | In-app guidance with difficulty levels | Guided intro banner + optional hints per finding (P1/P2) |
-| Instructor monitoring | Scoreboard per student | No real-time monitoring | Enterprise reporting dashboard | Real-time review matrix + class progress stats + consensus indicators |
-| Language support | English primarily | English primarily | Multi-language | Quebec French default with full i18n infrastructure |
-| False positive triage | Not a focus | Mentioned in advanced exercises | Limited | Core mechanic: classify as confirmed/FP/needs investigation |
-| Real code context | Hardened real vulnerabilities | Real vulnerable apps | Simulated environments | Actual vulnerabilities in the platform's own codebase (self-referential) |
+## Implementation Notes
 
-**Our key differentiator**: Students analyze the very application they are using. The findings are real vulnerabilities in the platform's own code. This self-referential design creates a uniquely engaging "meta" experience that no other platform offers.
+### Code Snippet Approach: Pre-rendered Multi-line Strings in Seed Data
+
+The current `code_snippet` field in `utils/seedData.js` contains single lines like:
+```
+"secret: 'university-secret-key-change-in-production'"
+```
+
+For v1.1, replace with multi-line strings (5-10 lines of actual surrounding code from each referenced file). Example for finding #1 (server.js:44):
+```
+// Session configuration
+const startupSecuritySettings = getSecuritySettings();
+app.use(session({
+  secret: 'university-class-management-secret-key-change-in-production',  // <-- vulnerable
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24,
+    httpOnly: true,
+```
+
+Two approaches for marking the vulnerable line:
+- **Option A (recommended):** Add a `vulnerable_line_offset` integer field to each finding (e.g., `3` meaning the 4th line, 0-indexed). The EJS template splits the snippet by newlines and applies a highlight class to that line.
+- **Option B:** Use a marker convention in the string (e.g., `>>>` prefix). The EJS template detects and strips the marker while applying styling.
+
+Option A is cleaner because it keeps data and presentation separate.
+
+### Code Snippet Rendering: Template Changes
+
+Current rendering in `finding-detail.ejs` line 53:
+```html
+<pre style="background:#282c34; color:#abb2bf; ..."><%= finding.code_snippet %></pre>
+```
+
+Replace with a line-by-line renderer:
+```html
+<pre style="background:#282c34; color:#abb2bf; ..."><%
+  const lines = finding.code_snippet.split('\n');
+  const startLine = finding.line_number - finding.vulnerable_line_offset;
+  lines.forEach((line, i) => {
+    const lineNum = startLine + i;
+    const isVuln = (i === finding.vulnerable_line_offset);
+%><span style="<%= isVuln ? 'background:#3e2723; display:inline-block; width:100%;' : '' %>"><span style="color:#636d83; user-select:none;"><%= String(lineNum).padStart(3) %> </span><%= line %></span>
+<% }); %></pre>
+```
+
+This adds line numbers and highlights the vulnerable line with no dependencies.
+
+### Answer Key Data Structure
+
+Store as i18n keys in `fr.json` and `en.json` under `sca.answerKey.<findingId>`:
+```json
+{
+  "sca": {
+    "answerKey": {
+      "1": {
+        "expectedClassification": "confirmed",
+        "reasoning": "Le secret de session est visible en clair dans le code source...",
+        "discussionPoints": "Demandez aux etudiants : que se passe-t-il si un attaquant..."
+      }
+    }
+  }
+}
+```
+
+This keeps French text in the translation system (consistent with the existing `sca.findings.<id>` pattern), makes English fallback automatic, and requires no database schema changes.
+
+### Answer Key Route
+
+```
+GET /sca/answer-key -> requireAuth, requireRole(['admin', 'professor'])
+```
+
+Renders a new `views/sca/answer-key.ejs` template showing all 12 findings with their expected classifications, reasoning, and discussion points. Uses the existing card/table styling from `instructor.ejs`.
+
+### Code Quality Scope
+
+Focus areas (from codebase observation):
+- **Consistent error handling:** Some routes return JSON errors, others render error pages. Standardize per route type (API vs page).
+- **Dead code removal:** Check for unused variables, unreachable branches.
+- **CSS extraction:** Inline `<style>` blocks in SCA templates share duplicated CSS (severity colors, badge styles). Consider extracting to a shared partial or the public CSS file.
+- **Consistent naming:** Verify function/variable naming follows a single convention throughout.
+
+Out of scope for code quality: TypeScript migration, JSDoc for existing code, dependency updates, architectural changes.
 
 ## Sources
 
-- [OWASP Application Security Curriculum](https://owasp.org/www-project-application-security-curriculum/) -- educational framework for application security training
-- [OWASP Security Shepherd](https://owasp.org/www-project-security-shepherd/) -- classroom-mode security training platform with user-specific solution keys
-- [Leveraging Gamification in Cybersecurity Education for Non-Cyber Students](https://www.researchgate.net/publication/378541770_Leveraging_Gamification_and_Game-based_Learning_in_Cybersecurity_Education_Engaging_and_Inspiring_Non-Cyber_Students) -- research on engaging non-technical students, finding real-world problem-solving tasks preferred over leaderboards
-- [PentesterLab Code Review Exercise](https://pentesterlab.com/exercises/codereview) -- guided code review training with progressive difficulty
-- [OWASP Secure Coding Dojo - Code Review 101](https://owasp.org/SecureCodingDojo/codereview101/) -- structured code review training
-- [Cyber Range and Cyber Defense Exercises: Gamification Meets University Students](https://dl.acm.org/doi/10.1145/3617553.3617888) -- ACM study on gamification effectiveness in university cybersecurity courses
-- [Monitoring Student Progress in Real Time](https://www.innovationassessments.com/blog/2025/02/09/monitoring-student-progress-in-real-time/) -- instructor dashboard best practices for real-time progress monitoring
-- [Vulnerability Triage Best Practices](https://www.getastra.com/blog/dast/false-positive-triage/) -- industry approach to false positive vs true positive classification
-- [Secure Code Warrior](https://www.securecodewarrior.com/) -- developer security training platform with role-based, hands-on labs
+- [Highlight.js server-side rendering](https://hackernoon.com/server-side-code-highlighting-in-node-4f10h4289) -- confirms highlight.js works server-side in Node but requires npm install (ruled out by constraint)
+- [CSS-only syntax highlighting approaches](https://github.com/soulshined/ft-syntax-highlight) -- pure CSS syntax highlighter exists but requires manual span wrapping (validates our pre-rendered approach)
+- [Server-side code highlighting performance](https://remysharp.com/2019/04/09/code-highlighting-server-or-client) -- SSR highlighted code has zero client-side impact and smaller total transfer
+- [OWASP Security Shepherd](https://owasp.org/www-project-security-shepherd/) -- uses user-specific solution keys to prevent sharing; instructor admin controls for class management
+- [OWASP Secure Coding Dojo - Code Review 101](https://owasp.org/SecureCodingDojo/codereview101/) -- structured code review training with inline code display
+- [Snyk Code SAST tool UX](https://snyk.io/product/snyk-code/) -- highlights affected code lines with context, provides specific remediation inline
+- [SAST tools feature comparison](https://www.guru99.com/code-review-tools.html) -- all major tools show filename, location, line number, and affected code snippet with the problematic line highlighted
+- [yeswehack/vulnerable-code-snippets](https://github.com/yeswehack/vulnerable-code-snippets) -- collection of vulnerable code snippets used for security education, showing the pattern of presenting code with highlighted vulnerable sections
+- Existing `SOLUTION-GUIDE.md` in the repository (lines 614-678) -- already contains expected classifications, teaching flow, and grading rubric for all 12 SCA findings
 
 ---
-*Feature research for: HEC Montreal SCA Lab Production Release*
+*Feature research for: HEC Montreal SCA Lab v1.1 Polish & Pedagogy*
 *Researched: 2026-03-12*

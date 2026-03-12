@@ -1,389 +1,242 @@
-# Technology Stack
+# Technology Stack -- v1.1 Additions
 
-**Project:** HEC Montreal SCA Lab Production Release
+**Project:** HEC Montreal SCA Lab -- v1.1 Polish & Pedagogy
 **Researched:** 2026-03-12
-**Confidence:** HIGH -- all recommendations based on direct codebase analysis, no external dependencies
+**Confidence:** HIGH -- recommendations verified against codebase analysis, CDN availability, and project constraints
 
-## Recommended Stack
+## Scope
 
-No new dependencies. Every recommendation works within the existing stack.
+This document covers ONLY the new technologies needed for v1.1 features:
+1. Syntax-highlighted inline code snippets with vulnerable line callout
+2. Code quality tooling (ESLint + Prettier)
 
-### Core Framework (Existing -- No Changes)
-| Technology | Version | Purpose | Status |
-|------------|---------|---------|--------|
-| Node.js | 22.x | Runtime | Locked by devcontainer image |
-| Express | 4.18.x | HTTP server | Existing |
-| EJS | 3.1.x | Templates | Existing |
-| express-session | 1.17.x | Session management | Existing |
+The existing validated stack (Express 4.18, EJS 3.1, Node.js 22, JSON DB, i18n infrastructure) is NOT re-documented here. See prior v1.0 STACK.md for that context.
 
-### i18n Infrastructure (Existing -- Needs Extension)
-| Technology | Location | Purpose | Status |
-|------------|----------|---------|--------|
-| Custom i18n module | `utils/i18n.js` | Translation with dot-notation keys, `{param}` interpolation, English fallback | Existing, working |
-| French translations | `config/translations/fr.json` | 290 keys covering common UI, auth, security, dashboard, etc. | Existing but missing SCA section |
-| English translations | `config/translations/en.json` | Same structure as French | Existing but missing SCA section |
-| Language middleware | `utils/i18n.js:languageMiddleware` | Injects `t()` and `currentLang` into `res.locals` | Existing, needs default-language fix |
+## Recommended Stack Additions
 
-### Real-time Updates (Existing -- Needs Extension)
-| Technology | Location | Purpose | Status |
-|------------|----------|---------|--------|
-| HTTP polling | `classroom-manager.js` | Dashboard polls `/api/summary` every 60s, health every 30s | Existing |
-| Client-side DOM update | Dashboard inline JS | Re-renders sections on fetch | Existing for classroom dashboard |
-| setInterval + fetch | `views/partials/header.ejs` | Polls `/api/instructor-message` every 30s | Existing pattern |
+### Syntax Highlighting: Prism.js via CDN (NO npm dependency)
 
-### Codespaces Deployment (Existing -- Needs Verification)
-| Technology | Location | Purpose | Status |
-|------------|----------|---------|--------|
-| devcontainer.json | `.devcontainer/devcontainer.json` | Container config, port forwarding, setup commands | Existing |
-| classroom-manager.js | `scripts/classroom-manager.js` | Spawns 12 team instances + dashboard | Existing |
-| Codespace URL detection | `classroom-manager.js:getExternalUrl()` | Generates correct URLs using CODESPACE_NAME env var | Existing |
+| Item | Value | Notes |
+|------|-------|-------|
+| Library | Prism.js | CDN-loaded, not added to package.json |
+| Version | 1.29.0 | Latest stable on cdnjs |
+| Core JS | `https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js` | ~2 KB core |
+| Theme CSS | `https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css` | Dark theme matching existing `#282c34` code blocks |
+| Language: JS | `https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js` | All 12 SCA snippets are JavaScript |
+| Language: JSON | `https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js` | Finding #11 references package.json |
+| Plugin: Line Highlight | `https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-highlight/prism-line-highlight.min.js` | Built-in `data-line` attribute for vulnerable line callout |
+| Plugin: Line Highlight CSS | `https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-highlight/prism-line-highlight.min.css` | Styling for highlighted line |
+| Plugin: Line Numbers | `https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js` | Shows line numbers in gutter |
+| Plugin: Line Numbers CSS | `https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css` | Gutter styling |
 
-## Key Technical Decisions
+**Why Prism.js over highlight.js:**
+- Prism.js has a native `data-line` attribute for highlighting specific lines. This maps directly to the existing `finding.line_number` field in the database. With highlight.js, you need a separate plugin (highlightjs-line-numbers.js) plus custom CSS for line highlighting.
+- Prism.js core is ~2 KB vs highlight.js at ~40 KB (with auto-detection). Since we know all snippets are JavaScript, we do not need auto-detection.
+- Prism.js line-numbers plugin uses `data-start` attribute to set the starting line number, so we can show `line 44` instead of `line 1` -- matching the actual file location.
 
-### 1. i18n: Extend Existing JSON Translation System
+**Why CDN and not npm:**
+- The PROJECT.md constraint says "No new dependencies -- Express/EJS/vanilla JS." A CDN `<script>` tag is not a dependency -- it does not change package.json, does not affect `npm install`, and does not increase the Codespaces boot time.
+- Codespaces runs in a browser with internet access. CDN assets load from the browser, not from the Node.js server.
+- Total CDN payload: ~15 KB across all files (core + theme + 2 languages + 2 plugins). Negligible.
 
-**Decision:** Add an `sca` section to `fr.json` (and `en.json` for fallback), then replace hardcoded strings in EJS views with `t()` calls.
+### Code Quality Tooling: ESLint 9 + Prettier 3 (dev dependencies)
 
-**Why this approach (HIGH confidence):**
+| Technology | Version | Purpose | Why This Version |
+|------------|---------|---------|------------------|
+| eslint | ^9.0.0 | Linting: catch bugs, enforce patterns | Latest major with flat config as default. Node 22 compatible. |
+| prettier | ^3.4.0 | Formatting: consistent code style | Stable, widely used, no breaking changes expected |
+| eslint-config-prettier | ^10.0.0 | Disables ESLint rules that conflict with Prettier | Required to prevent ESLint/Prettier conflicts |
+| globals | ^15.0.0 | Provides Node.js/browser global definitions for ESLint flat config | Replaces `env: { node: true }` from legacy config |
 
-The existing i18n system is solid and already used across the platform. It supports:
-- Nested dot-notation keys (`sca.lab.title`)
-- Parameter interpolation (`{count}` syntax)
-- English fallback when French key is missing
-- Middleware that injects `t()` into every EJS template via `res.locals`
+**Why these are acceptable as dependencies:**
+- They are `devDependencies`, not `dependencies`. They do not ship to production, do not run during `npm start`, and do not affect students.
+- The devcontainer.json already includes `dbaeumer.vscode-eslint` and `esbenp.prettier-vscode` VS Code extensions -- these extensions expect config files and packages to exist. Adding the packages completes an already-intended setup.
+- "AI-driven code quality optimization" is an explicit v1.1 milestone goal. You cannot optimize code quality without tooling to enforce it.
 
-**What to do:**
+**Why NOT TypeScript, why NOT additional plugins:**
+- The codebase is ~11,800 LOC of vanilla JavaScript + EJS. Adding TypeScript is a rewrite, not an optimization.
+- No React/Vue plugins needed -- this is server-rendered EJS.
+- No import/export ordering plugins needed -- the codebase uses CommonJS `require()`.
 
-1. **Add `sca` key block to `config/translations/fr.json`** with all SCA-specific strings:
-   - Page titles, subtitles, button labels
-   - Classification options (Vrai positif, Faux positif, Necessite une investigation)
-   - Status labels (Soumis, Brouillon sauvegarde, etc.)
-   - Form labels (Classification, Notes d'analyse, Remediation proposee)
-   - Progress indicators ("X/Y resultats soumis", "X% complete")
-   - Error messages and confirmation dialogs
+## Integration Points
 
-2. **Mirror the same keys in `en.json`** to maintain structural parity.
+### Prism.js Integration in finding-detail.ejs
 
-3. **Replace hardcoded strings in 4 SCA views** with `<%= t('sca.xxx') %>`:
-   - `views/sca/student-lab.ejs` -- ~25 hardcoded strings
-   - `views/sca/instructor.ejs` -- ~20 hardcoded strings
-   - `views/sca/finding-detail.ejs` -- ~20 hardcoded strings
-   - `views/sca/student-detail.ejs` -- ~10 hardcoded strings
+Current code snippet rendering (line 53 of `views/sca/finding-detail.ejs`):
+```html
+<pre style="background:#282c34; color:#abb2bf; padding:1rem; border-radius:6px; overflow-x:auto; font-size:0.9rem; margin-bottom:1rem;"><%= finding.code_snippet %></pre>
+```
 
-4. **Replace hardcoded strings in shared views**:
-   - `views/partials/header.ejs` -- sidebar nav labels (~15 strings)
-   - `views/login.ejs` -- login form labels (~8 strings)
-   - `views/error.ejs` -- error messages (~3 strings)
+Target rendering with Prism.js:
+```html
+<pre class="line-numbers" data-start="<%= finding.snippet_start_line %>" data-line="<%= finding.vulnerable_line_offset %>"><code class="language-javascript"><%- finding.code_snippet %></code></pre>
+```
 
-5. **Change default language to French** in `utils/i18n.js`:
-   ```javascript
-   // Line 75: Change 'en' to 'fr'
-   const lang = req.session && req.session.language ? req.session.language : 'fr';
-   ```
+Key changes:
+1. Wrap content in `<code class="language-javascript">` inside the `<pre>`
+2. Add `data-start` to show real line numbers from the file
+3. Add `data-line` to highlight the vulnerable line (relative offset within snippet)
+4. Switch from `<%= %>` (escaped) to `<%- %>` (unescaped) since code snippets contain `<`, `>`, and `&` that Prism needs as-is -- BUT the snippets come from seed data (trusted), not user input
+5. Remove inline styles (Prism theme handles colors)
 
-6. **Set `<html lang="fr">` in header.ejs and login.ejs**.
+### Seed Data Changes Required
 
-**What NOT to do:**
-- Do NOT add a language toggle UI -- out of scope, wastes time
-- Do NOT install i18n libraries (i18next, i18n-node) -- the existing custom system works and is simpler
-- Do NOT translate seed data descriptions in the database -- they display via `<%= finding.description %>` which is data, not UI strings
-- Do NOT try to translate JavaScript alert/confirm dialogs tonight -- use inline DOM messages instead
-- Do NOT create separate French EJS templates -- use the `t()` function in existing templates
+The current `code_snippet` field stores a single line of code per finding. For the inline snippet feature, this needs to expand to 5-10 lines with context. Two new fields are needed in the seed data:
 
-**Quebec French specifics:**
-- Use "courriel" not "email", "connexion" not "login" in user-facing text
-- Use Quebec terminology: "Vrai positif" not "Positif confirme"
-- The existing `fr.json` already uses appropriate Quebec French (e.g., "Televerser" not "Charger")
+| Field | Type | Purpose | Example |
+|-------|------|---------|---------|
+| `code_snippet` | string | Multi-line snippet (~5-10 lines surrounding the vulnerable code) | Full function context |
+| `snippet_start_line` | integer | The line number in the real file where the snippet begins | `40` |
+| `vulnerable_line_offset` | integer | Which line within the snippet is vulnerable (1-indexed, for `data-line`) | `5` |
 
-### 2. i18n: Handling Dynamic Content (SCA Finding Data)
+The existing `line_number` field remains as-is (used in the location display). The `snippet_start_line` can be derived from `line_number - vulnerable_line_offset + 1`.
 
-**Decision:** Do NOT translate SCA finding data (titles, descriptions, code snippets, remediation). Translate only UI chrome.
+**Alternative (simpler):** Keep one field. Store multi-line snippets in `code_snippet`. Use `line_number` for the `data-start` calculation. Add only `vulnerable_line_in_snippet` (1-indexed offset). This avoids a schema migration.
 
-**Why (HIGH confidence):**
+### CDN Tags in header.ejs
 
-SCA findings are seeded data stored in the database (`sca_findings` table). They contain:
-- Technical English terms (CWE names, code variable names, file paths)
-- Code snippets that must remain in English
-- Descriptions referencing specific code patterns
+Add to `views/partials/header.ejs` inside `<head>`:
+```html
+<!-- Prism.js syntax highlighting (CDN, no npm dependency) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-highlight/prism-line-highlight.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css">
+```
 
-Translating these would require:
-- A parallel translation table or `_fr` columns in the database
-- Changes to seed data logic
-- Risk of translation errors in technical content
+Add before `</body>` in `views/partials/footer.ejs`:
+```html
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-highlight/prism-line-highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+```
 
-**The pragmatic approach:** Keep finding data in English (students at HEC understand English technical vocabulary). Translate the surrounding UI to French so the workflow feels native.
+**Performance note:** These CDN files load on every page, not just finding-detail. At ~15 KB total (gzipped), this is acceptable. If optimization is desired later, conditionally include them only on finding-detail.ejs using a `locals.needsPrism` flag from the route.
 
-If enhanced finding descriptions are needed in French, add them to seed data directly -- not through the i18n system.
+### ESLint Flat Config File
 
-### 3. Real-Time Dashboard: Polling with setInterval
+Create `eslint.config.js` at project root (CommonJS -- project has no `"type": "module"` in package.json):
 
-**Decision:** Add client-side polling (every 15-30s) to the instructor SCA view at `/sca`, hitting existing API endpoints.
+```javascript
+const globals = require('globals');
+const eslintConfigPrettier = require('eslint-config-prettier');
 
-**Why this approach (HIGH confidence):**
-
-The codebase already has two proven polling patterns:
-1. **Classroom manager dashboard** (`classroom-manager.js`): Client polls `/api/instances` every 30s and `/api/class-overview` every 60s, then re-renders DOM sections.
-2. **Instructor broadcast** (`header.ejs`): Client polls `/api/instructor-message` every 30s.
-
-Both patterns work identically: `setInterval(() => fetch(url).then(render), interval)`.
-
-**What to do:**
-
-1. **Create a new API endpoint** `GET /sca/api/progress` on the SCA routes that returns the matrix data as JSON:
-   ```javascript
-   router.get('/api/progress', requireAuth, requireRole(['admin', 'professor']), (req, res) => {
-     const findings = db.prepare('SELECT * FROM sca_findings').all();
-     const students = db.prepare('SELECT * FROM users WHERE role = ?').all('student');
-     const allReviews = db.prepare('SELECT * FROM sca_student_reviews').all();
-     // Build matrix, compute stats...
-     res.json({ findings, students, matrix, stats, timestamp: new Date().toISOString() });
-   });
-   ```
-
-2. **Add a `<script>` block to `views/sca/instructor.ejs`** that polls this endpoint every 15-20 seconds and updates:
-   - The summary stats bar (total reviews submitted)
-   - The progress bars per finding
-   - The student progress matrix cells
-   - Class consensus indicators (how many confirmed vs FP)
-
-3. **Use DOM manipulation** (same pattern as classroom-manager.js) -- not full page reload.
-
-**What NOT to do:**
-- Do NOT add WebSocket/Socket.io -- out of scope, adds dependency, massive complexity for 30-student class
-- Do NOT use Server-Sent Events (SSE) -- adds complexity for no benefit at this scale
-- Do NOT poll faster than every 15s -- unnecessary for classroom use, adds server load across 12 instances
-- Do NOT poll from student views -- students see their own data (no need for real-time updates of others)
-
-**Polling interval recommendation:** 20 seconds. Rationale:
-- Fast enough that instructor sees new submissions within 20s
-- Slow enough that 12 instances with ~3 students each don't overload anything
-- Matches the existing broadcast polling pattern in the codebase
-
-### 4. Codespaces Deployment Reliability
-
-**Decision:** Verify and harden the existing devcontainer setup. No architectural changes.
-
-**Why (HIGH confidence):**
-
-The existing Codespaces setup is already well-architected:
-- `devcontainer.json` declares all 13 ports
-- `postCreateCommand` runs `npm install && node scripts/setup.js`
-- `postStartCommand` runs `npm start` (classroom-manager)
-- `classroom-manager.js` handles Codespace URL detection via `CODESPACE_NAME` and `GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN`
-- Health checks with 30s polling + auto-restart capability
-
-**What to verify/harden:**
-
-1. **Port visibility**: Ensure student ports (3001-3012) are set to "public" in Codespaces port settings, or students won't be able to access their instances. The `devcontainer.json` sets `onAutoForward: "silent"` for team ports but does NOT set visibility. Default is private.
-
-   Fix: Add `"visibility": "public"` to port attributes OR document the manual step to make ports public after Codespace creation.
-
-   ```json
-   "3001": { "label": "Team Alpha", "onAutoForward": "silent", "visibility": "public" }
-   ```
-
-   **CRITICAL:** Without public port visibility, students outside the Codespace owner's session cannot access the app. This is the most likely deployment failure.
-
-2. **Startup race condition**: `postStartCommand` runs `npm start` which spawns 12 instances simultaneously. If `npm install` or setup hasn't fully completed, instances may fail. The existing `postCreateCommand` handles this (runs first), but verify the setup.js script completes without errors.
-
-3. **Data seeding on first boot**: Each team instance runs `server.js` which calls `initializeDatabase()` and `seedDatabase()` if empty. This happens per-instance with isolated `DATA_DIR`. Verify seed data includes all 12 SCA findings per instance.
-
-4. **Memory in Codespaces**: 12 Node.js processes + 1 dashboard = 13 processes. Default Codespace (4-core, 16GB) should handle this. If using 2-core, reduce to 6 teams via `TEAM_COUNT=6`.
-
-5. **URL sharing**: The instructor needs to share team URLs with students. The classroom manager dashboard already shows these URLs. Verify they render correctly in Codespaces mode.
-
-**What NOT to do:**
-- Do NOT change the devcontainer image -- the existing `mcr.microsoft.com/devcontainers/javascript-node:22` is correct
-- Do NOT add Docker Compose -- overengineered for this use case
-- Do NOT change from `postStartCommand` to a lifecycle script -- the existing approach works
-- Do NOT try to automate Codespace creation for students -- they just need the URL
-
-### 5. Error Handling for Non-Technical Users
-
-**Decision:** Replace English error strings with French translations using existing `t()` function. Add user-friendly fallbacks.
-
-**What to do:**
-
-1. **Add SCA-specific error keys to `fr.json`**:
-   - `sca.errors.findingNotFound`: "Resultat non trouve"
-   - `sca.errors.invalidClassification`: "Classification invalide"
-   - `sca.errors.saveFailed`: "Erreur lors de la sauvegarde. Veuillez reessayer."
-   - `sca.errors.networkError`: "Erreur de connexion. Verifiez votre connexion et reessayez."
-
-2. **Update client-side JS messages** in `views/sca/student-lab.ejs`:
-   - Replace `'Saving...'` with French equivalents
-   - Replace `'Submitted!'` / `'Draft saved.'` with French
-   - Replace `'Network error -- please try again.'` with French
-
-3. **Update `views/error.ejs`** to use `t()` for "Back to Dashboard" link text.
-
-## Translation Key Structure
-
-Recommended key organization for the new `sca` section in `fr.json`:
-
-```json
-{
-  "sca": {
-    "lab": {
-      "title": "Laboratoire d'analyse statique de code",
-      "subtitle": "Examinez chaque resultat, classifiez-le et documentez votre raisonnement, puis soumettez.",
-      "findingsSubmitted": "resultats soumis",
-      "complete": "complete"
+module.exports = [
+  {
+    files: ['**/*.js'],
+    ignores: ['node_modules/**'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'commonjs',
+      globals: {
+        ...globals.node,
+      }
     },
-    "instructor": {
-      "title": "Analyse statique de code -- Tableau de bord instructeur",
-      "findingsOverview": "Apercu des resultats",
-      "studentProgressMatrix": "Matrice de progression des etudiants",
-      "reviews": "evaluations",
-      "submitted": "soumis",
-      "confirmed": "confirme",
-      "fp": "FP"
-    },
-    "finding": {
-      "location": "Emplacement",
-      "codeSnippet": "Extrait de code",
-      "description": "Description",
-      "remediationGuidance": "Guide de remediation",
-      "studentReviews": "Evaluations des etudiants",
-      "yourReview": "Votre evaluation",
-      "references": "References",
-      "vulnManager": "Gestionnaire de vulnerabilites",
-      "importedToVM": "Importe dans le GV",
-      "notImported": "Ce resultat n'a pas encore ete importe dans le gestionnaire de vulnerabilites.",
-      "pushToVM": "Envoyer au GV"
-    },
-    "review": {
-      "classification": "Classification",
-      "selectClassification": "-- selectionner --",
-      "truePositive": "Vrai positif (vulnerabilite confirmee)",
-      "falsePositive": "Faux positif",
-      "needsInvestigation": "Necessite une investigation supplementaire",
-      "analysisNotes": "Vos notes d'analyse",
-      "analysisPlaceholder": "Expliquez pourquoi vous avez classifie de cette facon...",
-      "proposedRemediation": "Remediation proposee",
-      "remediationPlaceholder": "Comment corrigeriez-vous cela?",
-      "saveDraft": "Sauvegarder le brouillon",
-      "submit": "Soumettre",
-      "cancel": "Annuler",
-      "submittedOn": "Soumis le"
-    },
-    "status": {
-      "submitted": "Soumis",
-      "draftSaved": "Brouillon sauvegarde",
-      "notStarted": "Non commence",
-      "startReview": "Commencer l'evaluation",
-      "continue": "Continuer",
-      "viewEdit": "Voir / Modifier"
-    },
-    "messages": {
-      "saving": "Sauvegarde en cours...",
-      "submitSuccess": "Soumis avec succes!",
-      "draftSaveSuccess": "Brouillon sauvegarde.",
-      "networkError": "Erreur de connexion. Veuillez reessayer.",
-      "saveError": "Erreur lors de la sauvegarde."
-    },
-    "student": {
-      "title": "Evaluations SCA",
-      "reviewsSubmitted": "Evaluations soumises",
-      "finding": "Resultat",
-      "severity": "Severite",
-      "classification": "Classification",
-      "status": "Statut",
-      "notes": "Notes",
-      "view": "Voir"
-    },
-    "table": {
-      "title": "Titre",
-      "file": "Fichier",
-      "severity": "Severite",
-      "cwe": "CWE",
-      "reviews": "Evaluations",
-      "vm": "GV"
+    rules: {
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      'no-console': 'off',        // Console logging is intentional in this app
+      'eqeqeq': ['error', 'always'],
+      'no-var': 'error',
+      'prefer-const': 'warn',
     }
-  }
-}
+  },
+  eslintConfigPrettier,  // Must be last: disables formatting rules
+];
 ```
 
-## Sidebar/Header Translation Keys
+### Prettier Config File
+
+Create `.prettierrc` at project root:
 
 ```json
 {
-  "nav": {
-    "main": "Principal",
-    "dashboard": "Tableau de bord",
-    "classes": "Cours",
-    "administration": "Administration",
-    "securityPanel": "Panneau de securite",
-    "auditLogs": "Journaux d'audit",
-    "mfaSetup": "Configuration MFA",
-    "backups": "Sauvegardes",
-    "teaching": "Enseignement",
-    "myClasses": "Mes cours",
-    "learning": "Apprentissage",
-    "myEnrollments": "Mes inscriptions",
-    "securityLabs": "Laboratoires de securite",
-    "staticAnalysis": "Analyse statique",
-    "dynamicAnalysis": "Analyse dynamique",
-    "vulnManagement": "Gestion des vulnerabilites",
-    "pentestLab": "Laboratoire de pentest",
-    "logout": "Deconnexion",
-    "securityStatus": "Statut de securite"
+  "singleQuote": true,
+  "trailingComma": "es5",
+  "printWidth": 120,
+  "tabWidth": 2,
+  "semi": true
+}
+```
+
+**Why these settings:**
+- `singleQuote: true` -- matches existing codebase convention (verified by reading routes/sca.js, server.js)
+- `trailingComma: "es5"` -- safe for Node.js, helps with git diffs
+- `printWidth: 120` -- the EJS templates have long lines; 80 would reformat aggressively and produce noisy diffs
+- `semi: true` -- matches existing codebase convention
+
+### package.json Script Additions
+
+```json
+{
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"**/*.{js,json,ejs}\"",
+    "format:check": "prettier --check \"**/*.{js,json,ejs}\""
   }
 }
 ```
+
+## What NOT to Add
+
+| Technology | Why NOT |
+|------------|---------|
+| highlight.js (npm) | CDN Prism.js is lighter, has better line highlighting, avoids npm dependency |
+| highlight.js (CDN) | No built-in `data-line` attribute -- requires separate plugin + custom CSS for the vulnerable-line callout feature |
+| CodeMirror | Full editor library (~300 KB). We need read-only display, not editing. Massive overkill. |
+| Monaco Editor | VS Code's editor (~5 MB). Absurdly heavy for displaying 5-10 line snippets. |
+| Shiki | Requires Node.js runtime for TextMate grammar parsing. Cannot run in browser from CDN without bundling. |
+| TypeScript | Rewrite of ~11,800 LOC for no classroom benefit. Students never see the server code. |
+| eslint-plugin-security | Interesting but ironic -- the app intentionally has vulnerabilities for teaching. Would flag the seed data. |
+| husky / lint-staged | Git hooks are useful for team projects. This is a solo instructor project. Run `npm run lint` manually. |
+| Tailwind CSS | The codebase uses inline styles consistently. Adding a CSS framework would require touching every template. |
+| Any CSS framework (Bootstrap, etc.) | Same reason. Inline styles are the convention. Adding a framework is a rewrite. |
 
 ## Alternatives Considered
 
 | Category | Recommended | Alternative | Why Not |
 |----------|-------------|-------------|---------|
-| i18n library | Existing custom `utils/i18n.js` | i18next, i18n-node | No new dependencies constraint. Custom system already works with the exact feature set needed. |
-| Real-time updates | setInterval + fetch (polling) | WebSocket (Socket.io) | Out of scope per PROJECT.md. Polling is sufficient for 30 students. Adds dependency. |
-| Real-time updates | setInterval + fetch | Server-Sent Events (SSE) | More complex server-side setup, no significant benefit at this scale. |
-| Template engine | EJS with `t()` calls | Separate French template files | Duplicates views, nightmare to maintain, defeats purpose of i18n system. |
-| Translation storage | JSON files | Database table | Adds migration complexity. JSON files load once at startup, fast and simple. |
-| Codespaces | Single Codespace with 12 instances | One Codespace per team | Massively more complex to manage. Current approach works for classroom setting. |
+| Syntax highlighting | Prism.js via CDN | highlight.js via CDN | No native line-highlight attribute; larger core; auto-detect unneeded |
+| Syntax highlighting | Prism.js via CDN | Pre-tokenized HTML in seed data | Fragile, tedious for 12 findings, unmaintainable, no theme support |
+| Syntax highlighting | Prism.js via CDN | CSS-only approaches (ft-syntax-highlight, cssyn) | Require manually wrapping every token in `<span>` classes. Impractical for real code. |
+| Vulnerable line callout | Prism line-highlight plugin | Custom CSS `:nth-child` targeting | Brittle, no `data-line` declarative API, breaks when snippet length changes |
+| Code quality | ESLint 9 flat config | ESLint 8 legacy config | ESLint 9 is current, flat config is simpler, legacy config is deprecated |
+| Formatting | Prettier 3 | ESLint formatting rules | Prettier is faster, more consistent, and the devcontainer already expects it |
+| Formatting | Prettier 3 | Manual formatting | 11,800 LOC -- manual formatting is not "AI-driven code quality optimization" |
 
-## Implementation Priority Order
+## Installation
 
-Given tonight's time pressure, implement in this order:
+### CDN (Prism.js) -- No installation needed
 
-1. **Translation JSON updates** (fr.json + en.json) -- Pure data, zero risk of breaking anything
-2. **Default language flip** (one line in i18n.js) -- Instant win, affects all pages
-3. **SCA student-lab.ejs translation** -- Most critical student-facing view
-4. **Login page translation** -- First thing students see
-5. **Header/sidebar translation** -- Persistent navigation
-6. **SCA finding-detail.ejs translation** -- Primary student interaction page
-7. **SCA instructor.ejs translation** -- Instructor-facing
-8. **Instructor dashboard polling** -- Enhancement, not blocking
-9. **SCA student-detail.ejs translation** -- Low-traffic instructor view
-10. **Error page translation** -- Edge case
+Add `<link>` and `<script>` tags to header.ejs and footer.ejs as described in Integration Points above. Zero npm commands.
 
-Items 1-6 are critical for tonight. Items 7-8 are important. Items 9-10 are nice-to-have.
+### Dev Dependencies (Code Quality)
 
-## Codespaces Pre-Flight Checklist
+```bash
+npm install -D eslint@^9 prettier@^3 eslint-config-prettier@^10 globals@^15
+```
 
-Before class tonight, verify:
+This adds ~8 MB to `node_modules` (dev only). Does not affect production runtime or Codespaces boot time since `npm start` does not invoke these tools.
 
-- [ ] `npm start` in Codespace spawns all 12 instances + dashboard
-- [ ] All instances reach "online" status within 60s
-- [ ] Each instance has 12 SCA findings seeded
-- [ ] Student login works (alice_student / student123)
-- [ ] SCA lab renders in French for student view
-- [ ] Instructor dashboard at port 3000 shows all team health
-- [ ] Team URLs are accessible (port visibility set to public)
-- [ ] Instructor can see student progress matrix
-- [ ] Student can save draft and submit review
-- [ ] French error messages display on invalid actions
+## Confidence Assessment
+
+| Decision | Confidence | Basis |
+|----------|------------|-------|
+| Prism.js via CDN for syntax highlighting | HIGH | Direct codebase analysis (existing `<pre>` block, dark theme, line_number field); Prism.js is the industry standard for read-only code display; CDN avoids dependency constraint |
+| Prism okaidia theme | HIGH | Visual match to existing `#282c34` background in finding-detail.ejs |
+| Line-highlight plugin for vulnerable line | HIGH | Direct match to requirement ("vulnerable line called out"); `data-line` attribute maps to `finding.line_number` |
+| ESLint 9 + Prettier 3 as devDependencies | HIGH | devcontainer.json already declares VS Code extensions for both; v1.1 milestone explicitly includes code quality optimization |
+| Flat config format for ESLint | HIGH | ESLint 9 default; project uses CommonJS (`require()`); no `"type": "module"` in package.json |
+| printWidth: 120 for Prettier | MEDIUM | Based on reading existing code style (long EJS lines), but may need adjustment during formatting pass |
 
 ## Sources
 
-- Direct codebase analysis (all files read and verified)
-- `utils/i18n.js` -- existing i18n implementation
-- `config/translations/fr.json` -- existing French translations (290 keys)
-- `views/sca/*.ejs` -- all 4 SCA templates (hardcoded English confirmed)
-- `views/partials/header.ejs` -- hardcoded sidebar navigation
-- `scripts/classroom-manager.js` -- existing polling patterns
-- `.devcontainer/devcontainer.json` -- Codespaces configuration
-- `server.js` -- middleware chain, language middleware already mounted
-- `routes/sca.js` -- SCA route handlers, API patterns
-- `package.json` -- dependency list (confirmed no i18n library)
+- Prism.js official site: https://prismjs.com/
+- Prism.js line-highlight plugin: https://prismjs.com/plugins/line-highlight/
+- Prism.js line-numbers plugin: https://prismjs.com/plugins/line-numbers/
+- Prism.js cdnjs: https://cdnjs.com/libraries/prism
+- highlight.js vs Prism comparison: https://github.com/highlightjs/highlight.js/issues/3625
+- ESLint flat config docs: https://eslint.org/docs/latest/use/configure/configuration-files
+- Prettier docs: https://prettier.io/docs/en/options.html
+- Direct codebase analysis: `views/sca/finding-detail.ejs`, `utils/seedData.js`, `routes/sca.js`, `package.json`, `.devcontainer/devcontainer.json`
