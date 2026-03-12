@@ -72,7 +72,7 @@ function t(lang, key, params = {}) {
  */
 function languageMiddleware(req, res, next) {
   // Default to English if no language set in session
-  const lang = req.session && req.session.language ? req.session.language : 'en';
+  const lang = req.session && req.session.language ? req.session.language : 'fr';
 
   // Make translation function available in all views
   res.locals.t = (key, params) => t(lang, key, params);
@@ -83,8 +83,34 @@ function languageMiddleware(req, res, next) {
   next();
 }
 
+/**
+ * Localize a seed data finding by overlaying translations from fr.json.
+ * @param {object} finding - SCA finding object from database
+ * @param {string} lang - Language code ('fr' or 'en')
+ * @returns {object} Copy of finding with translated text fields
+ */
+function localize(finding, lang) {
+  if (lang === 'en') return finding;
+
+  const fields = ['title', 'description', 'remediation'];
+  const localized = { ...finding };
+
+  for (const field of fields) {
+    const key = `sca.findings.${finding.id}.${field}`;
+    const translated = t(lang, key);
+    if (translated !== key) {
+      localized[field] = translated;
+    } else {
+      console.warn(`localize: missing ${lang} translation for ${key}`);
+    }
+  }
+
+  return localized;
+}
+
 module.exports = {
   t,
+  localize,
   languageMiddleware,
   translations
 };
