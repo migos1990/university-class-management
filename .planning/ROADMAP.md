@@ -41,11 +41,11 @@ Full details: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
   3. Code snippet has syntax coloring (keywords, strings, comments in different colors) making the code readable
   4. Student-lab overview page shows a compact one-line code preview per finding, giving a quick sense of what each finding involves without overwhelming the card layout
   5. All code snippets render correctly without XSS -- angle brackets in source code display as text, not HTML
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 06-01: TBD
-- [ ] 06-02: TBD
+- [ ] 06-01-PLAN.md -- Seed data expansion, Prism.js vendoring, and syntax-highlighted finding detail view
+- [ ] 06-02-PLAN.md -- Student-lab card code preview and visual verification
 
 ### Phase 7: Instructor Answer Key
 **Goal**: Instructor has a French-language reference showing expected classifications, reasoning, and discussion prompts for all 12 findings, enabling confident in-class facilitation
@@ -102,7 +102,7 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9
 | 3. SCA Student Experience | v1.0 | 2/2 | Complete | 2026-03-12 |
 | 4. SCA Instructor Experience | v1.0 | 2/2 | Complete | 2026-03-12 |
 | 5. Deployment Verification | v1.0 | 2/2 | Complete | 2026-03-12 |
-| 6. Inline Code Snippets | v1.1 | 0/? | Not started | - |
+| 6. Inline Code Snippets | v1.1 | 0/2 | Not started | - |
 | 7. Instructor Answer Key | v1.1 | 0/? | Not started | - |
 | 8. Documentation | v1.1 | 0/? | Not started | - |
 | 9. Code Quality | v1.1 | 0/? | Not started | - |
