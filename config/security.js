@@ -15,7 +15,7 @@ function getSecuritySettings() {
   return settings || {
     mfa_enabled: 0,
     rbac_enabled: 1,
-    encryption_at_rest: 0,
+    encryption_at_rest: 1,
     field_encryption: 0,
     https_enabled: 0,
     audit_logging: 0,

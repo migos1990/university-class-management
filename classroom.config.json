@@ -8,7 +8,7 @@
     "Team Echo",    "Team Foxtrot", "Team Golf",    "Team Hotel",
     "Team India",   "Team Juliet",  "Team Kilo",    "Team Lima"
   ],
-  "autoResetOnStart": false,
+  "autoResetOnStart": true,
   "cloud": {
     "provider": null,
     "autoStop": false

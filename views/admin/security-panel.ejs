@@ -256,9 +256,12 @@
         <div class="security-card-desc">Encrypt data in transit with TLS certificates</div>
       </div>
       <label class="toggle-switch">
-        <input type="checkbox" <%= securitySettings.https_enabled ? 'checked' : '' %> onchange="toggleFeature('https_enabled')">
-        <span class="toggle-slider"></span>
+        <input type="checkbox" disabled title="HTTPS is managed by Codespaces">
+        <span class="toggle-slider" style="opacity: 0.5;"></span>
       </label>
+      <p style="font-size: 0.75rem; color: #e67e22; margin-top: 0.5rem;">
+        Disabled &mdash; HTTPS is provided by the Codespaces proxy
+      </p>
     </div>
     <div class="security-card-body">
       <div class="impact-label">Connection Security</div>
@@ -267,7 +270,6 @@
         <span class="impact-arrow">→</span>
         <span class="impact-on">https://localhost</span>
       </div>
-      <p style="font-size: 0.75rem; color: #999; margin-top: 0.5rem;">Requires server restart</p>
     </div>
   </div>
 

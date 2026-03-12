@@ -34,6 +34,16 @@ router.get('/security', requireAuth, requireRole(['admin']), (req, res) => {
  */
 router.post('/security/toggle/:feature', requireAuth, requireRole(['admin']), async (req, res) => {
   const feature = req.params.feature;
+
+  // Prevent HTTPS toggle in Codespaces (causes proxy conflicts)
+  if (feature === 'https_enabled') {
+    return res.json({
+      success: false,
+      message: 'HTTPS is managed by the Codespaces proxy. This toggle is disabled to prevent connection issues.',
+      blocked: true
+    });
+  }
+
   const currentValue = req.securitySettings[feature];
   const newValue = !currentValue;
 
