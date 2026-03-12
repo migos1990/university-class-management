@@ -84,10 +84,11 @@ Plans:
   1. A fresh Codespace boots cleanly: npm install completes, seed data populates all 12 findings, all team instances (ports 3001-3012) and the instructor dashboard (port 3000) start without errors
   2. Codespaces port visibility is configured so students on separate machines can access their team's port (public or org-visible)
   3. The full student journey works end-to-end: login (French) -> SCA lab (French) -> select finding -> review detail (French) -> classify + write notes -> save draft (French feedback) -> submit (French feedback) -> instructor dashboard reflects the submission
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 05-01: TBD
+- [ ] 05-01-PLAN.md -- Configuration hardening (autoResetOnStart, security defaults, HTTPS toggle disable) and port visibility automation
+- [ ] 05-02-PLAN.md -- Comprehensive smoke test rewrite with 13-port verification, French content checks, and student journey validation
 
 ## Progress
 
@@ -100,4 +101,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 2. Shared UI Translation | 0/1 | Not started | - |
 | 3. SCA Student Experience | 0/2 | Not started | - |
 | 4. SCA Instructor Experience | 0/2 | Not started | - |
-| 5. Deployment Verification | 0/? | Not started | - |
+| 5. Deployment Verification | 0/2 | Not started | - |
