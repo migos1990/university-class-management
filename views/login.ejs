@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - HEC Montréal Application Security</title>
+  <title><%= t('login.formTitle') %> - HEC Montréal <%= t('nav.appSubtitle') %></title>
   <style>
     * {
       margin: 0;
@@ -154,40 +154,40 @@
       <img src="/images/hec-logo.svg" alt="HEC Montréal" style="height: 80px; width: 80px; border-radius: 8px;">
     </div>
     <h1>HEC Montréal</h1>
-    <p class="subtitle">Application Security Learning Platform</p>
+    <p class="subtitle"><%= t('login.subtitle') %></p>
 
     <% if (error) { %>
       <div class="alert-danger">
         <div class="alert-danger-text">
-          <div class="alert-danger-title">Login Failed</div>
-          <div class="alert-danger-message"><%= error %></div>
+          <div class="alert-danger-title"><%= t('login.loginFailed') %></div>
+          <div class="alert-danger-message"><%= t('auth.invalidCredentials') %></div>
         </div>
       </div>
     <% } %>
 
     <form action="/auth/login" method="POST">
       <div class="form-group">
-        <label for="username">Username</label>
+        <label for="username"><%= t('auth.username') %></label>
         <input type="text" id="username" name="username" required autofocus>
       </div>
 
       <div class="form-group">
-        <label for="password">Password</label>
+        <label for="password"><%= t('auth.password') %></label>
         <input type="password" id="password" name="password" required>
       </div>
 
-      <button type="submit" class="btn">Login</button>
+      <button type="submit" class="btn"><%= t('common.login') %></button>
     </form>
 
     <div class="demo-accounts">
-      <h3>Default Accounts:</h3>
-      <p><strong>Admin:</strong> admin / admin123</p>
-      <p><strong>Professor:</strong> prof_jones / prof123</p>
-      <p><strong>Student:</strong> alice_student / student123</p>
+      <h3><%= t('login.demoAccounts') %> :</h3>
+      <p><strong><%= t('login.demoAdmin') %></strong></p>
+      <p><strong><%= t('login.demoProf') %></strong></p>
+      <p><strong><%= t('login.demoStudent') %></strong></p>
     </div>
 
     <p class="info-text">
-      Educational application security demonstration platform
+      <%= t('login.footerText') %>
     </p>
   </div>
 </body>
