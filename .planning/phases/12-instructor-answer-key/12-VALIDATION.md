@@ -1,5 +1,5 @@
 ---
-phase: 7
+phase: 12
 slug: instructor-answer-key
 status: draft
 nyquist_compliant: false
@@ -7,7 +7,7 @@ wave_0_complete: false
 created: 2026-03-19
 ---
 
-# Phase 7 — Validation Strategy
+# Phase 12 — Validation Strategy
 
 > Per-phase validation contract for feedback sampling during execution.
 
