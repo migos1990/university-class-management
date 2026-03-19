@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Polish & Pedagogy
-status: planning
-stopped_at: Phase 9 context gathered
-last_updated: "2026-03-19T22:52:14.230Z"
-last_activity: 2026-03-19 -- Completed Phase 8 Testing (integration tests)
+status: executing
+stopped_at: Completed 09-01-PLAN.md
+last_updated: "2026-03-19T23:06:40.764Z"
+last_activity: 2026-03-19 -- Completed Phase 9 Plan 1 (Security Boundary Doc)
 progress:
   total_phases: 11
-  completed_phases: 3
-  total_plans: 6
-  completed_plans: 4
-  percent: 67
+  completed_phases: 4
+  total_plans: 7
+  completed_plans: 5
+  percent: 71
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** The SCA lab must work flawlessly end-to-end in French -- from Codespace boot to student submission to instructor review -- with zero friction for non-technical students.
-**Current focus:** Phase 8 complete -- ready for Phase 9 (Security Boundary Doc)
+**Current focus:** Phase 9 complete -- ready for Phase 10 (DAST French)
 
 ## Current Position
 
-Phase: 8 of 16 (Testing) -- COMPLETE
+Phase: 9 of 16 (Security Boundary Doc) -- COMPLETE
 Plan: 1 of 1 (all plans complete)
-Status: Phase 8 complete, ready for Phase 9 (Security Boundary Doc) planning
-Last activity: 2026-03-19 -- Completed Phase 8 Testing (integration tests)
+Status: Phase 9 complete, ready for Phase 10 (DAST French)
+Last activity: 2026-03-19 -- Completed Phase 9 Plan 1 (Security Boundary Doc)
 
-Progress: [██████▓░░░] 67%
+Progress: [███████░░░] 71%
 
 ## Performance Metrics
 
@@ -46,7 +46,7 @@ Progress: [██████▓░░░] 67%
 | 6. Inline Code Snippets | 2/2 | 6min | 3min |
 | 7. Quick Wins | 1/1 | 4min | 4min |
 | 8. Testing | 1/1 | 3min | 3min |
-| 9. Security Boundary Doc | 0/? | - | - |
+| 9. Security Boundary Doc | 1/1 | 2min | 2min |
 | 10. DAST French | 0/? | - | - |
 | 11. Instructor Tools | 0/? | - | - |
 | 12. Instructor Answer Key | 0/2 | - | - |
@@ -60,6 +60,7 @@ Progress: [██████▓░░░] 67%
 | Phase 06 P02 | 2min | 2 tasks | 1 files |
 | Phase 07 P01 | 4min | 3 tasks | 7 files |
 | Phase 08 P01 | 3min | 2 tasks | 6 files |
+| Phase 09 P01 | 2min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -79,6 +80,9 @@ Recent decisions affecting current work:
 - [Phase 07]: Prev/next navigation reuses DIFFICULTY_MAP/DIFFICULTY_ORDER for consistency with student-lab sort
 - [Phase 08]: Used French assertion text ("refus") in tests -- error template renders via i18n, not raw English message
 - [Phase 08]: Zero new npm dependencies -- only built-in node:test, node:assert, node:http
+- [Phase 09]: No code snippets in SECURITY-BOUNDARY.md -- file:line references only (per user decision)
+- [Phase 09]: English language for SECURITY-BOUNDARY.md (per user decision)
+- [Phase 09]: Real findings listed without severity rating -- status only (Open / Accepted Risk)
 
 ### Roadmap Evolution
 
@@ -97,6 +101,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-19T22:52:14.225Z
-Stopped at: Phase 9 context gathered
-Resume file: .planning/phases/09-security-boundary-documentation/09-CONTEXT.md
+Last session: 2026-03-19T23:05:51Z
+Stopped at: Completed 09-01-PLAN.md
+Resume file: .planning/phases/09-security-boundary-documentation/09-01-SUMMARY.md

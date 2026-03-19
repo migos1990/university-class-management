@@ -31,7 +31,7 @@ Requirements for v1.1 Polish & Pedagogy release. Each maps to roadmap phases.
 
 ### Security Boundary Documentation
 
-- [ ] **SDOC-01**: SECURITY-BOUNDARY.md documents all 12 intentional vulnerabilities (purpose, location) separately from real security findings
+- [x] **SDOC-01**: SECURITY-BOUNDARY.md documents all 12 intentional vulnerabilities (purpose, location) separately from real security findings
 
 ### DAST French Translation
 
@@ -133,7 +133,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TEST-01 | Phase 8 | Complete |
 | TEST-02 | Phase 8 | Complete |
 | TEST-03 | Phase 8 | Complete |
-| SDOC-01 | Phase 9 | Pending |
+| SDOC-01 | Phase 9 | Complete |
 | DAST-01 | Phase 10 | Pending |
 | DAST-02 | Phase 10 | Pending |
 | INST-01 | Phase 11 | Pending |
