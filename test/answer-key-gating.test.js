@@ -38,8 +38,8 @@ describe('TEST-02: Answer Key Role-Gating', () => {
 
     assert.strictEqual(res.statusCode, 403);
     assert.ok(
-      res.body.includes('Access Denied'),
-      'Response body should contain "Access Denied"'
+      res.body.includes('refus'),
+      'Response body should contain access denied text (French: "Accès refusé")'
     );
   });
 
