@@ -81,6 +81,12 @@ Login as **admin** and visit the **Security Panel** to toggle these features:
 
 ---
 
+## Security
+
+This project contains **intentional security vulnerabilities** for educational purposes. Before reporting a vulnerability or submitting a fix, read [SECURITY-BOUNDARY.md](SECURITY-BOUNDARY.md) to understand which issues are deliberate teaching tools and which are real findings.
+
+---
+
 ## Security Curriculum Labs
 
 The platform includes four specialized labs for hands-on security training:
