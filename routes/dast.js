@@ -3,6 +3,7 @@ const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/rbac');
 const { db } = require('../config/database');
+const { dastLocalize, t } = require('../utils/i18n');
 
 // Helper: import a DAST scenario's confirmed finding into the VM
 function importToVM(scenarioId, importedBy) {
@@ -42,9 +43,11 @@ router.get('/', requireAuth, (req, res) => {
     const findingMap = {};
     myFindings.forEach(f => { findingMap[f.scenario_id] = f; });
 
+    const lang = req.session.language || 'fr';
+    const localizedScenarios = scenarios.map(s => dastLocalize(s, lang));
     return res.render('dast/student-lab', {
-      title: 'DAST Lab',
-      scenarios,
+      title: t(lang, 'dast.studentLab.title'),
+      scenarios: localizedScenarios,
       findingMap,
       securitySettings: req.securitySettings
     });
@@ -61,9 +64,11 @@ router.get('/', requireAuth, (req, res) => {
   const vmImported = db.prepare("SELECT * FROM vulnerabilities WHERE source = 'dast'").all();
   const importedIds = new Set(vmImported.map(v => v.source_id));
 
+  const lang = req.session.language || 'fr';
+  const localizedScenarios = scenarios.map(s => dastLocalize(s, lang));
   res.render('dast/instructor', {
-    title: 'DAST — Instructor Dashboard',
-    scenarios,
+    title: t(lang, 'dast.instructor.title'),
+    scenarios: localizedScenarios,
     students,
     countMap,
     importedIds
@@ -75,8 +80,11 @@ router.get('/scenarios/:id', requireAuth, (req, res) => {
   const scenario = db.prepare('SELECT * FROM dast_scenarios WHERE id = ?').get(parseInt(req.params.id));
   if (!scenario) return res.status(404).render('error', { message: 'Scenario not found', error: { status: 404 } });
 
+  const lang = req.session.language || 'fr';
+  const localizedScenario = dastLocalize(scenario, lang);
+
   let steps = [];
-  try { steps = JSON.parse(scenario.steps); } catch(e) { steps = []; }
+  try { steps = JSON.parse(localizedScenario.steps); } catch(e) { steps = []; }
 
   const user = req.session.user;
   let myFinding = null;
@@ -95,8 +103,8 @@ router.get('/scenarios/:id', requireAuth, (req, res) => {
   ).get('dast', scenario.id);
 
   res.render('dast/scenario-detail', {
-    title: `DAST: ${scenario.title}`,
-    scenario,
+    title: `DAST: ${localizedScenario.title}`,
+    scenario: localizedScenario,
     steps,
     myFinding,
     allFindings,
@@ -111,17 +119,18 @@ router.get('/scenarios/:id/precondition', requireAuth, (req, res) => {
 
   const settings = req.securitySettings;
   const pre = scenario.precondition;
+  const lang = req.session.language || 'fr';
 
   if (pre === 'none') {
-    return res.json({ met: true, message: 'No precondition required — scenario is always available.' });
+    return res.json({ met: true, message: t(lang, 'dast.precondition.none') });
   }
   if (pre === 'rbac_disabled') {
     const met = !settings.rbac_enabled;
     return res.json({
       met,
       message: met
-        ? 'RBAC is OFF — scenario is unlocked.'
-        : 'Requires RBAC to be disabled. Ask your instructor to toggle it in the Security Panel.'
+        ? t(lang, 'dast.precondition.rbacMet')
+        : t(lang, 'dast.precondition.rbacUnmet')
     });
   }
   if (pre === 'rate_limit_disabled') {
@@ -129,12 +138,12 @@ router.get('/scenarios/:id/precondition', requireAuth, (req, res) => {
     return res.json({
       met,
       message: met
-        ? 'Rate limiting is OFF — scenario is unlocked.'
-        : 'Requires Rate Limiting to be disabled. Ask your instructor to toggle it in the Security Panel.'
+        ? t(lang, 'dast.precondition.rateLimitMet')
+        : t(lang, 'dast.precondition.rateLimitUnmet')
     });
   }
 
-  res.json({ met: false, message: `Unknown precondition: ${pre}` });
+  res.json({ met: false, message: t(lang, 'dast.precondition.unknown', { precondition: pre }) });
 });
 
 // ─── POST /dast/scenarios/:id/findings ─── Student submit finding
