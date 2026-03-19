@@ -18,10 +18,10 @@ Requirements for v1.1 Polish & Pedagogy release. Each maps to roadmap phases.
 
 ### Quick Wins
 
-- [ ] **QWIN-01**: Security status bar badges display in French on every page
-- [ ] **QWIN-02**: SCA completion celebration banner shown when student submits all 12 findings
-- [ ] **QWIN-03**: Finding detail page has prev/next navigation arrows between findings
-- [ ] **QWIN-04**: POST /api/instructor-message and GET /api/summary require authentication
+- [x] **QWIN-01**: Security status bar badges display in French on every page
+- [x] **QWIN-02**: SCA completion celebration banner shown when student submits all 12 findings
+- [x] **QWIN-03**: Finding detail page has prev/next navigation arrows between findings
+- [x] **QWIN-04**: POST /api/instructor-message and GET /api/summary require authentication
 
 ### Testing
 
@@ -126,10 +126,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SNIP-03 | Phase 6 | Complete |
 | SNIP-04 | Phase 6 | Complete |
 | SNIP-05 | Phase 6 | Complete |
-| QWIN-01 | Phase 7 | Pending |
-| QWIN-02 | Phase 7 | Pending |
-| QWIN-03 | Phase 7 | Pending |
-| QWIN-04 | Phase 7 | Pending |
+| QWIN-01 | Phase 7 | Complete |
+| QWIN-02 | Phase 7 | Complete |
+| QWIN-03 | Phase 7 | Complete |
+| QWIN-04 | Phase 7 | Complete |
 | TEST-01 | Phase 8 | Pending |
 | TEST-02 | Phase 8 | Pending |
 | TEST-03 | Phase 8 | Pending |

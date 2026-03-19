@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Polish & Pedagogy
 status: executing
-stopped_at: Completed 06-02-PLAN.md
-last_updated: "2026-03-12T20:25:00.000Z"
-last_activity: 2026-03-12 -- Completed Phase 6 Plan 2 (student-lab code preview)
+stopped_at: Completed 07-01-PLAN.md (Phase 7 fully complete)
+last_updated: "2026-03-19T16:35:35Z"
+last_activity: 2026-03-19 -- Completed Phase 7 Quick Wins (badges, celebration, nav, auth)
 progress:
   total_phases: 11
-  completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  completed_phases: 2
+  total_plans: 5
+  completed_plans: 3
   percent: 9
 ---
 
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** The SCA lab must work flawlessly end-to-end in French -- from Codespace boot to student submission to instructor review -- with zero friction for non-technical students.
-**Current focus:** Phase 6 complete -- ready for Phase 7 (Quick Wins)
+**Current focus:** Phase 7 complete -- ready for Phase 8 (Testing)
 
 ## Current Position
 
-Phase: 6 of 16 (Inline Code Snippets) -- COMPLETE
-Plan: 2 of 2 (all plans complete)
-Status: Phase 6 complete, ready for Phase 7 (Quick Wins) planning
-Last activity: 2026-03-19 -- Roadmap expanded from product review (phases 7-16)
+Phase: 7 of 16 (Quick Wins) -- COMPLETE
+Plan: 1 of 1 (all plans complete)
+Status: Phase 7 complete, ready for Phase 8 (Testing) planning
+Last activity: 2026-03-19 -- Completed Phase 7 Quick Wins (badges, celebration, nav, auth)
 
-Progress: [█░░░░░░░░░] 9%
+Progress: [██████░░░░] 60%
 
 ## Performance Metrics
 
@@ -44,7 +44,7 @@ Progress: [█░░░░░░░░░] 9%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 6. Inline Code Snippets | 2/2 | 6min | 3min |
-| 7. Quick Wins | 0/? | - | - |
+| 7. Quick Wins | 1/1 | 4min | 4min |
 | 8. Testing | 0/? | - | - |
 | 9. Security Boundary Doc | 0/? | - | - |
 | 10. DAST French | 0/? | - | - |
@@ -58,6 +58,7 @@ Progress: [█░░░░░░░░░] 9%
 *Updated after each plan completion*
 | Phase 06 P01 | 4min | 2 tasks | 10 files |
 | Phase 06 P02 | 2min | 2 tasks | 1 files |
+| Phase 07 P01 | 4min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,9 @@ Recent decisions affecting current work:
 - [Phase 06]: Vendored Prism.js locally for offline Codespace reliability
 - [Phase 06]: Conditional asset loading via needsPrism flag to avoid Prism on non-SCA pages
 - [Phase 06]: Code preview scoped to student-lab cards only -- instructor views unchanged
+- [Phase 07]: Used AMF (Authentification multifacteur) for MFA badge -- standard Quebec French security terminology
+- [Phase 07]: Accepted classroom-manager broadcast breakage from requireAuth -- explicit per QWIN-04 requirement
+- [Phase 07]: Prev/next navigation reuses DIFFICULTY_MAP/DIFFICULTY_ORDER for consistency with student-lab sort
 
 ### Roadmap Evolution
 
@@ -90,6 +94,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-12T20:25:00.000Z
-Stopped at: Completed 06-02-PLAN.md (Phase 6 fully complete)
+Last session: 2026-03-19T16:35:35Z
+Stopped at: Completed 07-01-PLAN.md (Phase 7 fully complete)
 Resume file: None
