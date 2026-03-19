@@ -25,9 +25,9 @@ Requirements for v1.1 Polish & Pedagogy release. Each maps to roadmap phases.
 
 ### Testing
 
-- [ ] **TEST-01**: Integration tests verify SCA review submission workflow (student submits classification, data persists)
-- [ ] **TEST-02**: Integration tests verify answer key role-gating (student denied, instructor allowed)
-- [ ] **TEST-03**: Integration tests verify /api/instructor-message and /api/summary require auth
+- [x] **TEST-01**: Integration tests verify SCA review submission workflow (student submits classification, data persists)
+- [x] **TEST-02**: Integration tests verify answer key role-gating (student denied, instructor allowed)
+- [x] **TEST-03**: Integration tests verify /api/instructor-message and /api/summary require auth
 
 ### Security Boundary Documentation
 
@@ -130,9 +130,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | QWIN-02 | Phase 7 | Complete |
 | QWIN-03 | Phase 7 | Complete |
 | QWIN-04 | Phase 7 | Complete |
-| TEST-01 | Phase 8 | Pending |
-| TEST-02 | Phase 8 | Pending |
-| TEST-03 | Phase 8 | Pending |
+| TEST-01 | Phase 8 | Complete |
+| TEST-02 | Phase 8 | Complete |
+| TEST-03 | Phase 8 | Complete |
 | SDOC-01 | Phase 9 | Pending |
 | DAST-01 | Phase 10 | Pending |
 | DAST-02 | Phase 10 | Pending |

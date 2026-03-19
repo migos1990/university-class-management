@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Polish & Pedagogy
-status: planning
-stopped_at: Phase 8 context gathered
-last_updated: "2026-03-19T18:47:19.565Z"
-last_activity: 2026-03-19 -- Completed Phase 7 Quick Wins (badges, celebration, nav, auth)
+status: executing
+stopped_at: Completed 08-01-PLAN.md
+last_updated: "2026-03-19T21:17:00Z"
+last_activity: 2026-03-19 -- Completed Phase 8 Testing (integration tests)
 progress:
   total_phases: 11
-  completed_phases: 2
-  total_plans: 5
-  completed_plans: 3
-  percent: 60
+  completed_phases: 3
+  total_plans: 6
+  completed_plans: 4
+  percent: 67
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** The SCA lab must work flawlessly end-to-end in French -- from Codespace boot to student submission to instructor review -- with zero friction for non-technical students.
-**Current focus:** Phase 7 complete -- ready for Phase 8 (Testing)
+**Current focus:** Phase 8 complete -- ready for Phase 9 (Security Boundary Doc)
 
 ## Current Position
 
-Phase: 7 of 16 (Quick Wins) -- COMPLETE
+Phase: 8 of 16 (Testing) -- COMPLETE
 Plan: 1 of 1 (all plans complete)
-Status: Phase 7 complete, ready for Phase 8 (Testing) planning
-Last activity: 2026-03-19 -- Completed Phase 7 Quick Wins (badges, celebration, nav, auth)
+Status: Phase 8 complete, ready for Phase 9 (Security Boundary Doc) planning
+Last activity: 2026-03-19 -- Completed Phase 8 Testing (integration tests)
 
-Progress: [██████░░░░] 60%
+Progress: [██████▓░░░] 67%
 
 ## Performance Metrics
 
@@ -45,7 +45,7 @@ Progress: [██████░░░░] 60%
 |-------|-------|-------|----------|
 | 6. Inline Code Snippets | 2/2 | 6min | 3min |
 | 7. Quick Wins | 1/1 | 4min | 4min |
-| 8. Testing | 0/? | - | - |
+| 8. Testing | 1/1 | 3min | 3min |
 | 9. Security Boundary Doc | 0/? | - | - |
 | 10. DAST French | 0/? | - | - |
 | 11. Instructor Tools | 0/? | - | - |
@@ -59,6 +59,7 @@ Progress: [██████░░░░] 60%
 | Phase 06 P01 | 4min | 2 tasks | 10 files |
 | Phase 06 P02 | 2min | 2 tasks | 1 files |
 | Phase 07 P01 | 4min | 3 tasks | 7 files |
+| Phase 08 P01 | 3min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -76,6 +77,8 @@ Recent decisions affecting current work:
 - [Phase 07]: Used AMF (Authentification multifacteur) for MFA badge -- standard Quebec French security terminology
 - [Phase 07]: Accepted classroom-manager broadcast breakage from requireAuth -- explicit per QWIN-04 requirement
 - [Phase 07]: Prev/next navigation reuses DIFFICULTY_MAP/DIFFICULTY_ORDER for consistency with student-lab sort
+- [Phase 08]: Used French assertion text ("refus") in tests -- error template renders via i18n, not raw English message
+- [Phase 08]: Zero new npm dependencies -- only built-in node:test, node:assert, node:http
 
 ### Roadmap Evolution
 
@@ -94,6 +97,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-19T18:47:19.559Z
-Stopped at: Phase 8 context gathered
-Resume file: .planning/phases/08-testing/08-CONTEXT.md
+Last session: 2026-03-19T21:17:00Z
+Stopped at: Completed 08-01-PLAN.md
+Resume file: .planning/phases/08-testing/08-01-SUMMARY.md
