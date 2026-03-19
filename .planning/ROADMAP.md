@@ -65,10 +65,10 @@ Plans:
   2. Students who submit all 12 SCA findings see a celebration banner ("Bravo!") confirming completion
   3. Finding detail page has prev/next navigation arrows so students don't have to go back to the list after each finding
   4. POST /api/instructor-message and GET /api/summary require authentication (currently unauthenticated)
-**Plans**: TBD
+**Plans:** 1 plan
 
 Plans:
-- [ ] 07-01: TBD
+- [ ] 07-01-PLAN.md -- French security badges, SCA celebration banner, prev/next finding nav, API auth hardening
 
 ### Phase 8: Testing
 **Goal**: Core user actions and security-critical paths have integration test coverage, catching regressions before they reach the classroom
@@ -207,7 +207,7 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 4. SCA Instructor Experience | v1.0 | 2/2 | Complete | 2026-03-12 |
 | 5. Deployment Verification | v1.0 | 2/2 | Complete | 2026-03-12 |
 | 6. Inline Code Snippets | v1.1 | 2/2 | Complete | 2026-03-12 |
-| 7. Quick Wins | v1.1 | 0/? | Not started | - |
+| 7. Quick Wins | v1.1 | 0/1 | Planned | - |
 | 8. Testing | v1.1 | 0/? | Not started | - |
 | 9. Security Boundary Doc | v1.1 | 0/? | Not started | - |
 | 10. DAST French | v1.1 | 0/? | Not started | - |
