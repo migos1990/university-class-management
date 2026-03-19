@@ -8,7 +8,8 @@
     "setup": "node scripts/setup.js",
     "stop": "node scripts/classroom-stop.js",
     "test": "node scripts/smoke-test.js",
-    "test:open": "node scripts/smoke-test.js --open"
+    "test:open": "node scripts/smoke-test.js --open",
+    "test:integration": "node --test test/*.test.js"
   },
   "keywords": [
     "education",

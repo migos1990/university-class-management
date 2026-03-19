@@ -250,4 +250,9 @@ router.post('/import-to-vm/:id', requireAuth, requireRole(['admin', 'professor']
   res.json(result);
 });
 
+// --- GET /sca/answer-key --- Stub for Phase 12 (role-gated)
+router.get('/answer-key', requireAuth, requireRole(['admin', 'professor']), (req, res) => {
+  res.json({ placeholder: true, message: 'Answer key coming in Phase 12' });
+});
+
 module.exports = { router, importToVM };
