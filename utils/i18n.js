@@ -108,9 +108,36 @@ function localize(finding, lang) {
   return localized;
 }
 
+/**
+ * Localize a DAST scenario by overlaying translations from fr.json.
+ * @param {object} scenario - DAST scenario object from database
+ * @param {string} lang - Language code ('fr' or 'en')
+ * @returns {object} Copy of scenario with translated text fields
+ */
+function dastLocalize(scenario, lang) {
+  if (lang === 'en') return scenario;
+
+  const fields = ['title', 'description', 'steps', 'expected_finding'];
+  const localized = { ...scenario };
+
+  for (const field of fields) {
+    const key = `dast.scenarios.${scenario.id}.${field}`;
+    const translated = t(lang, key);
+    if (translated !== key) {
+      // steps is stored as JSON string in DB; t() returns a JS array from fr.json
+      localized[field] = (field === 'steps' && Array.isArray(translated))
+        ? JSON.stringify(translated)
+        : translated;
+    }
+  }
+
+  return localized;
+}
+
 module.exports = {
   t,
   localize,
+  dastLocalize,
   languageMiddleware,
   translations
 };

@@ -540,5 +540,184 @@
         "hint3": "What cookie flag prevents transmission over an insecure connection?"
       }
     }
+  },
+  "dast": {
+    "scenarios": {
+      "1": {
+        "title": "IDOR: Access Another Student's Grades",
+        "description": "When RBAC is disabled the server skips ownership checks. A student can view any other student's grades by modifying the student ID in the URL.",
+        "steps": [
+          "Log in as alice_student (password: student123)",
+          "Navigate to My Classes and note your student ID in the URL",
+          "Go to /classes and find a class you are not enrolled in",
+          "Manually change the student ID in the URL to another student's ID (e.g., try IDs 1-8)",
+          "Observe that you can read enrolment records and grades belonging to other students",
+          "Document the affected URL, the IDs you were able to access, and the data exposed"
+        ],
+        "expected_finding": "Student can read grade records belonging to other users without authorisation"
+      },
+      "2": {
+        "title": "Plaintext Password Storage in Database",
+        "description": "Passwords are stored in plaintext in the JSON database. Anyone who can read the database file — or trigger a backup download — obtains every user's password.",
+        "steps": [
+          "Log in as admin (password: admin123)",
+          "Go to Admin → Backup & Restore",
+          "Click \"Create Backup Now\" then download the backup file",
+          "Open the JSON file and locate the users array",
+          "Observe that the password field contains the plaintext password for every user",
+          "Note that you can now log in as any user without needing to crack any hash"
+        ],
+        "expected_finding": "Plaintext passwords visible in the database backup"
+      },
+      "3": {
+        "title": "CSRF: Force Admin to Disable Security Feature",
+        "description": "State-changing POST requests do not include CSRF tokens. An attacker can craft a page that, when visited by a logged-in admin, silently disables a security setting.",
+        "steps": [
+          "Log in as admin and note that Audit Logging is currently enabled",
+          "Open browser DevTools → Network tab",
+          "Toggle Audit Logging off and on, capture the POST request",
+          "Craft an HTML page with a hidden form that submits the same POST to the same URL",
+          "Send the link to the admin (or open it in a second tab while still logged in as admin)",
+          "Observe that the security setting changes without any CSRF token being required"
+        ],
+        "expected_finding": "Security settings can be changed by a forged cross-origin request"
+      },
+      "4": {
+        "title": "Brute Force MFA Verification (No Rate Limit)",
+        "description": "The MFA token verification endpoint does not enforce rate limiting. An attacker can automate requests to guess a 6-digit TOTP code (1 000 000 possible values) within seconds.",
+        "steps": [
+          "Enable MFA for alice_student from the profile page",
+          "Log out, then attempt to log in as alice_student",
+          "At the MFA prompt, intercept the POST /auth/verify-mfa request with Burp Suite or a script",
+          "Send 1000 sequential 6-digit codes via repeater/intruder in under 60 seconds",
+          "Observe that none of the requests return a 429 Too Many Requests response",
+          "Note that a real attacker could exhaust the full keyspace in ~17 minutes"
+        ],
+        "expected_finding": "MFA verification accepts unlimited attempts with no lockout"
+      },
+      "5": {
+        "title": "Credentials Exposed in Server Logs",
+        "description": "The server logs the plaintext username and password on every login attempt. The logs are accessible in the admin panel.",
+        "steps": [
+          "Log in as admin and open the Audit Logs page",
+          "In a second tab, attempt to log in as any user (successful or failed)",
+          "Return to Audit Logs and observe the new entry",
+          "If you have server console access, inspect the console output for the login attempt",
+          "Note the plaintext password visible in the console/log entry",
+          "Consider the impact if these logs are shipped to a centralised log system"
+        ],
+        "expected_finding": "User passwords appear in plaintext in application logs"
+      },
+      "6": {
+        "title": "Path Traversal: Read Arbitrary Server Files via Backup Download",
+        "description": "The backup download endpoint uses the filename from the URL without sanitisation. An admin (or attacker with admin access) can request any file on the server.",
+        "steps": [
+          "Log in as admin",
+          "Navigate to Admin → Backup & Restore and create at least one backup",
+          "Note the backup filename format: backup-YYYY-MM-DD-HHMMSS.json",
+          "Modify the download URL, replacing the filename with: ../../package.json",
+          "Observe that the server returns the contents of package.json",
+          "Try ../../.env or ../../config/database.js to see what other files are readable"
+        ],
+        "expected_finding": "Path traversal allows reading arbitrary server files"
+      }
+    },
+    "studentLab": {
+      "title": "Dynamic Analysis Lab",
+      "subtitle": "Follow each scenario step-by-step, exploit the vulnerability, then document your findings.",
+      "requires": "Requires: {feature} OFF",
+      "submitted": "Submitted",
+      "draftSaved": "Draft saved",
+      "viewEdit": "View / Edit",
+      "continue": "Continue",
+      "start": "Start"
+    },
+    "form": {
+      "stepsHeading": "Steps",
+      "documentHeading": "Document Your Finding",
+      "triggeredQuestion": "Did you successfully trigger the vulnerability?",
+      "evidence": "Evidence / Proof (URL, response, screenshot description)",
+      "impact": "Impact Assessment",
+      "reproduction": "Reproduction Steps",
+      "recommendation": "Your Recommendation",
+      "severityRating": "Your Severity Rating",
+      "selectOption": "-- select --",
+      "saveDraft": "Save Draft",
+      "submit": "Submit",
+      "triggered": "Triggered?"
+    },
+    "common": {
+      "backToLab": "DAST Lab",
+      "submitted": "Submitted",
+      "draft": "Draft"
+    },
+    "detail": {
+      "stepsTitle": "Step-by-Step Instructions",
+      "affectedFile": "Affected file:",
+      "lines": "lines",
+      "studentSubmissions": "Student Submissions ({count})",
+      "yourFinding": "Your Finding",
+      "submittedOn": "Submitted on",
+      "vulnManager": "Vulnerability Manager",
+      "importedAs": "Imported as",
+      "pushToVM": "Push to VM",
+      "expectedFinding": "Expected Finding",
+      "tableHeaders": {
+        "student": "Student",
+        "triggered": "Triggered?",
+        "severity": "Severity",
+        "status": "Status",
+        "grade": "Grade"
+      }
+    },
+    "instructor": {
+      "title": "Dynamic Analysis — Instructor Dashboard",
+      "subtitle": "{scenarioCount} scenarios | {studentCount} students",
+      "scenariosHeading": "Scenarios",
+      "alwaysOn": "Always on",
+      "inVM": "In VM",
+      "pushToVM": "Push to VM",
+      "studentSubmissions": "{title} — Student Submissions ({count})",
+      "triggered": "Triggered",
+      "notTriggered": "Not triggered",
+      "gradeBtn": "Grade",
+      "gradeFeedbackTitle": "Grade / Feedback",
+      "gradeLabel": "Grade",
+      "feedbackLabel": "Instructor Feedback",
+      "tableHeaders": {
+        "id": "#",
+        "scenario": "Scenario",
+        "type": "Type",
+        "severity": "Sev.",
+        "precondition": "Precondition",
+        "submissions": "Submissions",
+        "vm": "VM",
+        "studentId": "Student ID",
+        "triggered": "Triggered?",
+        "severityCol": "Severity",
+        "submitted": "Submitted",
+        "grade": "Grade",
+        "actions": "Actions"
+      }
+    },
+    "precondition": {
+      "none": "No precondition required — scenario is always available.",
+      "rbacMet": "RBAC is OFF — scenario is unlocked.",
+      "rbacUnmet": "Requires RBAC to be disabled. Ask your instructor to toggle it in the Security Panel.",
+      "rateLimitMet": "Rate limiting is OFF — scenario is unlocked.",
+      "rateLimitUnmet": "Requires Rate Limiting to be disabled. Ask your instructor to toggle it in the Security Panel.",
+      "unknown": "Unknown precondition: {precondition}"
+    },
+    "js": {
+      "saving": "Saving...",
+      "savedDraft": "Draft saved.",
+      "submitted": "Submitted!",
+      "errorSaving": "Error saving.",
+      "networkError": "Network error.",
+      "checkingPrecondition": "Checking precondition...",
+      "confirmImport": "Push this scenario to the Vulnerability Manager?",
+      "imported": "Imported! Reloading...",
+      "importing": "Importing..."
+    }
   }
 }

@@ -540,5 +540,184 @@
         "hint3": "Quel indicateur de cookie empêche la transmission sur une connexion non sécurisée ?"
       }
     }
+  },
+  "dast": {
+    "scenarios": {
+      "1": {
+        "title": "IDOR : Acc\u00e9der aux notes d\u2019un autre \u00e9tudiant",
+        "description": "Lorsque le RBAC est d\u00e9sactiv\u00e9, le serveur ne v\u00e9rifie pas la propri\u00e9t\u00e9 des ressources. Un \u00e9tudiant peut consulter les notes de n\u2019importe quel autre \u00e9tudiant en modifiant l\u2019identifiant dans l\u2019URL.",
+        "steps": [
+          "Connectez-vous en tant que alice_student (mot de passe\u00a0: student123)",
+          "Naviguez vers Mes cours et notez votre identifiant \u00e9tudiant dans l\u2019URL",
+          "Allez \u00e0 /classes et trouvez un cours auquel vous n\u2019\u00eates pas inscrit",
+          "Modifiez manuellement l\u2019identifiant \u00e9tudiant dans l\u2019URL pour celui d\u2019un autre \u00e9tudiant (essayez les ID 1 \u00e0 8)",
+          "Observez que vous pouvez lire les dossiers d\u2019inscription et les notes d\u2019autres \u00e9tudiants",
+          "Documentez l\u2019URL affect\u00e9e, les identifiants auxquels vous avez pu acc\u00e9der et les donn\u00e9es expos\u00e9es"
+        ],
+        "expected_finding": "L\u2019\u00e9tudiant peut lire les dossiers de notes appartenant \u00e0 d\u2019autres utilisateurs sans autorisation"
+      },
+      "2": {
+        "title": "Stockage des mots de passe en clair dans la base de donn\u00e9es",
+        "description": "Les mots de passe sont stock\u00e9s en clair dans la base de donn\u00e9es JSON. Toute personne pouvant lire le fichier de base de donn\u00e9es \u2014 ou d\u00e9clencher un t\u00e9l\u00e9chargement de sauvegarde \u2014 obtient le mot de passe de chaque utilisateur.",
+        "steps": [
+          "Connectez-vous en tant que admin (mot de passe\u00a0: admin123)",
+          "Allez \u00e0 Administration \u2192 Sauvegarde et restauration",
+          "Cliquez sur \u00ab\u00a0Cr\u00e9er une sauvegarde maintenant\u00a0\u00bb puis t\u00e9l\u00e9chargez le fichier de sauvegarde",
+          "Ouvrez le fichier JSON et localisez le tableau des utilisateurs",
+          "Observez que le champ password contient le mot de passe en clair de chaque utilisateur",
+          "Notez que vous pouvez maintenant vous connecter en tant que n\u2019importe quel utilisateur sans avoir \u00e0 d\u00e9chiffrer un hachage"
+        ],
+        "expected_finding": "Les mots de passe en clair sont visibles dans la sauvegarde de la base de donn\u00e9es"
+      },
+      "3": {
+        "title": "CSRF\u00a0: Forcer un administrateur \u00e0 d\u00e9sactiver une fonctionnalit\u00e9 de s\u00e9curit\u00e9",
+        "description": "Les requ\u00eates POST modifiant l\u2019\u00e9tat ne contiennent pas de jeton CSRF. Un attaquant peut cr\u00e9er une page qui, lorsque visit\u00e9e par un administrateur connect\u00e9, d\u00e9sactive silencieusement un param\u00e8tre de s\u00e9curit\u00e9.",
+        "steps": [
+          "Connectez-vous en tant que admin et v\u00e9rifiez que la journalisation d\u2019audit est actuellement activ\u00e9e",
+          "Ouvrez les outils de d\u00e9veloppement du navigateur \u2192 onglet R\u00e9seau",
+          "D\u00e9sactivez puis r\u00e9activez la journalisation d\u2019audit, et capturez la requ\u00eate POST",
+          "Cr\u00e9ez une page HTML avec un formulaire cach\u00e9 qui soumet la m\u00eame requ\u00eate POST \u00e0 la m\u00eame URL",
+          "Envoyez le lien \u00e0 l\u2019administrateur (ou ouvrez-le dans un second onglet en \u00e9tant toujours connect\u00e9 en tant que admin)",
+          "Observez que le param\u00e8tre de s\u00e9curit\u00e9 change sans qu\u2019aucun jeton CSRF ne soit requis"
+        ],
+        "expected_finding": "Les param\u00e8tres de s\u00e9curit\u00e9 peuvent \u00eatre modifi\u00e9s par une requ\u00eate forg\u00e9e d\u2019origine crois\u00e9e"
+      },
+      "4": {
+        "title": "Force brute sur la v\u00e9rification AMF (aucune limitation de d\u00e9bit)",
+        "description": "Le point d\u2019acc\u00e8s de v\u00e9rification du jeton AMF n\u2019applique aucune limitation de d\u00e9bit. Un attaquant peut automatiser les requ\u00eates pour deviner un code TOTP \u00e0 6 chiffres (1\u00a0000\u00a0000 valeurs possibles) en quelques secondes.",
+        "steps": [
+          "Activez l\u2019AMF pour alice_student depuis la page de profil",
+          "D\u00e9connectez-vous, puis tentez de vous connecter en tant que alice_student",
+          "Au moment de la saisie AMF, interceptez la requ\u00eate POST /auth/verify-mfa avec Burp Suite ou un script",
+          "Envoyez 1000 codes \u00e0 6 chiffres s\u00e9quentiels via le repeater/intruder en moins de 60 secondes",
+          "Observez qu\u2019aucune des requ\u00eates ne retourne une r\u00e9ponse 429 Too Many Requests",
+          "Notez qu\u2019un v\u00e9ritable attaquant pourrait \u00e9puiser l\u2019espace de cl\u00e9s complet en environ 17 minutes"
+        ],
+        "expected_finding": "La v\u00e9rification AMF accepte un nombre illimit\u00e9 de tentatives sans verrouillage"
+      },
+      "5": {
+        "title": "Identifiants expos\u00e9s dans les journaux du serveur",
+        "description": "Le serveur enregistre le nom d\u2019utilisateur et le mot de passe en clair \u00e0 chaque tentative de connexion. Les journaux sont accessibles dans le panneau d\u2019administration.",
+        "steps": [
+          "Connectez-vous en tant que admin et ouvrez la page des journaux d\u2019audit",
+          "Dans un second onglet, tentez de vous connecter en tant que n\u2019importe quel utilisateur (r\u00e9ussite ou \u00e9chec)",
+          "Revenez aux journaux d\u2019audit et observez la nouvelle entr\u00e9e",
+          "Si vous avez acc\u00e8s \u00e0 la console du serveur, inspectez la sortie console pour la tentative de connexion",
+          "Notez le mot de passe en clair visible dans l\u2019entr\u00e9e de la console ou du journal",
+          "Consid\u00e9rez l\u2019impact si ces journaux sont envoy\u00e9s vers un syst\u00e8me de journalisation centralis\u00e9"
+        ],
+        "expected_finding": "Les mots de passe des utilisateurs apparaissent en clair dans les journaux de l\u2019application"
+      },
+      "6": {
+        "title": "Travers\u00e9e de chemin\u00a0: Lire des fichiers arbitraires du serveur via le t\u00e9l\u00e9chargement de sauvegarde",
+        "description": "Le point d\u2019acc\u00e8s de t\u00e9l\u00e9chargement de sauvegarde utilise le nom de fichier de l\u2019URL sans validation. Un administrateur (ou un attaquant avec un acc\u00e8s administrateur) peut demander n\u2019importe quel fichier sur le serveur.",
+        "steps": [
+          "Connectez-vous en tant que admin",
+          "Naviguez vers Administration \u2192 Sauvegarde et restauration et cr\u00e9ez au moins une sauvegarde",
+          "Notez le format du nom de fichier de sauvegarde\u00a0: backup-YYYY-MM-DD-HHMMSS.json",
+          "Modifiez l\u2019URL de t\u00e9l\u00e9chargement en rempla\u00e7ant le nom de fichier par\u00a0: ../../package.json",
+          "Observez que le serveur retourne le contenu de package.json",
+          "Essayez ../../.env ou ../../config/database.js pour voir quels autres fichiers sont lisibles"
+        ],
+        "expected_finding": "La travers\u00e9e de chemin permet la lecture de fichiers arbitraires du serveur"
+      }
+    },
+    "studentLab": {
+      "title": "Laboratoire d\u2019analyse dynamique",
+      "subtitle": "Suivez chaque sc\u00e9nario \u00e9tape par \u00e9tape, exploitez la vuln\u00e9rabilit\u00e9, puis documentez vos r\u00e9sultats.",
+      "requires": "Requis\u00a0: {feature} OFF",
+      "submitted": "Soumis",
+      "draftSaved": "Brouillon enregistr\u00e9",
+      "viewEdit": "Voir / Modifier",
+      "continue": "Continuer",
+      "start": "Commencer"
+    },
+    "form": {
+      "stepsHeading": "\u00c9tapes",
+      "documentHeading": "Documentez votre r\u00e9sultat",
+      "triggeredQuestion": "Avez-vous r\u00e9ussi \u00e0 d\u00e9clencher la vuln\u00e9rabilit\u00e9\u00a0?",
+      "evidence": "Preuve (URL, r\u00e9ponse, description de capture d\u2019\u00e9cran)",
+      "impact": "\u00c9valuation de l\u2019impact",
+      "reproduction": "\u00c9tapes de reproduction",
+      "recommendation": "Votre recommandation",
+      "severityRating": "Votre \u00e9valuation de la s\u00e9v\u00e9rit\u00e9",
+      "selectOption": "-- s\u00e9lectionner --",
+      "saveDraft": "Enregistrer le brouillon",
+      "submit": "Soumettre",
+      "triggered": "D\u00e9clench\u00e9e\u00a0?"
+    },
+    "common": {
+      "backToLab": "Laboratoire DAST",
+      "submitted": "Soumis",
+      "draft": "Brouillon"
+    },
+    "detail": {
+      "stepsTitle": "Instructions \u00e9tape par \u00e9tape",
+      "affectedFile": "Fichier affect\u00e9\u00a0:",
+      "lines": "lignes",
+      "studentSubmissions": "Soumissions \u00e9tudiantes ({count})",
+      "yourFinding": "Votre r\u00e9sultat",
+      "submittedOn": "Soumis le",
+      "vulnManager": "Gestionnaire de vuln\u00e9rabilit\u00e9s",
+      "importedAs": "Import\u00e9 en tant que",
+      "pushToVM": "Pousser vers le GV",
+      "expectedFinding": "R\u00e9sultat attendu",
+      "tableHeaders": {
+        "student": "\u00c9tudiant",
+        "triggered": "D\u00e9clench\u00e9e\u00a0?",
+        "severity": "S\u00e9v\u00e9rit\u00e9",
+        "status": "Statut",
+        "grade": "Note"
+      }
+    },
+    "instructor": {
+      "title": "Analyse dynamique \u2014 Tableau de bord instructeur",
+      "subtitle": "{scenarioCount} sc\u00e9narios | {studentCount} \u00e9tudiants",
+      "scenariosHeading": "Sc\u00e9narios",
+      "alwaysOn": "Toujours actif",
+      "inVM": "Dans le GV",
+      "pushToVM": "Pousser vers le GV",
+      "studentSubmissions": "{title} \u2014 Soumissions \u00e9tudiantes ({count})",
+      "triggered": "D\u00e9clench\u00e9e",
+      "notTriggered": "Non d\u00e9clench\u00e9e",
+      "gradeBtn": "Noter",
+      "gradeFeedbackTitle": "Note / R\u00e9troaction",
+      "gradeLabel": "Note",
+      "feedbackLabel": "R\u00e9troaction de l\u2019instructeur",
+      "tableHeaders": {
+        "id": "#",
+        "scenario": "Sc\u00e9nario",
+        "type": "Type",
+        "severity": "S\u00e9v.",
+        "precondition": "Pr\u00e9condition",
+        "submissions": "Soumissions",
+        "vm": "GV",
+        "studentId": "ID \u00e9tudiant",
+        "triggered": "D\u00e9clench\u00e9e\u00a0?",
+        "severityCol": "S\u00e9v\u00e9rit\u00e9",
+        "submitted": "Soumis",
+        "grade": "Note",
+        "actions": "Actions"
+      }
+    },
+    "precondition": {
+      "none": "Aucune pr\u00e9condition requise \u2014 le sc\u00e9nario est toujours disponible.",
+      "rbacMet": "Le RBAC est d\u00e9sactiv\u00e9 \u2014 le sc\u00e9nario est accessible.",
+      "rbacUnmet": "Le RBAC doit \u00eatre d\u00e9sactiv\u00e9. Demandez \u00e0 votre instructeur de le d\u00e9sactiver dans le panneau de s\u00e9curit\u00e9.",
+      "rateLimitMet": "La limitation de d\u00e9bit est d\u00e9sactiv\u00e9e \u2014 le sc\u00e9nario est accessible.",
+      "rateLimitUnmet": "La limitation de d\u00e9bit doit \u00eatre d\u00e9sactiv\u00e9e. Demandez \u00e0 votre instructeur de la d\u00e9sactiver dans le panneau de s\u00e9curit\u00e9.",
+      "unknown": "Pr\u00e9condition inconnue\u00a0: {precondition}"
+    },
+    "js": {
+      "saving": "Enregistrement...",
+      "savedDraft": "Brouillon enregistr\u00e9.",
+      "submitted": "Soumis\u00a0!",
+      "errorSaving": "Erreur lors de l\u2019enregistrement.",
+      "networkError": "Erreur r\u00e9seau.",
+      "checkingPrecondition": "V\u00e9rification de la pr\u00e9condition...",
+      "confirmImport": "Pousser ce sc\u00e9nario vers le gestionnaire de vuln\u00e9rabilit\u00e9s\u00a0?",
+      "imported": "Import\u00e9\u00a0! Rechargement...",
+      "importing": "Importation..."
+    }
   }
 }
