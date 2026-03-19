@@ -12,6 +12,7 @@ const { seedDatabase } = require('./utils/seedData');
 const { loadSecuritySettings, getSecuritySettings } = require('./config/security');
 const { languageMiddleware } = require('./utils/i18n');
 const { initializeBackupSystem } = require('./utils/backupManager');
+const { requireAuth } = require('./middleware/auth');
 
 // Initialize app
 const app = express();
@@ -103,27 +104,30 @@ app.get('/health', (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CLASSROOM INTERNAL ENDPOINTS
-// NOTE: No authentication — accessible only on the isolated classroom network
-//       (localhost ports 3001-3012). Do not expose these ports publicly.
+// CLASSROOM INTERNAL ENDPOINTS (auth-protected since Phase 7 / QWIN-04)
+// NOTE: The classroom-manager process (scripts/classroom-manager.js) calls
+//       POST /api/instructor-message via plain HTTP without a session cookie.
+//       After this change, classroom-manager broadcasts will receive a redirect
+//       instead of JSON. To restore broadcasts, the classroom-manager would
+//       need to authenticate or use a different mechanism.
 // ─────────────────────────────────────────────────────────────────────────────
 
 // In-memory broadcast message store (ephemeral; resets on restart)
 let _instructorMessage = null;
 
 // GET /api/instructor-message — student browsers poll this for instructor toasts
-app.get('/api/instructor-message', (req, res) => {
+app.get('/api/instructor-message', requireAuth, (req, res) => {
   res.json({ message: _instructorMessage });
 });
 
 // POST /api/instructor-message — called by classroom-manager broadcast fan-out
-app.post('/api/instructor-message', (req, res) => {
+app.post('/api/instructor-message', requireAuth, (req, res) => {
   _instructorMessage = req.body.message || null;
   res.json({ success: true });
 });
 
 // GET /api/summary — full classroom-visible snapshot of this instance
-app.get('/api/summary', (req, res) => {
+app.get('/api/summary', requireAuth, (req, res) => {
   try {
     // Security config
     const settings = db.prepare('SELECT * FROM security_settings').get();
