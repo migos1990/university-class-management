@@ -559,25 +559,25 @@
         <div class="security-badges">
           <span class="security-label"><%= t('nav.securityStatus') %></span>
           <span class="badge <%= securitySettings.mfa_enabled ? 'badge-success' : 'badge-danger' %>">
-            MFA: <%= securitySettings.mfa_enabled ? 'ON' : 'OFF' %>
+            <%= t('security.badges.mfa') %>: <%= securitySettings.mfa_enabled ? t('security.status.on') : t('security.status.off') %>
           </span>
           <span class="badge <%= securitySettings.rbac_enabled ? 'badge-success' : 'badge-danger' %>">
-            RBAC: <%= securitySettings.rbac_enabled ? 'ON' : 'OFF' %>
+            <%= t('security.badges.rbac') %>: <%= securitySettings.rbac_enabled ? t('security.status.on') : t('security.status.off') %>
           </span>
           <span class="badge <%= securitySettings.encryption_at_rest ? 'badge-success' : 'badge-danger' %>">
-            Passwords: <%= securitySettings.encryption_at_rest ? 'Encrypted' : 'Plaintext' %>
+            <%= t('security.badges.passwords') %>: <%= securitySettings.encryption_at_rest ? t('security.badges.encrypted') : t('security.badges.plaintext') %>
           </span>
           <span class="badge <%= securitySettings.field_encryption ? 'badge-success' : 'badge-danger' %>">
-            Data: <%= securitySettings.field_encryption ? 'Encrypted' : 'Plaintext' %>
+            <%= t('security.badges.data') %>: <%= securitySettings.field_encryption ? t('security.badges.encrypted') : t('security.badges.plaintext') %>
           </span>
           <span class="badge <%= securitySettings.https_enabled ? 'badge-success' : 'badge-danger' %>">
             <%= securitySettings.https_enabled ? 'HTTPS' : 'HTTP' %>
           </span>
           <span class="badge <%= securitySettings.audit_logging ? 'badge-success' : 'badge-danger' %>">
-            Logging: <%= securitySettings.audit_logging ? 'ON' : 'OFF' %>
+            <%= t('security.badges.logging') %>: <%= securitySettings.audit_logging ? t('security.status.on') : t('security.status.off') %>
           </span>
           <span class="badge <%= securitySettings.rate_limiting ? 'badge-success' : 'badge-danger' %>">
-            Rate Limit: <%= securitySettings.rate_limiting ? 'ON' : 'OFF' %>
+            <%= t('security.badges.rateLimit') %>: <%= securitySettings.rate_limiting ? t('security.status.on') : t('security.status.off') %>
           </span>
         </div>
       </div>

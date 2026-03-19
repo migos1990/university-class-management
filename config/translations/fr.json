@@ -74,6 +74,16 @@
     "logoutSuccess": "Déconnexion réussie"
   },
   "security": {
+    "badges": {
+      "mfa": "AMF",
+      "rbac": "RBAC",
+      "passwords": "Mots de passe",
+      "data": "Données",
+      "logging": "Journalisation",
+      "rateLimit": "Limitation de débit",
+      "encrypted": "Chiffré",
+      "plaintext": "Clair"
+    },
     "panel": {
       "title": "Panneau de configuration de sécurité",
       "description": "Activez et désactivez les fonctionnalités de sécurité pour démontrer la différence entre les implémentations sécurisées et non sécurisées.",
@@ -316,7 +326,12 @@
     "backupCodes": "Codes de secours",
     "backupCodesDesc": "Enregistrez ces codes de secours dans un endroit sécurisé. Chaque code peut être utilisé une fois si vous perdez l'accès à votre application d'authentification.",
     "setupComplete": "Configuration MFA terminée",
-    "alreadySetup": "Le MFA est déjà configuré pour votre compte."
+    "alreadySetup": "Le MFA est déjà configuré pour votre compte.",
+    "verifyTitle": "Vérification en deux étapes",
+    "verifySubtitle": "Entrez le code à 6 chiffres de votre application d'authentification",
+    "verifyLabel": "Code de vérification",
+    "verifyButton": "Vérifier",
+    "verifyHelp": "Ouvrez Google Authenticator sur votre appareil mobile et entrez le code à 6 chiffres affiché pour ce compte."
   },
   "login": {
     "demoAccounts": "Comptes de démonstration",
@@ -339,7 +354,9 @@
       "viewEdit": "Voir / Modifier",
       "draftSaved": "Brouillon enregistré",
       "submitted": "Soumis",
-      "progress": "{count} sur {total} complétés"
+      "progress": "{count} sur {total} complétés",
+      "completionTitle": "Bravo !",
+      "completionMessage": "Vous avez analysé et soumis les 12 constats. Excellent travail !"
     },
     "findingDetail": {
       "backToLab": "Laboratoire ACS",

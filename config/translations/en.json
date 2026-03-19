@@ -74,6 +74,16 @@
     "logoutSuccess": "Logged out successfully"
   },
   "security": {
+    "badges": {
+      "mfa": "MFA",
+      "rbac": "RBAC",
+      "passwords": "Passwords",
+      "data": "Data",
+      "logging": "Logging",
+      "rateLimit": "Rate Limit",
+      "encrypted": "Encrypted",
+      "plaintext": "Plaintext"
+    },
     "panel": {
       "title": "Security Configuration Panel",
       "description": "Toggle security features on and off to demonstrate the difference between secure and insecure implementations.",
@@ -316,7 +326,12 @@
     "backupCodes": "Backup Codes",
     "backupCodesDesc": "Save these backup codes in a secure location. Each code can be used once if you lose access to your authenticator app.",
     "setupComplete": "MFA Setup Complete",
-    "alreadySetup": "MFA is already configured for your account."
+    "alreadySetup": "MFA is already configured for your account.",
+    "verifyTitle": "Two-Factor Authentication",
+    "verifySubtitle": "Enter the 6-digit code from your authenticator app",
+    "verifyLabel": "Verification Code",
+    "verifyButton": "Verify",
+    "verifyHelp": "Open Google Authenticator on your mobile device and enter the 6-digit code shown for this account."
   },
   "login": {
     "demoAccounts": "Demo Accounts",
@@ -339,7 +354,9 @@
       "viewEdit": "View / Edit",
       "draftSaved": "Draft saved",
       "submitted": "Submitted",
-      "progress": "{count} of {total} completed"
+      "progress": "{count} of {total} completed",
+      "completionTitle": "Congratulations!",
+      "completionMessage": "You have reviewed and submitted all 12 findings. Well done!"
     },
     "findingDetail": {
       "backToLab": "SCA Lab",

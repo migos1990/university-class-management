@@ -49,6 +49,14 @@
   </div>
 </div>
 
+<% if (submitted === total && total > 0) { %>
+<div class="card" style="background: #d4edda; border: 1px solid #c3e6cb; text-align: center; padding: 2rem; margin-bottom: 1.5rem;">
+  <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">&#127881;</div>
+  <h2 style="color: #155724; margin: 0 0 0.5rem;"><%= t('sca.studentLab.completionTitle') %></h2>
+  <p style="color: #155724; margin: 0;"><%= t('sca.studentLab.completionMessage') %></p>
+</div>
+<% } %>
+
 <%
   const diffColors = {
     easy: { bg: '#e8f8e8', color: '#1e8449' },
