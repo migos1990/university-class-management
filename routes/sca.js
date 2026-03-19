@@ -160,6 +160,16 @@ router.get('/findings/:id', requireAuth, (req, res) => {
   const localizedFinding = localize(finding, lang);
   localizedFinding.difficulty = DIFFICULTY_MAP[finding.id] || 'medium';
 
+  // Compute prev/next navigation using difficulty sort order (matches student-lab list)
+  const allFindings = db.prepare('SELECT id FROM sca_findings').all();
+  const sortedIds = allFindings
+    .map(f => ({ id: f.id, difficulty: DIFFICULTY_MAP[f.id] || 'medium' }))
+    .sort((a, b) => DIFFICULTY_ORDER[a.difficulty] - DIFFICULTY_ORDER[b.difficulty])
+    .map(f => f.id);
+  const currentIndex = sortedIds.indexOf(finding.id);
+  const prevId = currentIndex > 0 ? sortedIds[currentIndex - 1] : null;
+  const nextId = currentIndex < sortedIds.length - 1 ? sortedIds[currentIndex + 1] : null;
+
   const users = user.role !== 'student' ? db.prepare('SELECT id, username FROM users WHERE role = ?').all('student') : null;
 
   res.render('sca/finding-detail', {
@@ -169,7 +179,9 @@ router.get('/findings/:id', requireAuth, (req, res) => {
     allReviews,
     vmEntry,
     users,
-    needsPrism: true
+    needsPrism: true,
+    prevId,
+    nextId
   });
 });
 

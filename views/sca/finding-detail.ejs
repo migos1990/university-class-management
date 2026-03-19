@@ -2,8 +2,18 @@
 
 <div class="page-header">
   <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+    <% if (prevId) { %>
+      <a href="/sca/findings/<%= prevId %>" style="color:#002855; text-decoration:none; font-size:1.5rem; font-weight:bold;" title="<%= t('common.previous') %>">&larr;</a>
+    <% } else { %>
+      <span style="color:#ccc; font-size:1.5rem; font-weight:bold;">&larr;</span>
+    <% } %>
     <a href="/sca" style="color:#666; text-decoration:none; font-size:0.9rem;"><%= t('sca.findingDetail.backToLab') %></a>
-    <h1 class="page-title" style="margin:0;"><%= finding.title %></h1>
+    <h1 class="page-title" style="margin:0; flex:1;"><%= finding.title %></h1>
+    <% if (nextId) { %>
+      <a href="/sca/findings/<%= nextId %>" style="color:#002855; text-decoration:none; font-size:1.5rem; font-weight:bold;" title="<%= t('common.next') %>">&rarr;</a>
+    <% } else { %>
+      <span style="color:#ccc; font-size:1.5rem; font-weight:bold;">&rarr;</span>
+    <% } %>
   </div>
 </div>
 
