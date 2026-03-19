@@ -101,10 +101,10 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. All 6 DAST scenario descriptions, instructions, and results display in Quebec French using the localize() pattern
   2. All DAST views (scenario list, scenario detail, results) display in Quebec French
-**Plans**: TBD
+**Plans:** 1 plan
 
 Plans:
-- [ ] 10-01: TBD
+- [ ] 10-01-PLAN.md -- dastLocalize() function, ~70 i18n keys in fr/en.json, and full French translation of all 3 DAST views + route handlers
 
 ### Phase 11: Instructor Tools
 **Goal**: Instructor can see at a glance which students are active, what they're working on, and their overall progress — enabling timely intervention during class
@@ -210,7 +210,7 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 7. Quick Wins | v1.1 | 0/1 | Planned | - |
 | 8. Testing | v1.1 | 0/1 | Planned | - |
 | 9. Security Boundary Doc | v1.1 | 0/1 | Planned | - |
-| 10. DAST French | v1.1 | 0/? | Not started | - |
+| 10. DAST French | v1.1 | 0/1 | Planned | - |
 | 11. Instructor Tools | v1.1 | 0/? | Not started | - |
 | 12. Instructor Answer Key | v1.1 | 0/2 | Planned | - |
 | 13. Documentation | v1.1 | 0/? | Not started | - |
