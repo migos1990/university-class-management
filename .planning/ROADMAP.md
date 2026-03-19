@@ -56,11 +56,11 @@ Plans:
   2. A student attempting to access the answer key page is denied (redirect or 403) -- the route is role-gated at the handler level, not just hidden in the UI
   3. Instructor viewing a specific finding detail page sees a collapsible inline section with the expected answer, invisible to students even in page source
   4. Answer key page is linked from the instructor dashboard so it is discoverable without memorizing a URL
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 07-01: TBD
-- [ ] 07-02: TBD
+- [ ] 07-01-PLAN.md -- i18n answer key content, standalone answer key page, dashboard link, and role-gating with RBAC-bypass hardening
+- [ ] 07-02-PLAN.md -- Inline collapsible answer on finding detail page and smoke test extensions
 
 ### Phase 8: Documentation
 **Goal**: README and instructor-facing docs accurately describe the v1.1 feature set so a new instructor (or future Julie) can understand and use the platform without tribal knowledge
@@ -103,6 +103,6 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9
 | 4. SCA Instructor Experience | v1.0 | 2/2 | Complete | 2026-03-12 |
 | 5. Deployment Verification | v1.0 | 2/2 | Complete | 2026-03-12 |
 | 6. Inline Code Snippets | v1.1 | 2/2 | Complete | 2026-03-12 |
-| 7. Instructor Answer Key | v1.1 | 0/? | Not started | - |
+| 7. Instructor Answer Key | v1.1 | 0/2 | Not started | - |
 | 8. Documentation | v1.1 | 0/? | Not started | - |
 | 9. Code Quality | v1.1 | 0/? | Not started | - |
