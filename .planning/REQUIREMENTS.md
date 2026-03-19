@@ -35,8 +35,8 @@ Requirements for v1.1 Polish & Pedagogy release. Each maps to roadmap phases.
 
 ### DAST French Translation
 
-- [ ] **DAST-01**: All 6 DAST scenario descriptions, instructions, and results display in Quebec French
-- [ ] **DAST-02**: All DAST views (scenario list, scenario detail, results) display in Quebec French
+- [x] **DAST-01**: All 6 DAST scenario descriptions, instructions, and results display in Quebec French
+- [x] **DAST-02**: All DAST views (scenario list, scenario detail, results) display in Quebec French
 
 ### Instructor Tools
 
@@ -134,8 +134,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TEST-02 | Phase 8 | Complete |
 | TEST-03 | Phase 8 | Complete |
 | SDOC-01 | Phase 9 | Complete |
-| DAST-01 | Phase 10 | Pending |
-| DAST-02 | Phase 10 | Pending |
+| DAST-01 | Phase 10 | Complete |
+| DAST-02 | Phase 10 | Complete |
 | INST-01 | Phase 11 | Pending |
 | INST-02 | Phase 11 | Pending |
 | AKEY-01 | Phase 12 | Pending |

@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Polish & Pedagogy
 status: completed
-stopped_at: Phase 10 context gathered
-last_updated: "2026-03-19T23:32:09.333Z"
-last_activity: 2026-03-19 -- Completed Phase 9 Plan 1 (Security Boundary Doc)
+stopped_at: Completed 10-01-PLAN.md
+last_updated: "2026-03-19T23:56:19.547Z"
+last_activity: 2026-03-19 -- Completed Phase 10 Plan 1 (DAST French Translation)
 progress:
   total_phases: 11
-  completed_phases: 4
-  total_plans: 7
-  completed_plans: 5
-  percent: 71
+  completed_phases: 5
+  total_plans: 8
+  completed_plans: 6
+  percent: 75
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** The SCA lab must work flawlessly end-to-end in French -- from Codespace boot to student submission to instructor review -- with zero friction for non-technical students.
-**Current focus:** Phase 9 complete -- ready for Phase 10 (DAST French)
+**Current focus:** Phase 10 complete -- ready for Phase 11 (Instructor Tools)
 
 ## Current Position
 
-Phase: 9 of 16 (Security Boundary Doc) -- COMPLETE
+Phase: 10 of 16 (DAST French Translation) -- COMPLETE
 Plan: 1 of 1 (all plans complete)
-Status: Phase 9 complete, ready for Phase 10 (DAST French)
-Last activity: 2026-03-19 -- Completed Phase 9 Plan 1 (Security Boundary Doc)
+Status: Phase 10 complete, ready for Phase 11 (Instructor Tools)
+Last activity: 2026-03-19 -- Completed Phase 10 Plan 1 (DAST French Translation)
 
-Progress: [███████░░░] 71%
+Progress: [████████░░] 75%
 
 ## Performance Metrics
 
@@ -47,7 +47,7 @@ Progress: [███████░░░] 71%
 | 7. Quick Wins | 1/1 | 4min | 4min |
 | 8. Testing | 1/1 | 3min | 3min |
 | 9. Security Boundary Doc | 1/1 | 2min | 2min |
-| 10. DAST French | 0/? | - | - |
+| 10. DAST French | 1/1 | 7min | 7min |
 | 11. Instructor Tools | 0/? | - | - |
 | 12. Instructor Answer Key | 0/2 | - | - |
 | 13. Documentation | 0/? | - | - |
@@ -61,6 +61,7 @@ Progress: [███████░░░] 71%
 | Phase 07 P01 | 4min | 3 tasks | 7 files |
 | Phase 08 P01 | 3min | 2 tasks | 6 files |
 | Phase 09 P01 | 2min | 2 tasks | 2 files |
+| Phase 10 P01 | 7min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -83,6 +84,9 @@ Recent decisions affecting current work:
 - [Phase 09]: No code snippets in SECURITY-BOUNDARY.md -- file:line references only (per user decision)
 - [Phase 09]: English language for SECURITY-BOUNDARY.md (per user decision)
 - [Phase 09]: Real findings listed without severity rating -- status only (Open / Accepted Risk)
+- [Phase 10]: dastLocalize() as separate function (not parameterized localize()) -- cleaner SCA vs DAST field set separation
+- [Phase 10]: Unicode escape sequences for French accents in JSON -- reliable cross-platform encoding
+- [Phase 10]: Severity badges and OWASP categories kept in English per locked decision
 
 ### Roadmap Evolution
 
@@ -101,6 +105,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-19T23:32:09.326Z
-Stopped at: Phase 10 context gathered
-Resume file: .planning/phases/10-dast-french-translation/10-CONTEXT.md
+Last session: 2026-03-19T23:56:19.542Z
+Stopped at: Completed 10-01-PLAN.md
+Resume file: None

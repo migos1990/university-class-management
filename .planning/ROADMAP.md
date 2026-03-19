@@ -30,7 +30,7 @@ Full details: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 - [ ] **Phase 7: Quick Wins** - Security status bar French, SCA completion celebration, finding prev/next nav, API auth hardening
 - [ ] **Phase 8: Testing** - Integration tests for SCA review submission, answer key role-gating, internal API auth
 - [ ] **Phase 9: Security Boundary Documentation** - SECURITY-BOUNDARY.md documenting all 12 intentional vulnerabilities vs. real bugs
-- [ ] **Phase 10: DAST French Translation** - Translate all 6 DAST scenarios + views using the established localize() pattern
+- [x] **Phase 10: DAST French Translation** - Translate all 6 DAST scenarios + views using the established localize() pattern (completed 2026-03-19)
 - [ ] **Phase 11: Instructor Tools** - Student activity tracking (last_active_at, current finding) and progress summary on dashboard
 - [ ] **Phase 12: Instructor Answer Key** - Role-gated answer key with classifications, reasoning, and discussion prompts in French
 - [ ] **Phase 13: Documentation** - README and instructor docs reflecting the v1.1 feature set
@@ -101,7 +101,7 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. All 6 DAST scenario descriptions, instructions, and results display in Quebec French using the localize() pattern
   2. All DAST views (scenario list, scenario detail, results) display in Quebec French
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
 - [ ] 10-01-PLAN.md -- dastLocalize() function, ~70 i18n keys in fr/en.json, and full French translation of all 3 DAST views + route handlers
@@ -210,7 +210,7 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 7. Quick Wins | v1.1 | 0/1 | Planned | - |
 | 8. Testing | v1.1 | 0/1 | Planned | - |
 | 9. Security Boundary Doc | v1.1 | 0/1 | Planned | - |
-| 10. DAST French | v1.1 | 0/1 | Planned | - |
+| 10. DAST French | 1/1 | Complete   | 2026-03-19 | - |
 | 11. Instructor Tools | v1.1 | 0/? | Not started | - |
 | 12. Instructor Answer Key | v1.1 | 0/2 | Planned | - |
 | 13. Documentation | v1.1 | 0/? | Not started | - |
