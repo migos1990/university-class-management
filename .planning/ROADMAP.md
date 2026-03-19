@@ -78,10 +78,10 @@ Plans:
   1. Integration tests verify SCA review submission workflow (student submits classification, data persists)
   2. Integration tests verify answer key role-gating (student denied, instructor allowed)
   3. Integration tests verify /api/instructor-message and /api/summary require auth
-**Plans**: TBD
+**Plans:** 1 plan
 
 Plans:
-- [ ] 08-01: TBD
+- [ ] 08-01-PLAN.md -- Test infrastructure (helpers, answer-key stub, npm script) and three integration test files (SCA review, role-gating, API auth)
 
 ### Phase 9: Security Boundary Documentation
 **Goal**: A clear reference document distinguishes the 12 intentional teaching vulnerabilities from real security bugs, so anyone reviewing the codebase understands what is deliberate
@@ -208,7 +208,7 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 5. Deployment Verification | v1.0 | 2/2 | Complete | 2026-03-12 |
 | 6. Inline Code Snippets | v1.1 | 2/2 | Complete | 2026-03-12 |
 | 7. Quick Wins | v1.1 | 0/1 | Planned | - |
-| 8. Testing | v1.1 | 0/? | Not started | - |
+| 8. Testing | v1.1 | 0/1 | Planned | - |
 | 9. Security Boundary Doc | v1.1 | 0/? | Not started | - |
 | 10. DAST French | v1.1 | 0/? | Not started | - |
 | 11. Instructor Tools | v1.1 | 0/? | Not started | - |
