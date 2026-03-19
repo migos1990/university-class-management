@@ -89,10 +89,10 @@ Plans:
 **Requirements**: SDOC-01
 **Success Criteria** (what must be TRUE):
   1. SECURITY-BOUNDARY.md exists at the project root, listing all 12 intentional vulnerabilities with their purpose, and separately listing any real security findings with their status
-**Plans**: TBD
+**Plans:** 1 plan
 
 Plans:
-- [ ] 09-01: TBD
+- [ ] 09-01-PLAN.md -- SECURITY-BOUNDARY.md with 12 intentional vulnerabilities, weakened controls, tech debt items, and README cross-link
 
 ### Phase 10: DAST French Translation
 **Goal**: DAST lab has the same full-French experience as the SCA lab, so students work entirely in their native language across both labs
@@ -209,7 +209,7 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 6. Inline Code Snippets | v1.1 | 2/2 | Complete | 2026-03-12 |
 | 7. Quick Wins | v1.1 | 0/1 | Planned | - |
 | 8. Testing | v1.1 | 0/1 | Planned | - |
-| 9. Security Boundary Doc | v1.1 | 0/? | Not started | - |
+| 9. Security Boundary Doc | v1.1 | 0/1 | Planned | - |
 | 10. DAST French | v1.1 | 0/? | Not started | - |
 | 11. Instructor Tools | v1.1 | 0/? | Not started | - |
 | 12. Instructor Answer Key | v1.1 | 0/2 | Planned | - |
