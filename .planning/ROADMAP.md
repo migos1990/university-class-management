@@ -210,7 +210,7 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 7. Quick Wins | v1.1 | 0/1 | Planned | - |
 | 8. Testing | v1.1 | 0/1 | Planned | - |
 | 9. Security Boundary Doc | v1.1 | 0/1 | Planned | - |
-| 10. DAST French | 1/1 | Complete   | 2026-03-19 | - |
+| 10. DAST French | 1/1 | Complete    | 2026-03-20 | - |
 | 11. Instructor Tools | v1.1 | 0/? | Not started | - |
 | 12. Instructor Answer Key | v1.1 | 0/2 | Planned | - |
 | 13. Documentation | v1.1 | 0/? | Not started | - |
