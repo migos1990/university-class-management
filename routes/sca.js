@@ -5,6 +5,20 @@ const { requireRole } = require('../middleware/rbac');
 const { db } = require('../config/database');
 const { localize, t } = require('../utils/i18n');
 
+// In-memory activity tracker for student progress monitoring
+// { [studentId]: { lastActiveAt: ISO string, currentFindingId: number|null } }
+const activityTracker = {};
+
+function trackActivity(studentId, findingId) {
+  if (!activityTracker[studentId]) {
+    activityTracker[studentId] = { lastActiveAt: null, currentFindingId: null };
+  }
+  activityTracker[studentId].lastActiveAt = new Date().toISOString();
+  if (findingId !== undefined) {
+    activityTracker[studentId].currentFindingId = findingId;
+  }
+}
+
 const DIFFICULTY_MAP = {
   1: 'easy', 2: 'easy', 3: 'easy', 4: 'easy',
   6: 'medium', 7: 'medium', 8: 'medium',
@@ -53,6 +67,7 @@ router.get('/', requireAuth, (req, res) => {
   const findings = db.prepare('SELECT * FROM sca_findings').all();
 
   if (user.role === 'student') {
+    trackActivity(user.id);
     const reviews = db.prepare(
       'SELECT * FROM sca_student_reviews WHERE student_id = ?'
     ).all(user.id);
@@ -106,33 +121,64 @@ router.get('/', requireAuth, (req, res) => {
 
 // ─── GET /sca/stats ─── Live class progress JSON for polling
 router.get('/stats', requireAuth, requireRole(['admin', 'professor']), (req, res) => {
-  const totalFindings = db.prepare('SELECT COUNT(*) as count FROM sca_findings').get().count;
-  const totalStudents = db.prepare("SELECT COUNT(*) as count FROM users WHERE role = 'student'").get().count;
+  const allFindings = db.prepare('SELECT * FROM sca_findings').all();
+  const totalFindings = allFindings.length;
+  const allStudents = db.prepare('SELECT * FROM users WHERE role = ?').all('student');
+  const totalStudents = allStudents.length;
+  const allReviews = db.prepare('SELECT * FROM sca_student_reviews').all();
 
   // Students started: those with at least 1 review record (any status: pending or submitted)
-  const studentsStarted = db.prepare(
-    'SELECT COUNT(DISTINCT student_id) as count FROM sca_student_reviews'
-  ).get().count;
+  const startedIds = new Set(allReviews.map(r => r.student_id));
+  const studentsStarted = startedIds.size;
 
   // Average completion: mean of (submitted / totalFindings) per student, across ALL students
-  const submittedPerStudent = db.prepare(`
-    SELECT student_id, COUNT(*) as cnt
-    FROM sca_student_reviews WHERE status = 'submitted'
-    GROUP BY student_id
-  `).all();
+  const submittedCounts = {};
+  allReviews.forEach(r => {
+    if (r.status === 'submitted') {
+      submittedCounts[r.student_id] = (submittedCounts[r.student_id] || 0) + 1;
+    }
+  });
   let avgCompletion = 0;
   if (totalStudents > 0 && totalFindings > 0) {
-    const totalPct = submittedPerStudent.reduce((sum, s) => sum + (s.cnt / totalFindings), 0);
+    const totalPct = Object.values(submittedCounts).reduce((sum, cnt) => sum + (cnt / totalFindings), 0);
     avgCompletion = Math.round((totalPct / totalStudents) * 100);
   }
 
   // Pace: submissions in last 5 minutes (only those with a non-null submitted_at)
   const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-  const pace = db.prepare(
-    'SELECT COUNT(*) as count FROM sca_student_reviews WHERE submitted_at IS NOT NULL AND submitted_at >= ?'
-  ).get(fiveMinAgo).count;
+  const pace = allReviews.filter(
+    r => r.submitted_at && r.submitted_at >= fiveMinAgo
+  ).length;
 
-  res.json({ studentsStarted, totalStudents, avgCompletion, pace });
+  // Build per-student data for instructor dashboard
+  const lang = req.session.language || 'fr';
+  const findingTitleMap = {};
+  allFindings.forEach(f => {
+    const localized = localize(f, lang);
+    findingTitleMap[f.id] = localized.title;
+  });
+
+  const studentsData = allStudents.map(s => {
+    const submitted = allReviews.filter(
+      r => r.student_id === s.id && r.status === 'submitted'
+    ).length;
+    const activity = activityTracker[s.id] || {};
+    return {
+      id: s.id,
+      username: s.username,
+      submitted,
+      lastActiveAt: activity.lastActiveAt || null,
+      currentFindingId: activity.currentFindingId || null,
+      currentFindingTitle: activity.currentFindingId
+        ? (findingTitleMap[activity.currentFindingId] || null)
+        : null
+    };
+  });
+
+  // Sort by completion descending (most progress first)
+  studentsData.sort((a, b) => b.submitted - a.submitted);
+
+  res.json({ studentsStarted, totalStudents, avgCompletion, pace, totalFindings, students: studentsData });
 });
 
 // ─── GET /sca/findings/:id ─── Detail view (shared)
@@ -145,6 +191,7 @@ router.get('/findings/:id', requireAuth, (req, res) => {
   let allReviews = [];
 
   if (user.role === 'student') {
+    trackActivity(user.id, finding.id);
     myReview = db.prepare(
       'SELECT * FROM sca_student_reviews WHERE finding_id = ? AND student_id = ?'
     ).get(finding.id, user.id);
@@ -189,6 +236,7 @@ router.get('/findings/:id', requireAuth, (req, res) => {
 router.post('/findings/:id/review', requireAuth, requireRole(['student']), (req, res) => {
   const findingId = parseInt(req.params.id);
   const studentId = req.session.user.id;
+  trackActivity(studentId);
   const { classification, student_notes, remediation_notes, action } = req.body;
 
   if (!['confirmed', 'false_positive', 'needs_investigation'].includes(classification)) {

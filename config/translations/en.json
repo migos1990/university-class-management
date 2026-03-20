@@ -403,7 +403,21 @@
       "avgCompletion": "Average Completion",
       "overallPace": "Overall Pace",
       "confirmImport": "Push this finding to the Vulnerability Manager?",
-      "importFailed": "Import failed"
+      "importFailed": "Import failed",
+      "progress": {
+        "heading": "Student Progress",
+        "activeCount": "{active} active / {total} students",
+        "colStudent": "Student",
+        "colProgress": "Progress",
+        "colLastActive": "Last active",
+        "colCurrentFinding": "Current finding",
+        "colStatus": "Status",
+        "submitted": "{count}/{total} submitted",
+        "statusActive": "Active",
+        "statusInactive": "Inactive",
+        "statusNotStarted": "Not started",
+        "noStudents": "No students enrolled"
+      }
     },
     "studentDetail": {
       "backToDashboard": "SCA Dashboard",

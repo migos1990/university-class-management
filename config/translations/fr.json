@@ -403,7 +403,21 @@
       "avgCompletion": "Complétion moyenne",
       "overallPace": "Rythme global",
       "confirmImport": "Envoyer ce constat au gestionnaire de vulnérabilités ?",
-      "importFailed": "Échec de l'importation"
+      "importFailed": "Échec de l'importation",
+      "progress": {
+        "heading": "Suivi des \u00e9tudiants",
+        "activeCount": "{active} actifs / {total} \u00e9tudiants",
+        "colStudent": "\u00c9tudiant",
+        "colProgress": "Progression",
+        "colLastActive": "Derni\u00e8re act.",
+        "colCurrentFinding": "Analyse en cours",
+        "colStatus": "Statut",
+        "submitted": "{count}/{total} soumis",
+        "statusActive": "Actif",
+        "statusInactive": "Inactif",
+        "statusNotStarted": "Pas commenc\u00e9",
+        "noStudents": "Aucun \u00e9tudiant inscrit"
+      }
     },
     "studentDetail": {
       "backToDashboard": "Tableau de bord ACS",
