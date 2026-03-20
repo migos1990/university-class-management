@@ -207,6 +207,17 @@ router.get('/findings/:id', requireAuth, (req, res) => {
   const localizedFinding = localize(finding, lang);
   localizedFinding.difficulty = DIFFICULTY_MAP[finding.id] || 'medium';
 
+  // Only pass answer key data for instructors (AKEY-05)
+  // Students receive null -- the EJS template will not emit any answer HTML
+  let answerKey = null;
+  if (user.role !== 'student') {
+    answerKey = {
+      classification: t(lang, `sca.answerKey.${finding.id}.classification`),
+      reasoning: t(lang, `sca.answerKey.${finding.id}.reasoning`),
+      discussion: t(lang, `sca.answerKey.${finding.id}.discussion`)
+    };
+  }
+
   // Compute prev/next navigation using difficulty sort order (matches student-lab list)
   const allFindings = db.prepare('SELECT id FROM sca_findings').all();
   const sortedIds = allFindings
@@ -226,6 +237,7 @@ router.get('/findings/:id', requireAuth, (req, res) => {
     allReviews,
     vmEntry,
     users,
+    answerKey,
     needsPrism: true,
     prevId,
     nextId

@@ -87,6 +87,33 @@
       <p style="line-height:1.7;"><%= finding.remediation %></p>
     </div>
 
+    <%# AKEY-05: Inline answer -- NOT rendered for students (absent from page source) %>
+    <% if (user.role !== 'student' && answerKey) { %>
+    <div class="card" style="margin-bottom:1rem; border-left:4px solid #002855;">
+      <details>
+        <summary style="cursor:pointer; font-weight:600; color:#002855; padding:0.5rem 0;">
+          <%= t('sca.answerKey.inlineTitle') %>
+        </summary>
+        <div style="margin-top:0.75rem;">
+          <p style="margin-bottom:0.5rem;">
+            <strong><%= t('sca.answerKey.expectedClassification') %> :</strong>
+            <span class="badge-sm <%= answerKey.classification.includes('investigation') ? 'cls-needs' : 'cls-confirmed' %>">
+              <%= answerKey.classification %>
+            </span>
+          </p>
+          <p style="margin-bottom:0.5rem; line-height:1.7;">
+            <strong><%= t('sca.answerKey.reasoning') %> :</strong>
+            <%= answerKey.reasoning %>
+          </p>
+          <p style="line-height:1.7;">
+            <strong><%= t('sca.answerKey.discussionPrompt') %> :</strong>
+            <em><%= answerKey.discussion %></em>
+          </p>
+        </div>
+      </details>
+    </div>
+    <% } %>
+
     <% if (user.role !== 'student' && allReviews.length > 0) { %>
     <div class="card">
       <h3 style="margin-bottom:1rem;"><%= t('sca.findingDetail.studentReviews') %> (<%= allReviews.length %>)</h3>
