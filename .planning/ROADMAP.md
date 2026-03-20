@@ -113,10 +113,10 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Instructor dashboard shows each student's last_active_at timestamp and current finding being analyzed
   2. Instructor dashboard includes a progress summary card showing per-student completion across labs
-**Plans**: TBD
+**Plans:** 1 plan
 
 Plans:
-- [ ] 11-01: TBD
+- [ ] 11-01-PLAN.md -- In-memory activity tracking, /sca/stats students array extension, student progress table with 30s polling
 
 ### Phase 12: Instructor Answer Key
 **Goal**: Instructor has a French-language reference showing expected classifications, reasoning, and discussion prompts for all 12 findings, enabling confident in-class facilitation
@@ -211,7 +211,7 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 8. Testing | v1.1 | 0/1 | Planned | - |
 | 9. Security Boundary Doc | v1.1 | 0/1 | Planned | - |
 | 10. DAST French | 1/1 | Complete    | 2026-03-20 | - |
-| 11. Instructor Tools | v1.1 | 0/? | Not started | - |
+| 11. Instructor Tools | v1.1 | 0/1 | Planned | - |
 | 12. Instructor Answer Key | v1.1 | 0/2 | Planned | - |
 | 13. Documentation | v1.1 | 0/? | Not started | - |
 | 14. Code Quality | v1.1 | 0/? | Not started | - |
