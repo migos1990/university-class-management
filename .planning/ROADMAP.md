@@ -31,7 +31,7 @@ Full details: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 - [ ] **Phase 8: Testing** - Integration tests for SCA review submission, answer key role-gating, internal API auth
 - [ ] **Phase 9: Security Boundary Documentation** - SECURITY-BOUNDARY.md documenting all 12 intentional vulnerabilities vs. real bugs
 - [x] **Phase 10: DAST French Translation** - Translate all 6 DAST scenarios + views using the established localize() pattern (completed 2026-03-19)
-- [ ] **Phase 11: Instructor Tools** - Student activity tracking (last_active_at, current finding) and progress summary on dashboard
+- [x] **Phase 11: Instructor Tools** - Student activity tracking (last_active_at, current finding) and progress summary on dashboard (completed 2026-03-20)
 - [ ] **Phase 12: Instructor Answer Key** - Role-gated answer key with classifications, reasoning, and discussion prompts in French
 - [ ] **Phase 13: Documentation** - README and instructor docs reflecting the v1.1 feature set
 - [ ] **Phase 14: Code Quality** - ESLint/Prettier tooling, dead code removal (preserving intentional vulnerabilities)
@@ -113,7 +113,7 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Instructor dashboard shows each student's last_active_at timestamp and current finding being analyzed
   2. Instructor dashboard includes a progress summary card showing per-student completion across labs
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
 - [ ] 11-01-PLAN.md -- In-memory activity tracking, /sca/stats students array extension, student progress table with 30s polling
@@ -211,7 +211,7 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 8. Testing | v1.1 | 0/1 | Planned | - |
 | 9. Security Boundary Doc | v1.1 | 0/1 | Planned | - |
 | 10. DAST French | 1/1 | Complete    | 2026-03-20 | - |
-| 11. Instructor Tools | v1.1 | 0/1 | Planned | - |
+| 11. Instructor Tools | 1/1 | Complete   | 2026-03-20 | - |
 | 12. Instructor Answer Key | v1.1 | 0/2 | Planned | - |
 | 13. Documentation | v1.1 | 0/? | Not started | - |
 | 14. Code Quality | v1.1 | 0/? | Not started | - |

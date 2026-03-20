@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Polish & Pedagogy
-status: completed
-stopped_at: Phase 11 context gathered
-last_updated: "2026-03-20T00:25:12.932Z"
-last_activity: 2026-03-19 -- Completed Phase 10 Plan 1 (DAST French Translation)
+status: in_progress
+stopped_at: Completed 11-01-PLAN.md
+last_updated: "2026-03-20T00:44:13.000Z"
+last_activity: 2026-03-20 -- Completed Phase 11 Plan 1 (Student Activity Tracking)
 progress:
   total_phases: 11
   completed_phases: 5
   total_plans: 8
-  completed_plans: 6
-  percent: 75
+  completed_plans: 7
+  percent: 81
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** The SCA lab must work flawlessly end-to-end in French -- from Codespace boot to student submission to instructor review -- with zero friction for non-technical students.
-**Current focus:** Phase 10 complete -- ready for Phase 11 (Instructor Tools)
+**Current focus:** Phase 11 in progress -- Student Activity Tracking complete, remaining plans TBD
 
 ## Current Position
 
-Phase: 10 of 16 (DAST French Translation) -- COMPLETE
-Plan: 1 of 1 (all plans complete)
-Status: Phase 10 complete, ready for Phase 11 (Instructor Tools)
-Last activity: 2026-03-19 -- Completed Phase 10 Plan 1 (DAST French Translation)
+Phase: 11 of 16 (Instructor Tools) -- IN PROGRESS
+Plan: 1 of ? (plan 1 complete)
+Status: Phase 11 Plan 1 complete (Student Activity Tracking)
+Last activity: 2026-03-20 -- Completed Phase 11 Plan 1 (Student Activity Tracking)
 
-Progress: [████████░░] 75%
+Progress: [████████░░] 81%
 
 ## Performance Metrics
 
@@ -48,7 +48,7 @@ Progress: [████████░░] 75%
 | 8. Testing | 1/1 | 3min | 3min |
 | 9. Security Boundary Doc | 1/1 | 2min | 2min |
 | 10. DAST French | 1/1 | 7min | 7min |
-| 11. Instructor Tools | 0/? | - | - |
+| 11. Instructor Tools | 1/? | 5min | 5min |
 | 12. Instructor Answer Key | 0/2 | - | - |
 | 13. Documentation | 0/? | - | - |
 | 14. Code Quality | 0/? | - | - |
@@ -62,6 +62,7 @@ Progress: [████████░░] 75%
 | Phase 08 P01 | 3min | 2 tasks | 6 files |
 | Phase 09 P01 | 2min | 2 tasks | 2 files |
 | Phase 10 P01 | 7min | 2 tasks | 7 files |
+| Phase 11 P01 | 5min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -87,6 +88,9 @@ Recent decisions affecting current work:
 - [Phase 10]: dastLocalize() as separate function (not parameterized localize()) -- cleaner SCA vs DAST field set separation
 - [Phase 10]: Unicode escape sequences for French accents in JSON -- reliable cross-platform encoding
 - [Phase 10]: Severity badges and OWASP categories kept in English per locked decision
+- [Phase 11]: In-memory activityTracker for real-time student activity (not DB) -- acceptable for classroom scale
+- [Phase 11]: JS aggregation instead of GROUP BY/COUNT(DISTINCT) for JSON DB adapter compatibility
+- [Phase 11]: Parameterized queries required for JSON DB adapter (inline SQL values not matched)
 
 ### Roadmap Evolution
 
@@ -105,6 +109,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-20T00:25:12.927Z
-Stopped at: Phase 11 context gathered
-Resume file: .planning/phases/11-instructor-tools/11-CONTEXT.md
+Last session: 2026-03-20T00:44:13Z
+Stopped at: Completed 11-01-PLAN.md
+Resume file: .planning/phases/11-instructor-tools/11-01-SUMMARY.md

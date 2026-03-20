@@ -40,8 +40,8 @@ Requirements for v1.1 Polish & Pedagogy release. Each maps to roadmap phases.
 
 ### Instructor Tools
 
-- [ ] **INST-01**: Instructor dashboard shows each student's last_active_at and current finding being analyzed
-- [ ] **INST-02**: Instructor dashboard includes a progress summary card showing per-student completion
+- [x] **INST-01**: Instructor dashboard shows each student's last_active_at and current finding being analyzed
+- [x] **INST-02**: Instructor dashboard includes a progress summary card showing per-student completion
 
 ### Answer Key
 
@@ -136,8 +136,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SDOC-01 | Phase 9 | Complete |
 | DAST-01 | Phase 10 | Complete |
 | DAST-02 | Phase 10 | Complete |
-| INST-01 | Phase 11 | Pending |
-| INST-02 | Phase 11 | Pending |
+| INST-01 | Phase 11 | Complete |
+| INST-02 | Phase 11 | Complete |
 | AKEY-01 | Phase 12 | Pending |
 | AKEY-02 | Phase 12 | Pending |
 | AKEY-03 | Phase 12 | Pending |
