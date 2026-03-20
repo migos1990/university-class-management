@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Polish & Pedagogy
 status: completed
-stopped_at: Phase 12 context gathered
-last_updated: "2026-03-20T01:33:17.862Z"
-last_activity: 2026-03-20 -- Completed Phase 11 Plan 1 (Student Activity Tracking)
+stopped_at: Completed 12-01-PLAN.md
+last_updated: "2026-03-20T01:42:22.041Z"
+last_activity: 2026-03-20 -- Completed Phase 12 Plan 1 (Answer Key Page)
 progress:
   total_phases: 11
   completed_phases: 6
   total_plans: 9
-  completed_plans: 7
-  percent: 81
+  completed_plans: 8
+  percent: 89
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 
 ## Current Position
 
-Phase: 11 of 16 (Instructor Tools) -- IN PROGRESS
-Plan: 1 of ? (plan 1 complete)
-Status: Phase 11 Plan 1 complete (Student Activity Tracking)
-Last activity: 2026-03-20 -- Completed Phase 11 Plan 1 (Student Activity Tracking)
+Phase: 12 of 16 (Instructor Answer Key) -- IN PROGRESS
+Plan: 1 of 2 (plan 1 complete)
+Status: Phase 12 Plan 1 complete (Answer Key Page)
+Last activity: 2026-03-20 -- Completed Phase 12 Plan 1 (Answer Key Page)
 
-Progress: [████████░░] 81%
+Progress: [█████████░] 89%
 
 ## Performance Metrics
 
@@ -63,6 +63,7 @@ Progress: [████████░░] 81%
 | Phase 09 P01 | 2min | 2 tasks | 2 files |
 | Phase 10 P01 | 7min | 2 tasks | 7 files |
 | Phase 11 P01 | 5min | 2 tasks | 5 files |
+| Phase 12 P01 | 4min | 1 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -91,6 +92,8 @@ Recent decisions affecting current work:
 - [Phase 11]: In-memory activityTracker for real-time student activity (not DB) -- acceptable for classroom scale
 - [Phase 11]: JS aggregation instead of GROUP BY/COUNT(DISTINCT) for JSON DB adapter compatibility
 - [Phase 11]: Parameterized queries required for JSON DB adapter (inline SQL values not matched)
+- [Phase 12]: RBAC-bypass hardening: secondary role check for answer key to prevent student access when RBAC disabled
+- [Phase 12]: Finding 11 classified as Needs Investigation; all others as True Positive per SOLUTION-GUIDE.md
 
 ### Roadmap Evolution
 
@@ -109,6 +112,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-20T01:33:17.852Z
-Stopped at: Phase 12 context gathered
-Resume file: .planning/phases/12-instructor-answer-key/12-CONTEXT.md
+Last session: 2026-03-20T01:42:22.035Z
+Stopped at: Completed 12-01-PLAN.md
+Resume file: None

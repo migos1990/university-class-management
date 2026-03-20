@@ -45,12 +45,12 @@ Requirements for v1.1 Polish & Pedagogy release. Each maps to roadmap phases.
 
 ### Answer Key
 
-- [ ] **AKEY-01**: Instructor can view a standalone answer key page with all 12 findings' expected classifications
-- [ ] **AKEY-02**: Answer key displays reasoning explaining why each finding has its expected classification
-- [ ] **AKEY-03**: Answer key includes discussion prompts for in-class use per finding
-- [ ] **AKEY-04**: Answer key is role-gated (visible only to professor/admin, never to students)
+- [x] **AKEY-01**: Instructor can view a standalone answer key page with all 12 findings' expected classifications
+- [x] **AKEY-02**: Answer key displays reasoning explaining why each finding has its expected classification
+- [x] **AKEY-03**: Answer key includes discussion prompts for in-class use per finding
+- [x] **AKEY-04**: Answer key is role-gated (visible only to professor/admin, never to students)
 - [ ] **AKEY-05**: Instructor can see an inline collapsible answer section in the finding detail view
-- [ ] **AKEY-06**: All answer key content is in Quebec French
+- [x] **AKEY-06**: All answer key content is in Quebec French
 
 ### Documentation
 
@@ -138,12 +138,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DAST-02 | Phase 10 | Complete |
 | INST-01 | Phase 11 | Complete |
 | INST-02 | Phase 11 | Complete |
-| AKEY-01 | Phase 12 | Pending |
-| AKEY-02 | Phase 12 | Pending |
-| AKEY-03 | Phase 12 | Pending |
-| AKEY-04 | Phase 12 | Pending |
+| AKEY-01 | Phase 12 | Complete |
+| AKEY-02 | Phase 12 | Complete |
+| AKEY-03 | Phase 12 | Complete |
+| AKEY-04 | Phase 12 | Complete |
 | AKEY-05 | Phase 12 | Pending |
-| AKEY-06 | Phase 12 | Pending |
+| AKEY-06 | Phase 12 | Complete |
 | DOCS-01 | Phase 13 | Pending |
 | DOCS-02 | Phase 13 | Pending |
 | QUAL-01 | Phase 14 | Pending |
