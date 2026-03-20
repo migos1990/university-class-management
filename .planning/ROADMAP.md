@@ -212,7 +212,7 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 9. Security Boundary Doc | v1.1 | 0/1 | Planned | - |
 | 10. DAST French | 1/1 | Complete    | 2026-03-20 | - |
 | 11. Instructor Tools | 1/1 | Complete    | 2026-03-20 | - |
-| 12. Instructor Answer Key | 2/2 | Complete   | 2026-03-20 | - |
+| 12. Instructor Answer Key | 2/2 | Complete    | 2026-03-20 | - |
 | 13. Documentation | v1.1 | 0/? | Not started | - |
 | 14. Code Quality | v1.1 | 0/? | Not started | - |
 | 15. CSS Extraction | v1.1 | 0/? | Not started | - |
