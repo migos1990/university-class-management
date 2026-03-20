@@ -553,6 +553,78 @@
         "hint2": "On an unencrypted network, who can see cookies transmitted over HTTP?",
         "hint3": "What cookie flag prevents transmission over an insecure connection?"
       }
+    },
+    "answerKey": {
+      "title": "Answer Key — Static Code Analysis",
+      "subtitle": "Expected classification, reasoning, and discussion prompts for all 12 findings",
+      "expectedClassification": "Expected Classification",
+      "reasoning": "Reasoning",
+      "discussionPrompt": "Discussion Prompt",
+      "inlineTitle": "Expected Answer (instructor)",
+      "linkLabel": "Answer Key",
+      "confirmed": "True Positive (confirmed)",
+      "needsInvestigation": "Needs Investigation",
+      "backToInstructor": "Back to dashboard",
+      "1": {
+        "classification": "True Positive (confirmed)",
+        "reasoning": "The Express session secret is hardcoded in the source code. Anyone with repository access can forge session cookies and impersonate any user. This is a confirmed CWE-798 vulnerability.",
+        "discussion": "If an attacker obtains the source code, what would be the immediate impact on active user sessions?"
+      },
+      "2": {
+        "classification": "True Positive (confirmed)",
+        "reasoning": "The AES-256 encryption key is hardcoded. Compromise of this key allows decryption of all PII (SSNs, grades) in the database.",
+        "discussion": "What is the difference between storing a cryptographic key in source code versus using a secrets manager?"
+      },
+      "3": {
+        "classification": "True Positive (confirmed)",
+        "reasoning": "Plaintext passwords are written to console logs on every login attempt. Log aggregation systems will store and expose these credentials (CWE-532).",
+        "discussion": "In a cloud environment where logs are shipped to Splunk or CloudWatch, who could access the logged passwords?"
+      },
+      "4": {
+        "classification": "True Positive (confirmed)",
+        "reasoning": "Passwords are stored and compared in plaintext. A database breach exposes every password immediately. The absence of hashing violates fundamental password management practices.",
+        "discussion": "What is the difference in attacker effort between cracking bcrypt-hashed passwords versus reading plaintext passwords?"
+      },
+      "5": {
+        "classification": "True Positive (confirmed)",
+        "reasoning": "Audit logging defaults to OFF, preventing incident detection and forensics. Unauthorized data access would go unnoticed. This violates the secure-by-default principle.",
+        "discussion": "What critical events become undetectable when audit logging is disabled?"
+      },
+      "6": {
+        "classification": "True Positive (confirmed)",
+        "reasoning": "The endpoint uses the student ID from the URL rather than the authenticated session, allowing any student to view other students' records (IDOR, CWE-639).",
+        "discussion": "How could a malicious student automate enumeration of all student records?"
+      },
+      "7": {
+        "classification": "True Positive (confirmed)",
+        "reasoning": "POST/PUT/DELETE routes have no CSRF token validation. An attacker can craft a page that triggers authenticated actions on behalf of a logged-in user (CWE-352).",
+        "discussion": "If a professor clicks a malicious link while logged in, what actions could an attacker perform?"
+      },
+      "8": {
+        "classification": "True Positive (confirmed)",
+        "reasoning": "Rate limiting is only on the login route. MFA verification, password reset, and API endpoints remain vulnerable to brute-force attacks.",
+        "discussion": "How long would it take to brute-force a 6-digit TOTP code without rate limiting?"
+      },
+      "9": {
+        "classification": "True Positive (confirmed)",
+        "reasoning": "The application sets no HTTP security headers (CSP, X-Frame-Options, HSTS). This leaves it vulnerable to clickjacking, MIME-sniffing, and XSS amplification.",
+        "discussion": "How could an attacker exploit the absence of X-Frame-Options to capture credentials?"
+      },
+      "10": {
+        "classification": "True Positive (confirmed)",
+        "reasoning": "The backup filename comes from the URL without validation, allowing path traversal (../../) to read arbitrary server files (CWE-22).",
+        "discussion": "What sensitive files could an attacker target with this vulnerability?"
+      },
+      "11": {
+        "classification": "Needs Investigation",
+        "reasoning": "The project uses an older version of express-session. An npm audit is needed to confirm whether the specific version is affected by an exploitable CVE.",
+        "discussion": "How do you distinguish a merely outdated dependency from one with a real security risk?"
+      },
+      "12": {
+        "classification": "True Positive (confirmed)",
+        "reasoning": "The session cookie lacks the secure flag. Over HTTP, the session token is transmitted in plaintext and can be intercepted on shared networks (session hijacking).",
+        "discussion": "On a shared Wi-Fi network, what techniques could an attacker use to intercept session cookies?"
+      }
     }
   },
   "dast": {

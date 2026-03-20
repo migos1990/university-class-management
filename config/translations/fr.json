@@ -553,6 +553,78 @@
         "hint2": "Sur un réseau non chiffré, qui peut voir les cookies transmis en HTTP ?",
         "hint3": "Quel indicateur de cookie empêche la transmission sur une connexion non sécurisée ?"
       }
+    },
+    "answerKey": {
+      "title": "Corrigé — Analyse de code statique",
+      "subtitle": "Classification attendue, raisonnement et pistes de discussion pour les 12 constats",
+      "expectedClassification": "Classification attendue",
+      "reasoning": "Raisonnement",
+      "discussionPrompt": "Piste de discussion",
+      "inlineTitle": "Réponse attendue (instructeur)",
+      "linkLabel": "Corrigé",
+      "confirmed": "Vrai positif (confirmé)",
+      "needsInvestigation": "Nécessite une investigation",
+      "backToInstructor": "Retour au tableau de bord",
+      "1": {
+        "classification": "Vrai positif (confirmé)",
+        "reasoning": "Le secret de session Express est codé en dur directement dans le code source. Toute personne ayant accès au dépôt peut falsifier des cookies de session et usurper n'importe quel utilisateur. Il s'agit d'une vulnérabilité confirmée de type CWE-798 (identifiants codés en dur) qui compromet l'intégrité de toutes les sessions actives.",
+        "discussion": "Si un attaquant obtient le code source via un dépôt public ou une fuite interne, quelles seraient les conséquences immédiates sur les sessions des étudiants et professeurs connectés ?"
+      },
+      "2": {
+        "classification": "Vrai positif (confirmé)",
+        "reasoning": "La clé de chiffrement AES-256 est codée en dur dans le fichier de configuration. La compromission de cette clé permet le déchiffrement de toutes les données personnelles (NAS, notes) stockées dans la base de données. C'est un vrai positif car la clé est exposée à quiconque a accès au code.",
+        "discussion": "Quelle est la différence entre stocker une clé cryptographique dans le code source et utiliser un gestionnaire de secrets comme HashiCorp Vault ou les variables d'environnement ?"
+      },
+      "3": {
+        "classification": "Vrai positif (confirmé)",
+        "reasoning": "Les mots de passe en clair sont écrits dans les journaux de la console à chaque tentative de connexion. Les systèmes d'agrégation de journaux conserveront ces identifiants, les exposant à tout personnel ayant accès aux journaux. C'est un vrai positif de type CWE-532 (insertion d'informations sensibles dans un fichier journal).",
+        "discussion": "Dans un environnement infonuagique où les journaux sont acheminés vers Splunk ou CloudWatch, qui pourrait avoir accès aux mots de passe enregistrés et comment limiter ce risque ?"
+      },
+      "4": {
+        "classification": "Vrai positif (confirmé)",
+        "reasoning": "Les mots de passe sont stockés et comparés en clair dans la base de données. Une brèche de la base de données expose immédiatement tous les mots de passe. C'est un vrai positif car l'absence de hachage (bcrypt, Argon2) viole les pratiques fondamentales de gestion des mots de passe.",
+        "discussion": "Si la base de données est compromise, quelle est la différence d'impact entre des mots de passe stockés en clair et des mots de passe hachés avec bcrypt en termes de temps de récupération pour l'attaquant ?"
+      },
+      "5": {
+        "classification": "Vrai positif (confirmé)",
+        "reasoning": "La journalisation d'audit est désactivée par défaut, ce qui empêche la détection d'incidents et l'analyse forensique. Un accès non autorisé aux données étudiantes passerait inaperçu. C'est un vrai positif car le principe de sécurité par défaut (secure by default) est violé.",
+        "discussion": "Quels événements critiques deviendraient indétectables si la journalisation reste désactivée, et comment cela affecte-t-il la conformité aux normes comme la Loi 25 au Québec ?"
+      },
+      "6": {
+        "classification": "Vrai positif (confirmé)",
+        "reasoning": "Le point d'accès utilise l'identifiant étudiant provenant de l'URL plutôt que de la session authentifiée. Un étudiant peut consulter les dossiers d'inscription de n'importe quel autre étudiant en modifiant l'identifiant dans l'URL. C'est un vrai positif de type IDOR (Insecure Direct Object Reference, CWE-639).",
+        "discussion": "Comment un étudiant malveillant pourrait-il automatiser l'énumération de tous les dossiers étudiants, et quelle vérification côté serveur empêcherait cette attaque ?"
+      },
+      "7": {
+        "classification": "Vrai positif (confirmé)",
+        "reasoning": "Les routes POST/PUT/DELETE n'ont aucune validation de jeton CSRF. Un attaquant peut créer une page malveillante qui déclenche des actions authentifiées au nom d'un utilisateur connecté. C'est un vrai positif car toute requête modifiant l'état est vulnérable aux attaques de type Cross-Site Request Forgery (CWE-352).",
+        "discussion": "Si un professeur clique sur un lien piégé dans un courriel pendant qu'il est connecté à l'application, quelles actions un attaquant pourrait-il effectuer en son nom ?"
+      },
+      "8": {
+        "classification": "Vrai positif (confirmé)",
+        "reasoning": "La limitation de débit est appliquée uniquement à la route de connexion. La vérification AMF, la réinitialisation de mot de passe et les points d'accès API restent vulnérables aux attaques par force brute. C'est un vrai positif car la surface d'attaque non protégée est significative.",
+        "discussion": "Avec un code TOTP à 6 chiffres (1 000 000 valeurs possibles), combien de temps faudrait-il pour le deviner par force brute sans limitation de débit, et comment cela remet-il en question l'efficacité de l'AMF ?"
+      },
+      "9": {
+        "classification": "Vrai positif (confirmé)",
+        "reasoning": "L'application ne définit aucun en-tête de sécurité HTTP (CSP, X-Frame-Options, HSTS, X-Content-Type-Options). Cela la rend vulnérable au détournement de clic, au reniflage MIME et à l'amplification XSS. C'est un vrai positif car ces protections sont considérées comme essentielles par l'OWASP.",
+        "discussion": "Si cette application était intégrée dans une iframe sur un site malveillant, comment un attaquant pourrait-il exploiter l'absence de X-Frame-Options pour capturer les identifiants ?"
+      },
+      "10": {
+        "classification": "Vrai positif (confirmé)",
+        "reasoning": "Le nom de fichier de sauvegarde provient directement de l'URL sans validation. Un attaquant avec un accès administrateur peut demander n'importe quel fichier sur le serveur via des séquences de traversée de chemin (../../). C'est un vrai positif de type CWE-22 (traversée de chemin).",
+        "discussion": "Quels fichiers sensibles un attaquant pourrait-il cibler avec cette vulnérabilité (ex. : .env, database.js), et quel impact cela aurait-il sur la confidentialité globale de l'application ?"
+      },
+      "11": {
+        "classification": "Nécessite une investigation",
+        "reasoning": "Le projet utilise une version plus ancienne d'express-session. Bien que les dépendances obsolètes puissent contenir des vulnérabilités connues, il faut vérifier si la version spécifique utilisée est réellement affectée par un CVE exploitable. Un audit npm (npm audit) est nécessaire pour confirmer la présence d'une vulnérabilité concrète.",
+        "discussion": "Comment distinguer une dépendance simplement ancienne d'une dépendance présentant un risque de sécurité réel ? Quels outils et processus permettent de suivre les vulnérabilités des dépendances en continu ?"
+      },
+      "12": {
+        "classification": "Vrai positif (confirmé)",
+        "reasoning": "Le cookie de session n'a pas l'indicateur secure activé. Sur une connexion HTTP non chiffrée, le jeton de session est transmis en clair et peut être intercepté par un attaquant réseau. C'est un vrai positif car sur un réseau Wi-Fi partagé comme celui de l'université, cette vulnérabilité permet le vol de session (session hijacking).",
+        "discussion": "Sur le réseau Wi-Fi de l'université, quelles techniques un attaquant pourrait-il utiliser pour intercepter les cookies de session, et pourquoi l'indicateur secure seul ne suffit-il pas sans HTTPS ?"
+      }
     }
   },
   "dast": {

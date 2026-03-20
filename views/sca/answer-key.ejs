@@ -1,0 +1,117 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1 class="page-title"><%= title %></h1>
+  <p class="page-subtitle"><%= subtitle %></p>
+  <a href="/sca" style="display:inline-block; background:#e9ecef; color:#002855; padding:6px 14px; border-radius:4px; font-size:0.85rem; text-decoration:none; margin-top:0.5rem;">
+    &larr; <%= t('sca.answerKey.backToInstructor') %>
+  </a>
+</div>
+
+<style>
+  .sev-Critical  { background:#ffe0e0; color:#c0392b; }
+  .sev-High      { background:#fff0e0; color:#c0732a; }
+  .sev-Medium    { background:#fffbe0; color:#9a7d0a; }
+  .sev-Low       { background:#e8f8e8; color:#1e8449; }
+  .sev-Info      { background:#e8f0ff; color:#1a5276; }
+  .badge-sm { display:inline-block; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:600; }
+  .cls-confirmed { background:#d4edda; color:#155724; }
+  .cls-needs     { background:#fff3cd; color:#856404; }
+  .ak-card {
+    background:#fff;
+    border:1px solid #e0e0e0;
+    border-radius:8px;
+    padding:1.5rem;
+    margin-bottom:1.25rem;
+    box-shadow:0 1px 3px rgba(0,0,0,0.06);
+  }
+  .ak-card-header {
+    display:flex;
+    align-items:center;
+    gap:0.75rem;
+    flex-wrap:wrap;
+    margin-bottom:1rem;
+  }
+  .ak-finding-num {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:32px;
+    height:32px;
+    background:#002855;
+    color:#fff;
+    border-radius:50%;
+    font-weight:700;
+    font-size:0.9rem;
+    flex-shrink:0;
+  }
+  .ak-finding-title {
+    font-size:1.1rem;
+    font-weight:700;
+    color:#002855;
+  }
+  .ak-file-path {
+    font-size:0.8rem;
+    color:#666;
+    font-family:monospace;
+    margin-top:0.25rem;
+  }
+  .ak-section-label {
+    font-size:0.8rem;
+    font-weight:700;
+    color:#002855;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+    margin-bottom:0.35rem;
+  }
+  .ak-reasoning {
+    font-size:0.92rem;
+    line-height:1.55;
+    color:#333;
+    margin-bottom:1rem;
+  }
+  .ak-discussion {
+    font-size:0.92rem;
+    line-height:1.55;
+    color:#555;
+    font-style:italic;
+    background:#f8f9fa;
+    border-left:3px solid #002855;
+    padding:0.75rem 1rem;
+    border-radius:0 4px 4px 0;
+  }
+</style>
+
+<% findings.forEach(function(f) {
+  var isConfirmed = f.expectedClassification.indexOf('investigation') === -1
+    && f.expectedClassification.indexOf('Investigation') === -1;
+  var clsBadgeClass = isConfirmed ? 'cls-confirmed' : 'cls-needs';
+%>
+<div class="ak-card">
+  <div class="ak-card-header">
+    <span class="ak-finding-num"><%= f.id %></span>
+    <div>
+      <div class="ak-finding-title"><%= f.title %></div>
+      <div class="ak-file-path"><%= f.file_path %>:<%= f.line_number %></div>
+    </div>
+    <span class="badge-sm sev-<%= f.severity %>" style="margin-left:auto;"><%= f.severity %></span>
+  </div>
+
+  <div style="margin-bottom:1rem;">
+    <div class="ak-section-label"><%= labels.expectedClassification %></div>
+    <span class="badge-sm <%= clsBadgeClass %>" style="font-size:0.85rem; padding:4px 12px;"><%= f.expectedClassification %></span>
+  </div>
+
+  <div style="margin-bottom:1rem;">
+    <div class="ak-section-label"><%= labels.reasoning %></div>
+    <div class="ak-reasoning"><%= f.reasoning %></div>
+  </div>
+
+  <div>
+    <div class="ak-section-label"><%= labels.discussionPrompt %></div>
+    <div class="ak-discussion"><%= f.discussion %></div>
+  </div>
+</div>
+<% }) %>
+
+<%- include('../partials/footer') %>

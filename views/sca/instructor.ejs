@@ -3,6 +3,9 @@
 <div class="page-header">
   <h1 class="page-title"><%= t('sca.instructor.title') %></h1>
   <p class="page-subtitle"><%= findings.length %> <%= t('sca.common.findings') %> &nbsp;|&nbsp; <%= students.length %> <%= t('sca.common.students') %> &nbsp;|&nbsp; <%= allReviews.length %> <%= t('sca.common.reviewsSubmitted') %></p>
+  <a href="/sca/answer-key" style="display:inline-block; background:#002855; color:#fff; padding:6px 14px; border-radius:4px; font-size:0.85rem; text-decoration:none; margin-top:0.5rem;">
+    <%= t('sca.answerKey.linkLabel') %>
+  </a>
 </div>
 
 <style>

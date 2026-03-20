@@ -298,9 +298,39 @@ router.post('/import-to-vm/:id', requireAuth, requireRole(['admin', 'professor']
   res.json(result);
 });
 
-// --- GET /sca/answer-key --- Stub for Phase 12 (role-gated)
+// --- GET /sca/answer-key --- Instructor answer key (role-gated + RBAC-bypass hardened)
 router.get('/answer-key', requireAuth, requireRole(['admin', 'professor']), (req, res) => {
-  res.json({ placeholder: true, message: 'Answer key coming in Phase 12' });
+  // CRITICAL: Secondary check -- answer key must NEVER be visible to students
+  // even when RBAC is disabled via the security panel (see middleware/rbac.js line 13)
+  if (req.session.user.role === 'student') {
+    return res.status(403).render('error', {
+      message: 'Access Denied',
+      error: { status: 403, details: 'Answer key is restricted to instructors.' }
+    });
+  }
+
+  const lang = req.session.language || 'fr';
+  const findings = db.prepare('SELECT * FROM sca_findings').all();
+  const localizedFindings = findings.map(f => localize(f, lang));
+
+  // Build answer key data from i18n keys
+  const answerKeyData = localizedFindings.map(f => ({
+    ...f,
+    expectedClassification: t(lang, `sca.answerKey.${f.id}.classification`),
+    reasoning: t(lang, `sca.answerKey.${f.id}.reasoning`),
+    discussion: t(lang, `sca.answerKey.${f.id}.discussion`)
+  }));
+
+  res.render('sca/answer-key', {
+    title: t(lang, 'sca.answerKey.title'),
+    subtitle: t(lang, 'sca.answerKey.subtitle'),
+    findings: answerKeyData,
+    labels: {
+      expectedClassification: t(lang, 'sca.answerKey.expectedClassification'),
+      reasoning: t(lang, 'sca.answerKey.reasoning'),
+      discussionPrompt: t(lang, 'sca.answerKey.discussionPrompt')
+    }
+  });
 });
 
 module.exports = { router, importToVM };
