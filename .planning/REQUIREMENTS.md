@@ -49,7 +49,7 @@ Requirements for v1.1 Polish & Pedagogy release. Each maps to roadmap phases.
 - [x] **AKEY-02**: Answer key displays reasoning explaining why each finding has its expected classification
 - [x] **AKEY-03**: Answer key includes discussion prompts for in-class use per finding
 - [x] **AKEY-04**: Answer key is role-gated (visible only to professor/admin, never to students)
-- [ ] **AKEY-05**: Instructor can see an inline collapsible answer section in the finding detail view
+- [x] **AKEY-05**: Instructor can see an inline collapsible answer section in the finding detail view
 - [x] **AKEY-06**: All answer key content is in Quebec French
 
 ### Documentation
@@ -142,7 +142,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AKEY-02 | Phase 12 | Complete |
 | AKEY-03 | Phase 12 | Complete |
 | AKEY-04 | Phase 12 | Complete |
-| AKEY-05 | Phase 12 | Pending |
+| AKEY-05 | Phase 12 | Complete |
 | AKEY-06 | Phase 12 | Complete |
 | DOCS-01 | Phase 13 | Pending |
 | DOCS-02 | Phase 13 | Pending |

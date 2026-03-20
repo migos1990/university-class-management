@@ -32,7 +32,7 @@ Full details: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 - [ ] **Phase 9: Security Boundary Documentation** - SECURITY-BOUNDARY.md documenting all 12 intentional vulnerabilities vs. real bugs
 - [x] **Phase 10: DAST French Translation** - Translate all 6 DAST scenarios + views using the established localize() pattern (completed 2026-03-19)
 - [x] **Phase 11: Instructor Tools** - Student activity tracking (last_active_at, current finding) and progress summary on dashboard (completed 2026-03-20)
-- [ ] **Phase 12: Instructor Answer Key** - Role-gated answer key with classifications, reasoning, and discussion prompts in French
+- [x] **Phase 12: Instructor Answer Key** - Role-gated answer key with classifications, reasoning, and discussion prompts in French (completed 2026-03-20)
 - [ ] **Phase 13: Documentation** - README and instructor docs reflecting the v1.1 feature set
 - [ ] **Phase 14: Code Quality** - ESLint/Prettier tooling, dead code removal (preserving intentional vulnerabilities)
 - [ ] **Phase 15: CSS Extraction** - Move shared severity/badge/card CSS from inline styles into public/styles.css
@@ -127,7 +127,7 @@ Plans:
   2. A student attempting to access the answer key page is denied (redirect or 403) -- the route is role-gated at the handler level, not just hidden in the UI
   3. Instructor viewing a specific finding detail page sees a collapsible inline section with the expected answer, invisible to students even in page source
   4. Answer key page is linked from the instructor dashboard so it is discoverable without memorizing a URL
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 12-01-PLAN.md -- i18n answer key content, standalone answer key page, dashboard link, and role-gating with RBAC-bypass hardening
@@ -212,7 +212,7 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 9. Security Boundary Doc | v1.1 | 0/1 | Planned | - |
 | 10. DAST French | 1/1 | Complete    | 2026-03-20 | - |
 | 11. Instructor Tools | 1/1 | Complete    | 2026-03-20 | - |
-| 12. Instructor Answer Key | 1/2 | In Progress|  | - |
+| 12. Instructor Answer Key | 2/2 | Complete   | 2026-03-20 | - |
 | 13. Documentation | v1.1 | 0/? | Not started | - |
 | 14. Code Quality | v1.1 | 0/? | Not started | - |
 | 15. CSS Extraction | v1.1 | 0/? | Not started | - |

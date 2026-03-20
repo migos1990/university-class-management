@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Polish & Pedagogy
 status: completed
-stopped_at: Completed 12-01-PLAN.md
-last_updated: "2026-03-20T01:42:22.041Z"
-last_activity: 2026-03-20 -- Completed Phase 12 Plan 1 (Answer Key Page)
+stopped_at: Completed 12-02-PLAN.md
+last_updated: "2026-03-20T01:48:33.756Z"
+last_activity: 2026-03-20 -- Completed Phase 12 Plan 2 (Inline Answer Key + Smoke Test)
 progress:
   total_phases: 11
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 9
-  completed_plans: 8
-  percent: 89
+  completed_plans: 9
+  percent: 100
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 
 ## Current Position
 
-Phase: 12 of 16 (Instructor Answer Key) -- IN PROGRESS
-Plan: 1 of 2 (plan 1 complete)
-Status: Phase 12 Plan 1 complete (Answer Key Page)
-Last activity: 2026-03-20 -- Completed Phase 12 Plan 1 (Answer Key Page)
+Phase: 12 of 16 (Instructor Answer Key) -- COMPLETE
+Plan: 2 of 2 (all plans complete)
+Status: Phase 12 complete (Instructor Answer Key)
+Last activity: 2026-03-20 -- Completed Phase 12 Plan 2 (Inline Answer Key + Smoke Test)
 
-Progress: [█████████░] 89%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -64,6 +64,7 @@ Progress: [█████████░] 89%
 | Phase 10 P01 | 7min | 2 tasks | 7 files |
 | Phase 11 P01 | 5min | 2 tasks | 5 files |
 | Phase 12 P01 | 4min | 1 tasks | 5 files |
+| Phase 12 P02 | 3min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,7 @@ Recent decisions affecting current work:
 - [Phase 11]: Parameterized queries required for JSON DB adapter (inline SQL values not matched)
 - [Phase 12]: RBAC-bypass hardening: secondary role check for answer key to prevent student access when RBAC disabled
 - [Phase 12]: Finding 11 classified as Needs Investigation; all others as True Positive per SOLUTION-GUIDE.md
+- [Phase 12]: Hoisted studentCookie/profCookie to runTests() scope for cross-phase smoke test access
 
 ### Roadmap Evolution
 
@@ -112,6 +114,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-20T01:42:22.035Z
-Stopped at: Completed 12-01-PLAN.md
+Last session: 2026-03-20T01:48:33.751Z
+Stopped at: Completed 12-02-PLAN.md
 Resume file: None
