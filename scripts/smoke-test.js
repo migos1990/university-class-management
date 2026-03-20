@@ -167,6 +167,8 @@ async function runTests() {
   const frenchPorts = new Set();
   const failedPorts = [];
   let allPassed = true;
+  let studentCookie = null;
+  let profCookie = null;
 
   // -----------------------------------------------------------------------
   // Phase A: Health checks (all 13 ports)
@@ -231,7 +233,6 @@ async function runTests() {
     allPassed = false;
   } else {
     // Step 1: Login as student
-    let studentCookie = null;
     try {
       const loginData = 'username=alice_student&password=student123';
       const loginRes = await request({
@@ -306,7 +307,6 @@ async function runTests() {
     allPassed = false;
   } else {
     // Step 1: Login as professor
-    let profCookie = null;
     try {
       const loginData = 'username=prof_jones&password=prof123';
       const loginRes = await request({
@@ -375,6 +375,71 @@ async function runTests() {
         console.log(`  \u274C Stats endpoint -- ${e.message}`);
         allPassed = false;
       }
+    }
+  }
+
+  console.log('');
+
+  // -----------------------------------------------------------------------
+  // Phase E: Answer Key Role-Gating (AKEY-01, AKEY-04)
+  // -----------------------------------------------------------------------
+  console.log('--- Phase E: Answer Key Role-Gating ---');
+  console.log('');
+
+  // Test 1: Professor can access answer key
+  if (profCookie) {
+    try {
+      const akRes = await request({
+        url: `http://localhost:${DASHBOARD_PORT}/sca/answer-key`,
+        headers: { 'Cookie': profCookie }
+      });
+      if (akRes.statusCode === 200 && akRes.body.includes('Corrig')) {
+        console.log('  \u2713 Answer key -- professor access OK');
+      } else {
+        console.log(`  \u2717 Answer key -- professor got status ${akRes.statusCode}, missing French content`);
+        allPassed = false;
+      }
+    } catch (e) {
+      console.log(`  \u2717 Answer key -- professor access error: ${e.message}`);
+      allPassed = false;
+    }
+  }
+
+  // Test 2: Student is denied answer key access
+  if (studentCookie) {
+    try {
+      const akStudentRes = await request({
+        url: `http://localhost:${DEEP_PORT}/sca/answer-key`,
+        headers: { 'Cookie': studentCookie }
+      });
+      if (akStudentRes.statusCode === 403) {
+        console.log('  \u2713 Answer key -- student denied (403)');
+      } else {
+        console.log(`  \u2717 Answer key -- student got status ${akStudentRes.statusCode} (expected 403)`);
+        allPassed = false;
+      }
+    } catch (e) {
+      console.log(`  \u2717 Answer key -- student denial check error: ${e.message}`);
+      allPassed = false;
+    }
+  }
+
+  // Test 3: Student page source does NOT contain answer key data
+  if (studentCookie) {
+    try {
+      const findingRes = await request({
+        url: `http://localhost:${DEEP_PORT}/sca/findings/1`,
+        headers: { 'Cookie': studentCookie }
+      });
+      if (findingRes.statusCode === 200 && !findingRes.body.includes('answerKey') && !findingRes.body.includes('sca.answerKey.inlineTitle')) {
+        console.log('  \u2713 Finding detail -- no answer key in student page source');
+      } else {
+        console.log('  \u2717 Finding detail -- answer key content leaked to student page source!');
+        allPassed = false;
+      }
+    } catch (e) {
+      console.log(`  \u2717 Finding detail -- student source check error: ${e.message}`);
+      allPassed = false;
     }
   }
 
