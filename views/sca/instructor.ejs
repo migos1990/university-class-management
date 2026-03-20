@@ -23,6 +23,9 @@
   .btn-import   { background:#002855; color:#fff; }
   .btn-imported { background:#e9ecef; color:#6c757d; cursor:default; }
   details summary { cursor:pointer; font-weight:600; padding:0.5rem 0; }
+  .status-active     { background:#d4edda; color:#155724; }
+  .status-inactive   { background:#fff3cd; color:#856404; }
+  .status-notstarted { background:#e9ecef; color:#6c757d; }
 </style>
 
 <!-- Stats bar: 3 cards above Findings Overview -->
@@ -41,6 +44,30 @@
   </div>
 </div>
 <div id="stats-timestamp" style="text-align:right; font-size:0.75rem; color:#999; margin-top:-1rem; margin-bottom:1rem;"></div>
+
+<!-- Student Progress Summary (INST-01 + INST-02) -->
+<div class="card" style="margin-bottom:1.5rem;">
+  <h2 style="margin-bottom:1rem;">
+    <%= t('sca.instructor.progress.heading') %> —
+    <span id="student-active-count" style="font-weight:400; font-size:0.95rem; color:#666;"></span>
+  </h2>
+  <div style="overflow-x:auto;">
+    <table style="min-width:600px;">
+      <thead>
+        <tr>
+          <th><%= t('sca.instructor.progress.colStudent') %></th>
+          <th><%= t('sca.instructor.progress.colProgress') %></th>
+          <th><%= t('sca.instructor.progress.colLastActive') %></th>
+          <th><%= t('sca.instructor.progress.colCurrentFinding') %></th>
+          <th><%= t('sca.instructor.progress.colStatus') %></th>
+        </tr>
+      </thead>
+      <tbody id="student-progress-tbody">
+        <tr><td colspan="5" style="text-align:center; color:#999; padding:1rem;">Chargement...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
 
 <div class="card" style="margin-bottom:1.5rem;">
   <h2 style="margin-bottom:1rem;"><%= t('sca.instructor.findingsOverview') %></h2>
@@ -170,6 +197,65 @@ async function importToVM(findingId, btn) {
   }
 }
 
+// --- French relative time (no external library) ---
+function timeAgo(isoString) {
+  if (!isoString) return null;
+  var diff = Math.floor((Date.now() - new Date(isoString).getTime()) / 1000);
+  if (diff < 60) return 'il y a ' + diff + ' s';
+  if (diff < 3600) return 'il y a ' + Math.floor(diff / 60) + ' min';
+  if (diff < 86400) return 'il y a ' + Math.floor(diff / 3600) + ' h';
+  return 'il y a ' + Math.floor(diff / 86400) + ' j';
+}
+
+// --- Student progress table rendering ---
+function renderStudentTable(students, totalFindings) {
+  if (!students || !students.length) {
+    document.getElementById('student-progress-tbody').innerHTML =
+      '<tr><td colspan="5" style="text-align:center;color:#999;padding:1rem;">\u2014</td></tr>';
+    document.getElementById('student-active-count').textContent = '0 actifs / 0 \u00e9tudiants';
+    return;
+  }
+
+  var activeCount = students.filter(function(s) {
+    if (!s.lastActiveAt) return false;
+    return (Date.now() - new Date(s.lastActiveAt).getTime()) < 5 * 60 * 1000;
+  }).length;
+
+  document.getElementById('student-active-count').textContent =
+    activeCount + ' actifs / ' + students.length + ' \u00e9tudiants';
+
+  var tbody = document.getElementById('student-progress-tbody');
+  tbody.innerHTML = students.map(function(s) {
+    var pct = totalFindings ? Math.round(s.submitted / totalFindings * 100) : 0;
+    var name = s.username.replace('_student', '');
+    var ago = timeAgo(s.lastActiveAt);
+
+    // Three-state badge: Actif (green), Inactif (amber), Pas commence (gray)
+    var statusClass, statusLabel;
+    if (s.submitted === 0 && !s.lastActiveAt) {
+      statusClass = 'status-notstarted';
+      statusLabel = 'Pas commenc\u00e9';
+    } else if (s.lastActiveAt && (Date.now() - new Date(s.lastActiveAt).getTime()) < 5 * 60 * 1000) {
+      statusClass = 'status-active';
+      statusLabel = 'Actif';
+    } else {
+      statusClass = 'status-inactive';
+      statusLabel = 'Inactif';
+    }
+
+    return '<tr>' +
+      '<td><a href="/sca/student/' + s.id + '" style="color:#002855;font-weight:600;">' + name + '</a></td>' +
+      '<td style="min-width:140px;">' +
+        '<div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:' + pct + '%"></div></div>' +
+        '<div style="font-size:0.8rem;color:#666;margin-top:2px;">' + s.submitted + '/' + totalFindings + ' soumis</div>' +
+      '</td>' +
+      '<td style="font-size:0.85rem;color:#666;">' + (ago || '\u2014') + '</td>' +
+      '<td style="font-size:0.85rem;">' + (s.currentFindingTitle || '\u2014') + '</td>' +
+      '<td><span class="badge-sm ' + statusClass + '">' + statusLabel + '</span></td>' +
+    '</tr>';
+  }).join('');
+}
+
 // --- Stats polling (30s) ---
 async function refreshStats() {
   try {
@@ -182,6 +268,7 @@ async function refreshStats() {
       : '0';
     document.getElementById('stats-timestamp').textContent =
       'Mis \u00e0 jour : ' + new Date().toLocaleTimeString('fr-CA', { hour12: false });
+    renderStudentTable(data.students, data.totalFindings);
   } catch (e) {
     // Silently fail -- stats will refresh on next interval
   }
