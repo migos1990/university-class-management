@@ -213,7 +213,7 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 10. DAST French | 1/1 | Complete    | 2026-03-20 | - |
 | 11. Instructor Tools | 1/1 | Complete    | 2026-03-20 | - |
 | 12. Instructor Answer Key | 2/2 | Complete    | 2026-03-20 | - |
-| 13. Documentation | 1/1 | Complete   | 2026-03-21 | - |
+| 13. Documentation | 1/1 | Complete    | 2026-03-21 | - |
 | 14. Code Quality | v1.1 | 0/? | Not started | - |
 | 15. CSS Extraction | v1.1 | 0/? | Not started | - |
 | 16. CTF Pentest Lab | v1.1 | 0/? | Not started | - |
