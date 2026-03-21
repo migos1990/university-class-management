@@ -54,8 +54,8 @@ Requirements for v1.1 Polish & Pedagogy release. Each maps to roadmap phases.
 
 ### Documentation
 
-- [ ] **DOCS-01**: README reflects current v1.1 project state (features, setup, usage)
-- [ ] **DOCS-02**: Instructor-facing documentation describes how to use the answer key and new features
+- [x] **DOCS-01**: README reflects current v1.1 project state (features, setup, usage)
+- [x] **DOCS-02**: Instructor-facing documentation describes how to use the answer key and new features
 
 ### Code Quality
 
@@ -144,8 +144,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AKEY-04 | Phase 12 | Complete |
 | AKEY-05 | Phase 12 | Complete |
 | AKEY-06 | Phase 12 | Complete |
-| DOCS-01 | Phase 13 | Pending |
-| DOCS-02 | Phase 13 | Pending |
+| DOCS-01 | Phase 13 | Complete |
+| DOCS-02 | Phase 13 | Complete |
 | QUAL-01 | Phase 14 | Pending |
 | QUAL-02 | Phase 14 | Pending |
 | QUAL-03 | Phase 14 | Pending |

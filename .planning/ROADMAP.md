@@ -33,7 +33,7 @@ Full details: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 - [x] **Phase 10: DAST French Translation** - Translate all 6 DAST scenarios + views using the established localize() pattern (completed 2026-03-19)
 - [x] **Phase 11: Instructor Tools** - Student activity tracking (last_active_at, current finding) and progress summary on dashboard (completed 2026-03-20)
 - [x] **Phase 12: Instructor Answer Key** - Role-gated answer key with classifications, reasoning, and discussion prompts in French (completed 2026-03-20)
-- [ ] **Phase 13: Documentation** - README and instructor docs reflecting the v1.1 feature set
+- [x] **Phase 13: Documentation** - README and instructor docs reflecting the v1.1 feature set (completed 2026-03-21)
 - [ ] **Phase 14: Code Quality** - ESLint/Prettier tooling, dead code removal (preserving intentional vulnerabilities)
 - [ ] **Phase 15: CSS Extraction** - Move shared severity/badge/card CSS from inline styles into public/styles.css
 - [ ] **Phase 16: CTF Pentest Lab** - CTF-style challenge board replacing the pentest form-filling module with 12 exploit challenges
@@ -140,7 +140,7 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. README describes current features (inline code snippets, answer key, DAST French, CTF lab, code quality tooling), setup instructions, and usage -- reflecting the actual shipped v1.1 state
   2. Instructor documentation explains how to access and use the answer key, what the code snippets show students, and any new classroom workflow considerations
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
 - [ ] 13-01-PLAN.md -- Update README.md (SCA expansion, instructor features, version history v3.1) and SOLUTION-GUIDE.md (SCA lab, DAST French, classroom management, pre-class checklist, footer)
@@ -213,7 +213,7 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 10. DAST French | 1/1 | Complete    | 2026-03-20 | - |
 | 11. Instructor Tools | 1/1 | Complete    | 2026-03-20 | - |
 | 12. Instructor Answer Key | 2/2 | Complete    | 2026-03-20 | - |
-| 13. Documentation | v1.1 | 0/1 | Planned | - |
+| 13. Documentation | 1/1 | Complete   | 2026-03-21 | - |
 | 14. Code Quality | v1.1 | 0/? | Not started | - |
 | 15. CSS Extraction | v1.1 | 0/? | Not started | - |
 | 16. CTF Pentest Lab | v1.1 | 0/? | Not started | - |
