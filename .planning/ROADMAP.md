@@ -1,3 +1,4 @@
+
 # Roadmap: HEC Montreal Application Security Platform
 
 ## Milestones
@@ -30,10 +31,10 @@ Full details: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 - [ ] **Phase 7: Quick Wins** - Security status bar French, SCA completion celebration, finding prev/next nav, API auth hardening
 - [ ] **Phase 8: Testing** - Integration tests for SCA review submission, answer key role-gating, internal API auth
 - [ ] **Phase 9: Security Boundary Documentation** - SECURITY-BOUNDARY.md documenting all 12 intentional vulnerabilities vs. real bugs
-- [x] **Phase 10: DAST French Translation** - Translate all 6 DAST scenarios + views using the established localize() pattern (completed 2026-03-19)
-- [x] **Phase 11: Instructor Tools** - Student activity tracking (last_active_at, current finding) and progress summary on dashboard (completed 2026-03-20)
-- [x] **Phase 12: Instructor Answer Key** - Role-gated answer key with classifications, reasoning, and discussion prompts in French (completed 2026-03-20)
-- [x] **Phase 13: Documentation** - README and instructor docs reflecting the v1.1 feature set (completed 2026-03-21)
+- [ ] **Phase 10: DAST French Translation** - Translate all 6 DAST scenarios + views using the established localize() pattern
+- [ ] **Phase 11: Instructor Tools** - Student activity tracking (last_active_at, current finding) and progress summary on dashboard
+- [ ] **Phase 12: Instructor Answer Key** - Role-gated answer key with classifications, reasoning, and discussion prompts in French
+- [ ] **Phase 13: Documentation** - README and instructor docs reflecting the v1.1 feature set
 - [ ] **Phase 14: Code Quality** - ESLint/Prettier tooling, dead code removal (preserving intentional vulnerabilities)
 - [ ] **Phase 15: CSS Extraction** - Move shared severity/badge/card CSS from inline styles into public/styles.css
 - [ ] **Phase 16: CTF Pentest Lab** - CTF-style challenge board replacing the pentest form-filling module with 12 exploit challenges
@@ -78,10 +79,10 @@ Plans:
   1. Integration tests verify SCA review submission workflow (student submits classification, data persists)
   2. Integration tests verify answer key role-gating (student denied, instructor allowed)
   3. Integration tests verify /api/instructor-message and /api/summary require auth
-**Plans:** 1 plan
+**Plans**: TBD
 
 Plans:
-- [ ] 08-01-PLAN.md -- Test infrastructure (helpers, answer-key stub, npm script) and three integration test files (SCA review, role-gating, API auth)
+- [ ] 08-01: TBD
 
 ### Phase 9: Security Boundary Documentation
 **Goal**: A clear reference document distinguishes the 12 intentional teaching vulnerabilities from real security bugs, so anyone reviewing the codebase understands what is deliberate
@@ -89,10 +90,10 @@ Plans:
 **Requirements**: SDOC-01
 **Success Criteria** (what must be TRUE):
   1. SECURITY-BOUNDARY.md exists at the project root, listing all 12 intentional vulnerabilities with their purpose, and separately listing any real security findings with their status
-**Plans:** 1 plan
+**Plans**: TBD
 
 Plans:
-- [ ] 09-01-PLAN.md -- SECURITY-BOUNDARY.md with 12 intentional vulnerabilities, weakened controls, tech debt items, and README cross-link
+- [ ] 09-01: TBD
 
 ### Phase 10: DAST French Translation
 **Goal**: DAST lab has the same full-French experience as the SCA lab, so students work entirely in their native language across both labs
@@ -101,10 +102,10 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. All 6 DAST scenario descriptions, instructions, and results display in Quebec French using the localize() pattern
   2. All DAST views (scenario list, scenario detail, results) display in Quebec French
-**Plans:** 1/1 plans complete
+**Plans**: TBD
 
 Plans:
-- [ ] 10-01-PLAN.md -- dastLocalize() function, ~70 i18n keys in fr/en.json, and full French translation of all 3 DAST views + route handlers
+- [ ] 10-01: TBD
 
 ### Phase 11: Instructor Tools
 **Goal**: Instructor can see at a glance which students are active, what they're working on, and their overall progress — enabling timely intervention during class
@@ -113,10 +114,10 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Instructor dashboard shows each student's last_active_at timestamp and current finding being analyzed
   2. Instructor dashboard includes a progress summary card showing per-student completion across labs
-**Plans:** 1/1 plans complete
+**Plans**: TBD
 
 Plans:
-- [ ] 11-01-PLAN.md -- In-memory activity tracking, /sca/stats students array extension, student progress table with 30s polling
+- [ ] 11-01: TBD
 
 ### Phase 12: Instructor Answer Key
 **Goal**: Instructor has a French-language reference showing expected classifications, reasoning, and discussion prompts for all 12 findings, enabling confident in-class facilitation
@@ -127,7 +128,7 @@ Plans:
   2. A student attempting to access the answer key page is denied (redirect or 403) -- the route is role-gated at the handler level, not just hidden in the UI
   3. Instructor viewing a specific finding detail page sees a collapsible inline section with the expected answer, invisible to students even in page source
   4. Answer key page is linked from the instructor dashboard so it is discoverable without memorizing a URL
-**Plans:** 2/2 plans complete
+**Plans:** 2 plans
 
 Plans:
 - [ ] 12-01-PLAN.md -- i18n answer key content, standalone answer key page, dashboard link, and role-gating with RBAC-bypass hardening
@@ -140,10 +141,10 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. README describes current features (inline code snippets, answer key, DAST French, CTF lab, code quality tooling), setup instructions, and usage -- reflecting the actual shipped v1.1 state
   2. Instructor documentation explains how to access and use the answer key, what the code snippets show students, and any new classroom workflow considerations
-**Plans:** 1/1 plans complete
+**Plans**: TBD
 
 Plans:
-- [ ] 13-01-PLAN.md -- Update README.md (SCA expansion, instructor features, version history v3.1) and SOLUTION-GUIDE.md (SCA lab, DAST French, classroom management, pre-class checklist, footer)
+- [ ] 13-01: TBD
 
 ### Phase 14: Code Quality
 **Goal**: Codebase has consistent formatting and linting enforced by tooling, with dead code removed -- without touching the 12 intentional SCA vulnerabilities
@@ -154,11 +155,11 @@ Plans:
   2. Running `npm run format` executes Prettier 3 and the codebase is already formatted (no changes needed after a fresh format pass)
   3. No dead code or unused variables remain in the codebase (verified by ESLint rules)
   4. All 12 intentional SCA vulnerabilities and the SQL pattern-matching DB adapter are preserved exactly as-is -- `npm test` smoke test passes before and after every code quality change
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 14-01: TBD
-- [ ] 14-02: TBD
+- [ ] 14-01-PLAN.md -- Install ESLint 9 + Prettier 3 devDependencies, create config files, add npm scripts
+- [ ] 14-02-PLAN.md -- Fix all lint errors, format codebase, remove dead code, verify vulnerability preservation
 
 ### Phase 15: CSS Extraction
 **Goal**: Shared visual patterns (severity badges, cards, status indicators) are defined once in a shared stylesheet instead of duplicated across 8+ inline style blocks
@@ -208,12 +209,12 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 5. Deployment Verification | v1.0 | 2/2 | Complete | 2026-03-12 |
 | 6. Inline Code Snippets | v1.1 | 2/2 | Complete | 2026-03-12 |
 | 7. Quick Wins | v1.1 | 0/1 | Planned | - |
-| 8. Testing | v1.1 | 0/1 | Planned | - |
-| 9. Security Boundary Doc | v1.1 | 0/1 | Planned | - |
-| 10. DAST French | 1/1 | Complete    | 2026-03-20 | - |
-| 11. Instructor Tools | 1/1 | Complete    | 2026-03-20 | - |
-| 12. Instructor Answer Key | 2/2 | Complete    | 2026-03-20 | - |
-| 13. Documentation | 1/1 | Complete    | 2026-03-21 | - |
-| 14. Code Quality | v1.1 | 0/? | Not started | - |
+| 8. Testing | v1.1 | 0/? | Not started | - |
+| 9. Security Boundary Doc | v1.1 | 0/? | Not started | - |
+| 10. DAST French | v1.1 | 0/? | Not started | - |
+| 11. Instructor Tools | v1.1 | 0/? | Not started | - |
+| 12. Instructor Answer Key | v1.1 | 0/2 | Planned | - |
+| 13. Documentation | v1.1 | 0/? | Not started | - |
+| 14. Code Quality | v1.1 | 0/2 | Planned | - |
 | 15. CSS Extraction | v1.1 | 0/? | Not started | - |
 | 16. CTF Pentest Lab | v1.1 | 0/? | Not started | - |
