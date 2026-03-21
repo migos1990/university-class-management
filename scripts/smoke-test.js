@@ -121,7 +121,7 @@ async function waitForInstance(port, maxRetries, delayMs) {
         timeout: REQUEST_TIMEOUT
       });
       if (res.statusCode === 200) return true;
-    } catch (e) {
+    } catch (_e) {
       // Retry on error
     }
     if (attempt < maxRetries) {
@@ -141,13 +141,6 @@ function portLabel(port) {
   const teamIndex = port - BASE_PORT;
   const teamName = TEAMS[teamIndex] || `Instance ${teamIndex + 1}`;
   return `${teamName} (${port})`;
-}
-
-/**
- * Sleep helper.
- */
-function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms));
 }
 
 // ---------------------------------------------------------------------------

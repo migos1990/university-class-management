@@ -64,8 +64,6 @@ router.get('/student', requireAuth, (req, res) => {
  * Professor dashboard
  */
 router.get('/professor', requireAuth, (req, res) => {
-  const userId = req.session.user.id;
-
   // Get all classes (or classes assigned to this professor)
   const classes = db.prepare(`
     SELECT

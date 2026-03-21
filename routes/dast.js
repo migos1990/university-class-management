@@ -6,7 +6,7 @@ const { db } = require('../config/database');
 const { dastLocalize, t } = require('../utils/i18n');
 
 // Helper: import a DAST scenario's confirmed finding into the VM
-function importToVM(scenarioId, importedBy) {
+function importToVM(scenarioId, _importedBy) {
   const scenario = db.prepare('SELECT * FROM dast_scenarios WHERE id = ?').get(parseInt(scenarioId));
   if (!scenario) return { success: false, error: 'Scenario not found' };
 
@@ -84,7 +84,7 @@ router.get('/scenarios/:id', requireAuth, (req, res) => {
   const localizedScenario = dastLocalize(scenario, lang);
 
   let steps = [];
-  try { steps = JSON.parse(localizedScenario.steps); } catch(e) { steps = []; }
+  try { steps = JSON.parse(localizedScenario.steps); } catch(_e) { steps = []; }
 
   const user = req.session.user;
   let myFinding = null;

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { db } = require('../config/database');
-const { hashPassword, comparePassword } = require('../utils/passwordHash');
+const { comparePassword } = require('../utils/passwordHash');
 const { checkRateLimit, recordLoginAttempt } = require('../middleware/rateLimiter');
 const { logAuthAttempt } = require('../middleware/audit');
 

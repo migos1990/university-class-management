@@ -55,7 +55,7 @@ function auditLog(action, resourceType = null) {
  * Log authentication attempts
  */
 function logAuthAttempt(username, success, ip, reason = null) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve, _reject) => {
     try {
       db.prepare(`
         INSERT INTO audit_logs (username, action, ip_address, success, details)

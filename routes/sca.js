@@ -28,7 +28,7 @@ const DIFFICULTY_MAP = {
 const DIFFICULTY_ORDER = { easy: 0, medium: 1, advanced: 2 };
 
 // Helper: import a confirmed SCA finding into the VM as a vulnerability
-function importToVM(findingId, importedBy) {
+function importToVM(findingId, _importedBy) {
   const finding = db.prepare('SELECT * FROM sca_findings WHERE id = ?').get(parseInt(findingId));
   if (!finding) return { success: false, error: 'Finding not found' };
 

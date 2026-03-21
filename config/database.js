@@ -76,7 +76,7 @@ function attemptRecoveryFromBackup() {
           console.log(`✓ Database recovered from backup: ${file}`);
           return true;
         }
-      } catch (e) {
+      } catch (_e) {
         // Skip invalid backup files
       }
     }
@@ -117,7 +117,7 @@ function loadDatabase() {
             console.log('✓ Database recovered from temp file');
             return;
           }
-        } catch (tmpError) {
+        } catch (_tmpError) {
           // Temp file also corrupt
         }
       }
@@ -151,7 +151,7 @@ const dbInterface = {
     get: (...params) => executeSQL(sql, params),
     all: (...params) => executeSQL(sql, params)
   }),
-  exec: (sql) => {
+  exec: (_sql) => {
     // For schema creation, just ignore (we use JSON structure)
     return;
   }

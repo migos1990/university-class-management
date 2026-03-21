@@ -141,7 +141,7 @@ function healthCheck(inst) {
           inst.lastCheck = new Date().toISOString();
           inst.lastStatus = data;
           resolve(true);
-        } catch(e) {
+        } catch(_e) {
           inst.status = 'offline';
           resolve(false);
         }
@@ -170,7 +170,7 @@ function fetchSummary(inst) {
         try {
           summaryCache[inst.index] = JSON.parse(body);
           resolve(true);
-        } catch(e) {
+        } catch(_e) {
           resolve(false);
         }
       });
@@ -882,7 +882,7 @@ const dashboard = http.createServer(async (req, res) => {
         const delivered = results.filter(r => r.status === 'fulfilled' && r.value === true).length;
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, message: broadcastMessage, delivered }));
-      } catch(e) {
+      } catch(_e) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: false, error: 'Invalid JSON' }));
       }

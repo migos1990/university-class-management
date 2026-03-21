@@ -42,7 +42,7 @@ function normalizeKey(keyData) {
   try {
     // Try to decode as base64
     keyBuffer = Buffer.from(keyData, 'base64');
-  } catch (e) {
+  } catch (_e) {
     // If not base64, use as-is
     keyBuffer = Buffer.from(keyData, 'utf8');
   }
