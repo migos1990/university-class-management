@@ -59,10 +59,10 @@ Requirements for v1.1 Polish & Pedagogy release. Each maps to roadmap phases.
 
 ### Code Quality
 
-- [ ] **QUAL-01**: ESLint 9 and Prettier 3 are configured with npm scripts (`npm run lint`, `npm run format`)
+- [x] **QUAL-01**: ESLint 9 and Prettier 3 are configured with npm scripts (`npm run lint`, `npm run format`)
 - [ ] **QUAL-02**: Codebase passes ESLint and Prettier with zero errors/warnings
 - [ ] **QUAL-03**: Dead code and unused variables removed
-- [ ] **QUAL-04**: Intentional vulnerabilities (12 SCA findings) and SQL pattern-matching DB adapter are preserved unchanged
+- [x] **QUAL-04**: Intentional vulnerabilities (12 SCA findings) and SQL pattern-matching DB adapter are preserved unchanged
 
 ### CSS Extraction
 
@@ -146,10 +146,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AKEY-06 | Phase 12 | Complete |
 | DOCS-01 | Phase 13 | Complete |
 | DOCS-02 | Phase 13 | Complete |
-| QUAL-01 | Phase 14 | Pending |
+| QUAL-01 | Phase 14 | Complete |
 | QUAL-02 | Phase 14 | Pending |
 | QUAL-03 | Phase 14 | Pending |
-| QUAL-04 | Phase 14 | Pending |
+| QUAL-04 | Phase 14 | Complete |
 | CSS-01 | Phase 15 | Pending |
 | CTF-01 | Phase 16 | Pending |
 | CTF-02 | Phase 16 | Pending |

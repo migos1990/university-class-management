@@ -155,7 +155,7 @@ Plans:
   2. Running `npm run format` executes Prettier 3 and the codebase is already formatted (no changes needed after a fresh format pass)
   3. No dead code or unused variables remain in the codebase (verified by ESLint rules)
   4. All 12 intentional SCA vulnerabilities and the SQL pattern-matching DB adapter are preserved exactly as-is -- `npm test` smoke test passes before and after every code quality change
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 - [ ] 14-01-PLAN.md -- Install ESLint 9 + Prettier 3 devDependencies, create config files, add npm scripts
@@ -215,6 +215,6 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 11. Instructor Tools | v1.1 | 0/? | Not started | - |
 | 12. Instructor Answer Key | v1.1 | 0/2 | Planned | - |
 | 13. Documentation | v1.1 | 0/? | Not started | - |
-| 14. Code Quality | v1.1 | 0/2 | Planned | - |
+| 14. Code Quality | 1/2 | In Progress|  | - |
 | 15. CSS Extraction | v1.1 | 0/? | Not started | - |
 | 16. CTF Pentest Lab | v1.1 | 0/? | Not started | - |

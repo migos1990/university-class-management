@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Polish & Pedagogy
 status: completed
-stopped_at: Phase 14 context gathered
-last_updated: "2026-03-21T18:08:20.304Z"
-last_activity: 2026-03-20 -- Completed Phase 13 Plan 1 (README + SOLUTION-GUIDE update)
+stopped_at: Completed 14-01-PLAN.md
+last_updated: "2026-03-21T18:27:51.879Z"
+last_activity: 2026-03-21 -- Completed Phase 14 Plan 1 (ESLint 9 + Prettier 3 tooling)
 progress:
   total_phases: 11
   completed_phases: 8
-  total_plans: 10
-  completed_plans: 10
-  percent: 100
+  total_plans: 12
+  completed_plans: 11
+  percent: 92
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** The SCA lab must work flawlessly end-to-end in French -- from Codespace boot to student submission to instructor review -- with zero friction for non-technical students.
-**Current focus:** Phase 13 complete -- Documentation updated for v3.1
+**Current focus:** Phase 14 in progress -- Code Quality tooling
 
 ## Current Position
 
-Phase: 13 of 16 (Documentation) -- COMPLETE
-Plan: 1 of 1 (all plans complete)
-Status: Phase 13 complete (Documentation)
-Last activity: 2026-03-20 -- Completed Phase 13 Plan 1 (README + SOLUTION-GUIDE update)
+Phase: 14 of 16 (Code Quality)
+Plan: 1 of 2 (14-01 complete)
+Status: Phase 14 Plan 01 complete (Linting and Formatting Tooling)
+Last activity: 2026-03-21 -- Completed Phase 14 Plan 1 (ESLint 9 + Prettier 3 tooling)
 
-Progress: [██████████] 100%
+Progress: [█████████░] 92%
 
 ## Performance Metrics
 
@@ -66,6 +66,7 @@ Progress: [██████████] 100%
 | Phase 12 P01 | 4min | 1 tasks | 5 files |
 | Phase 12 P02 | 3min | 2 tasks | 3 files |
 | Phase 13 P01 | 3min | 2 tasks | 2 files |
+| Phase 14 P01 | 2min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -99,6 +100,10 @@ Recent decisions affecting current work:
 - [Phase 12]: Hoisted studentCookie/profCookie to runTests() scope for cross-phase smoke test access
 - [Phase 13]: Used v3.1 (not v1.1) for version history entry, continuing existing README version scheme
 - [Phase 13]: Collapsed v1.2-v1.9 into single milestone line; added Instructor Tools subsection under For Instructors; answer key as usage-focused paragraph
+- [Phase 14]: CommonJS flat config for ESLint 9 (project has no type:module)
+- [Phase 14]: eslint-config-prettier/flat as last config entry to disable conflicting rules
+- [Phase 14]: EJS templates excluded from Prettier via .prettierignore (breaks template syntax)
+- [Phase 14]: no-console disabled globally (console output is teaching experience)
 
 ### Roadmap Evolution
 
@@ -117,6 +122,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-21T18:08:20.297Z
-Stopped at: Phase 14 context gathered
-Resume file: .planning/phases/14-code-quality/14-CONTEXT.md
+Last session: 2026-03-21T18:27:51.874Z
+Stopped at: Completed 14-01-PLAN.md
+Resume file: None
