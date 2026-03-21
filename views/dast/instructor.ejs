@@ -5,20 +5,6 @@
   <p class="page-subtitle"><%= t('dast.instructor.subtitle', { scenarioCount: scenarios.length, studentCount: students.length }) %></p>
 </div>
 
-<style>
-  .sev-Critical  { background:#ffe0e0; color:#c0392b; }
-  .sev-High      { background:#fff0e0; color:#c0732a; }
-  .sev-Medium    { background:#fffbe0; color:#9a7d0a; }
-  .sev-Low       { background:#e8f8e8; color:#1e8449; }
-  .badge-sm { display:inline-block; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:600; }
-  .pre-badge { background:#e8f0ff; color:#1a5276; font-size:0.75rem; padding:2px 8px; border-radius:4px; font-weight:600; }
-  .action-btn { padding:4px 10px; border:none; border-radius:4px; cursor:pointer; font-size:0.8rem; }
-  .btn-import   { background:#002855; color:#fff; }
-  .btn-imported { background:#e9ecef; color:#6c757d; cursor:default; }
-  .progress-bar-wrap { background:#e9ecef; border-radius:4px; height:6px; margin-top:4px; }
-  .progress-bar-fill { height:6px; border-radius:4px; background:#002855; }
-</style>
-
 <div class="card">
   <h2 style="margin-bottom:1rem;"><%= t('dast.instructor.scenariosHeading') %></h2>
   <table>

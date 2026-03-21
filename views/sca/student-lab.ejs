@@ -5,23 +5,6 @@
   <p class="page-subtitle"><%= t('sca.studentLab.subtitle') %></p>
 </div>
 
-<style>
-  .sev-Critical  { background:#ffe0e0; color:#c0392b; }
-  .sev-High      { background:#fff0e0; color:#c0732a; }
-  .sev-Medium    { background:#fffbe0; color:#9a7d0a; }
-  .sev-Low       { background:#e8f8e8; color:#1e8449; }
-  .badge-sm { display:inline-block; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:600; }
-  .cls-confirmed      { background:#d4edda; color:#155724; }
-  .cls-false_positive { background:#f8d7da; color:#721c24; }
-  .cls-needs          { background:#fff3cd; color:#856404; }
-  .cls-none           { background:#e9ecef; color:#6c757d; }
-  .progress-outer { background:#e9ecef; border-radius:8px; height:12px; }
-  .progress-inner { height:12px; border-radius:8px; background:#002855; transition:width 0.3s; }
-  .finding-card { border:1px solid #dee2e6; border-radius:8px; padding:1rem 1.25rem; margin-bottom:1rem; background:#fff; }
-  .finding-card.done { border-left:4px solid #28a745; }
-  .finding-card.pending { border-left:4px solid #ffc107; }
-</style>
-
 <% if (user.role === 'student') { %>
 <div id="sca-intro-banner" class="card" style="background:#e8f0ff; border:1px solid #b8d4f0; margin-bottom:1.5rem;">
   <strong style="color:#002855; font-size:1.05rem;"><%= t('sca.guided.introBannerTitle') %></strong>
