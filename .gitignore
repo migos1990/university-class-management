@@ -34,3 +34,9 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# CTF flag file (generated at runtime by seed)
+FLAG.txt
+
+# Obsidian
+.obsidian/

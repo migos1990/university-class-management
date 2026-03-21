@@ -805,5 +805,41 @@
       "imported": "Imported! Reloading...",
       "importing": "Importing..."
     }
+  },
+  "pentest": {
+    "ctf": {
+      "title": "Penetration Testing Lab",
+      "subtitle": "Exploit the vulnerabilities and capture the flags",
+      "flagsCaptured": "Flags captured",
+      "score": "Score",
+      "rank": "Rank",
+      "easy": "Easy Challenges",
+      "medium": "Medium Challenges",
+      "advanced": "Advanced Challenges",
+      "locked": "Locked",
+      "unlockRequirement": "Solve %d %s challenges to unlock",
+      "mission": "Mission Briefing",
+      "hints": "Hints",
+      "submitFlag": "Submit Flag",
+      "correct": "FLAG CAPTURED!",
+      "incorrect": "Incorrect flag. No penalty. Try again.",
+      "captured": "CAPTURED",
+      "alreadyCaptured": "You have already captured this flag!",
+      "formatHint": "Expected format: FLAG{...}",
+      "confirmHint": "Confirm? (-%d pts)",
+      "welcome": "Welcome to the penetration testing lab. Your mission: exploit the vulnerabilities in this application and capture all 12 hidden flags. Start with the easy challenges.",
+      "completion": "Congratulations! You have captured all 12 flags!",
+      "tierUnlocked": "Tier %s unlocked!",
+      "activeChallenge": "Active Challenge",
+      "backToBoard": "\u2190 Back to challenges",
+      "leaderboard": "Leaderboard",
+      "heatmap": "Progress Heatmap",
+      "studentsActive": "active students",
+      "avgFlags": "Avg. flags",
+      "leader": "Leader",
+      "noStudents": "No student has started the lab yet.",
+      "reset": "Reset",
+      "confirmReset": "Are you sure you want to reset this student?"
+    }
   }
 }

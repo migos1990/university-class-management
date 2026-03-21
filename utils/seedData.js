@@ -1,4 +1,6 @@
 const { db } = require('../config/database');
+const fs = require('fs');
+const path = require('path');
 
 function seedDatabase() {
   console.log('Starting database seeding...');
@@ -20,6 +22,9 @@ function seedDatabase() {
 
   // Admin
   userStmt.run('admin', 'admin@university.edu', 'admin123', 'admin', null);
+  // CTF challenge 3: plant flag on admin user (plaintext passwords in DB)
+  const adminUser = db.prepare('SELECT * FROM users WHERE username = ?').get('admin');
+  if (adminUser) adminUser.ctf_flag = 'FLAG{plaintext-passwords-exposed}';
 
   // Professors
   userStmt.run('prof_jones', 'jones@university.edu', 'prof123', 'professor', null);
@@ -1163,15 +1168,260 @@ function seedDatabase() {
 
   vmVulns.forEach((v) => vmStmt.run(...v));
 
+  // -------------------------------------------------------
+  // CTF Challenge 5: Hidden enrollment with IDOR flag
+  // -------------------------------------------------------
+  const hiddenEnroll = db.prepare(`
+    INSERT INTO enrollments (student_id, class_id, grade)
+    VALUES (?, ?, ?)
+  `);
+  hiddenEnroll.run(adminUser.id, cs301.id, 'N/A');
+  // Plant IDOR flag on the hidden enrollment
+  const allEnrollments = db.prepare('SELECT * FROM enrollments').all();
+  const hiddenEnrollment = allEnrollments[allEnrollments.length - 1];
+  if (hiddenEnrollment) hiddenEnrollment.ctf_flag = 'FLAG{idor-grades-exposed}';
+
+  // -------------------------------------------------------
+  // CTF Challenges (12 challenges with French content)
+  // -------------------------------------------------------
+  console.log('Seeding CTF challenges...');
+  const ctfStmt = db.prepare(`
+    INSERT INTO ctf_challenges (id, title, title_fr, category, cwe, difficulty, points, briefing_fr, hint1_fr, hint2_fr, hint1_cost, hint2_cost, flag_value, flag_location, order_index)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  ctfStmt.run(
+    1,
+    'Hardcoded Session Secret',
+    'Secret de session cod\u00e9 en dur',
+    'A02:2021 - Cryptographic Failures',
+    'CWE-798',
+    'easy',
+    100,
+    'L\u2019application utilise un secret de session cod\u00e9 en dur dans le code source. Votre mission\u00a0: trouvez ce secret dans le fichier de configuration du serveur et soumettez le flag associ\u00e9.',
+    'Examinez le fichier principal du serveur, l\u00e0 o\u00f9 la session est configur\u00e9e.',
+    'Cherchez la propri\u00e9t\u00e9 "secret" dans la configuration de express-session.',
+    10,
+    20,
+    'FLAG{session-secret-exposed}',
+    'server.js -- session configuration secret value',
+    1
+  );
+
+  ctfStmt.run(
+    2,
+    'Hardcoded AES Key',
+    'Cl\u00e9 AES cod\u00e9e en dur',
+    'A02:2021 - Cryptographic Failures',
+    'CWE-321',
+    'easy',
+    100,
+    'Une cl\u00e9 de chiffrement AES est cod\u00e9e en dur dans le module de chiffrement. Trouvez cette cl\u00e9 et soumettez le flag.',
+    'Le module de chiffrement se trouve dans le dossier utils/.',
+    'Cherchez une constante contenant une cl\u00e9 hexad\u00e9cimale de 32 caract\u00e8res.',
+    10,
+    20,
+    'FLAG{aes-key-hardcoded}',
+    'utils/encryption.js -- hardcoded AES key constant',
+    2
+  );
+
+  ctfStmt.run(
+    3,
+    'Plaintext Passwords in DB',
+    'Mots de passe en clair dans la BD',
+    'A02:2021 - Cryptographic Failures',
+    'CWE-256',
+    'easy',
+    100,
+    'Les mots de passe des utilisateurs sont stock\u00e9s en clair dans la base de donn\u00e9es. Acc\u00e9dez aux donn\u00e9es utilisateur et trouvez le flag plant\u00e9 sur le compte administrateur.',
+    'Inspectez les donn\u00e9es de la base de donn\u00e9es\u00a0: comment les utilisateurs sont-ils stock\u00e9s\u00a0?',
+    'Le champ ctf_flag de l\u2019utilisateur admin contient le flag.',
+    10,
+    20,
+    'FLAG{plaintext-passwords-exposed}',
+    'Admin user record -- ctf_flag field in database',
+    3
+  );
+
+  ctfStmt.run(
+    4,
+    'Plaintext Password Comparison',
+    'Comparaison de mot de passe en clair',
+    'A07:2021 - Identification and Authentication Failures',
+    'CWE-287',
+    'easy',
+    100,
+    'L\u2019authentification compare les mots de passe en texte brut au lieu d\u2019utiliser un hachage s\u00e9curis\u00e9. Exploitez cette faiblesse pour vous connecter et capturez le flag.',
+    'Regardez comment le formulaire de connexion v\u00e9rifie le mot de passe soumis.',
+    'La route d\u2019authentification utilise une comparaison directe au lieu de bcrypt.',
+    10,
+    20,
+    'FLAG{auth-bypass-plaintext}',
+    'routes/auth.js -- plaintext password comparison in login handler',
+    4
+  );
+
+  ctfStmt.run(
+    5,
+    'IDOR on Enrollment Access',
+    'IDOR sur l\u2019acc\u00e8s aux inscriptions',
+    'A01:2021 - Broken Access Control',
+    'CWE-639',
+    'medium',
+    200,
+    'L\u2019application ne v\u00e9rifie pas correctement l\u2019identit\u00e9 de l\u2019\u00e9tudiant lors de l\u2019acc\u00e8s aux donn\u00e9es d\u2019inscription. Exploitez cette r\u00e9f\u00e9rence directe d\u2019objet non s\u00e9curis\u00e9e pour acc\u00e9der \u00e0 une inscription cach\u00e9e contenant le flag.',
+    'L\u2019endpoint des inscriptions utilise l\u2019ID de l\u2019URL plut\u00f4t que l\u2019ID de la session.',
+    'Essayez de changer l\u2019ID dans l\u2019URL pour acc\u00e9der aux inscriptions d\u2019autres utilisateurs.',
+    10,
+    20,
+    'FLAG{idor-grades-exposed}',
+    'Hidden enrollment record -- ctf_flag field on admin enrollment',
+    5
+  );
+
+  ctfStmt.run(
+    6,
+    'No CSRF Protection',
+    'Aucune protection CSRF',
+    'A01:2021 - Broken Access Control',
+    'CWE-352',
+    'medium',
+    200,
+    'L\u2019application n\u2019utilise aucun jeton CSRF pour prot\u00e9ger les formulaires. Cr\u00e9ez une requ\u00eate cross-site forg\u00e9e qui modifie un param\u00e8tre de s\u00e9curit\u00e9 et capturez le flag.',
+    'Les formulaires POST n\u2019incluent aucun champ hidden pour la v\u00e9rification CSRF.',
+    'Tentez de soumettre un formulaire POST depuis une page externe pour modifier les param\u00e8tres de s\u00e9curit\u00e9.',
+    10,
+    20,
+    'FLAG{csrf-no-token-required}',
+    'Security settings toggle endpoint -- no CSRF token validation',
+    6
+  );
+
+  ctfStmt.run(
+    7,
+    'Path Traversal in Backup Download',
+    'Traversal de chemin dans le t\u00e9l\u00e9chargement de sauvegarde',
+    'A01:2021 - Broken Access Control',
+    'CWE-22',
+    'medium',
+    200,
+    'L\u2019endpoint de t\u00e9l\u00e9chargement de sauvegarde brut ne valide pas le nom de fichier. Exploitez une vuln\u00e9rabilit\u00e9 de traversal de chemin pour lire le fichier FLAG.txt \u00e0 la racine du projet.',
+    'L\u2019endpoint /admin/backups/raw/ accepte un param\u00e8tre de nom de fichier sans validation.',
+    'Utilisez "../" dans le nom de fichier pour remonter dans l\u2019arborescence.',
+    10,
+    20,
+    'FLAG{path-traversal-arbitrary-read}',
+    'FLAG.txt in project root -- accessed via path traversal',
+    7
+  );
+
+  ctfStmt.run(
+    8,
+    'Rate Limiting Only on Login',
+    'Limitation de d\u00e9bit uniquement sur la connexion',
+    'A07:2021 - Identification and Authentication Failures',
+    'CWE-307',
+    'advanced',
+    300,
+    'La limitation de d\u00e9bit n\u2019est appliqu\u00e9e qu\u2019\u00e0 la connexion, pas \u00e0 l\u2019AMF ni aux autres endpoints sensibles. Trouvez le commentaire dans le code source du limiteur de d\u00e9bit qui r\u00e9v\u00e8le le flag.',
+    'Le middleware de limitation de d\u00e9bit se trouve dans le dossier middleware/.',
+    'Cherchez un commentaire contenant "CTF-FLAG" dans le fichier du limiteur de d\u00e9bit.',
+    10,
+    20,
+    'FLAG{no-mfa-rate-limit}',
+    'middleware/rateLimiter.js -- CTF-FLAG comment in source code',
+    8
+  );
+
+  ctfStmt.run(
+    9,
+    'No HTTP Security Headers',
+    'Aucun en-t\u00eate de s\u00e9curit\u00e9 HTTP',
+    'A05:2021 - Security Misconfiguration',
+    'CWE-693',
+    'advanced',
+    300,
+    'L\u2019application ne d\u00e9finit aucun en-t\u00eate de s\u00e9curit\u00e9 HTTP (CSP, X-Frame-Options, etc.). Inspectez les en-t\u00eates de r\u00e9ponse pour confirmer leur absence et soumettez le flag.',
+    'Utilisez les outils de d\u00e9veloppement du navigateur pour inspecter les en-t\u00eates de r\u00e9ponse.',
+    'V\u00e9rifiez l\u2019absence de Content-Security-Policy, X-Frame-Options et Strict-Transport-Security.',
+    10,
+    20,
+    'FLAG{missing-security-headers}',
+    'Server HTTP responses -- missing security headers',
+    9
+  );
+
+  ctfStmt.run(
+    10,
+    'Audit Logging Defaults to OFF',
+    'Journalisation d\u2019audit d\u00e9sactiv\u00e9e par d\u00e9faut',
+    'A09:2021 - Security Logging and Monitoring Failures',
+    'CWE-778',
+    'advanced',
+    300,
+    'La journalisation d\u2019audit est d\u00e9sactiv\u00e9e par d\u00e9faut dans les param\u00e8tres de s\u00e9curit\u00e9. Confirmez cette configuration par d\u00e9faut et soumettez le flag.',
+    'Examinez les param\u00e8tres de s\u00e9curit\u00e9 par d\u00e9faut dans la configuration de la base de donn\u00e9es.',
+    'Le champ audit_logging est initialis\u00e9 \u00e0 0 (d\u00e9sactiv\u00e9) dans la configuration initiale.',
+    10,
+    20,
+    'FLAG{audit-logging-disabled}',
+    'config/database.js -- audit_logging defaults to 0',
+    10
+  );
+
+  ctfStmt.run(
+    11,
+    'Outdated Dependencies',
+    'D\u00e9pendances obsol\u00e8tes',
+    'A06:2021 - Vulnerable and Outdated Components',
+    'CWE-1035',
+    'advanced',
+    300,
+    'Le projet utilise des d\u00e9pendances potentiellement vuln\u00e9rables. Analysez le fichier package.json pour identifier les composants obsol\u00e8tes et soumettez le flag.',
+    'Examinez le fichier package.json pour les versions des d\u00e9pendances.',
+    'Utilisez "npm audit" ou v\u00e9rifiez les versions connues vuln\u00e9rables d\u2019express-session.',
+    10,
+    20,
+    'FLAG{outdated-deps-known-cves}',
+    'package.json -- outdated dependency versions',
+    11
+  );
+
+  ctfStmt.run(
+    12,
+    'Session Cookie Missing Secure Flag',
+    'Cookie de session sans attribut secure',
+    'A02:2021 - Cryptographic Failures',
+    'CWE-614',
+    'advanced',
+    300,
+    'Le cookie de session est transmis sans les attributs de s\u00e9curit\u00e9 recommand\u00e9s. Inspectez les cookies dans les outils de d\u00e9veloppement du navigateur pour trouver le flag.',
+    'Ouvrez les outils de d\u00e9veloppement (F12) et inspectez les cookies du site.',
+    'Cherchez un cookie nomm\u00e9 "ctf_check" qui contient le flag en clair.',
+    10,
+    20,
+    'FLAG{cookie-no-secure-flag}',
+    'Browser cookie -- ctf_check cookie with flag value',
+    12
+  );
+
+  // -------------------------------------------------------
+  // CTF Flag planting: FLAG.txt for challenge 7
+  // -------------------------------------------------------
+  fs.writeFileSync(path.join(__dirname, '..', 'FLAG.txt'), 'FLAG{path-traversal-arbitrary-read}\n');
+
   console.log('Database seeded successfully!');
   console.log('Created:');
   console.log('  - 13 users (1 admin, 2 professors, 10 students)');
   console.log('  - 3 classes (CS101, CS201, CS301)');
   console.log('  - 36 sessions (12 per class)');
-  console.log('  - 9 enrollments');
+  console.log('  - 10 enrollments (9 student + 1 hidden CTF)');
   console.log('  - 12 SCA findings');
   console.log('  - 6 DAST scenarios');
   console.log('  - 12 VM vulnerabilities');
+  console.log('  - 12 CTF challenges');
+  console.log('  - FLAG.txt created');
 }
 
 module.exports = { seedDatabase };

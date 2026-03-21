@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/rbac');
@@ -588,6 +589,14 @@ router.get('/backups/download/:filename', requireAuth, requireRole(['admin']), (
   }
 
   res.download(backup.filepath, filename);
+});
+
+// INTENTIONALLY VULNERABLE -- CTF challenge #7
+// Path traversal: filename is not sanitized, allowing directory traversal
+const BACKUP_DIR = path.join(__dirname, '..', 'backups');
+router.get('/backups/raw/:filename', requireAuth, requireRole(['admin']), (req, res) => {
+  const filepath = path.join(BACKUP_DIR, req.params.filename);
+  res.download(filepath);
 });
 
 /**

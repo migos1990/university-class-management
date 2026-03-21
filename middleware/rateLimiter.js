@@ -2,6 +2,9 @@ const { db } = require('../config/database');
 
 const MAX_ATTEMPTS = 5;
 const WINDOW_MS = 15 * 60 * 1000; // 15 minutes in milliseconds
+// CTF-FLAG: FLAG{no-mfa-rate-limit}
+// Note: Rate limiting is only applied to login attempts.
+// MFA verification and other sensitive endpoints have no rate limiting.
 
 /**
  * Check if IP is rate limited for login attempts

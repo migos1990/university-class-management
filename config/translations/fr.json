@@ -805,5 +805,41 @@
       "imported": "Import\u00e9\u00a0! Rechargement...",
       "importing": "Importation..."
     }
+  },
+  "pentest": {
+    "ctf": {
+      "title": "Laboratoire de test d'intrusion",
+      "subtitle": "Exploitez les vuln\u00e9rabilit\u00e9s et capturez les flags",
+      "flagsCaptured": "Flags captur\u00e9s",
+      "score": "Score",
+      "rank": "Rang",
+      "easy": "D\u00e9fis Faciles",
+      "medium": "D\u00e9fis Moyens",
+      "advanced": "D\u00e9fis Avanc\u00e9s",
+      "locked": "Verrouill\u00e9",
+      "unlockRequirement": "R\u00e9solvez %d d\u00e9fis %s pour d\u00e9bloquer",
+      "mission": "Briefing de mission",
+      "hints": "Indices",
+      "submitFlag": "Valider le flag",
+      "correct": "FLAG CAPTUR\u00c9!",
+      "incorrect": "Flag incorrect. Pas de p\u00e9nalit\u00e9. R\u00e9essayez.",
+      "captured": "CAPTUR\u00c9",
+      "alreadyCaptured": "Vous avez d\u00e9j\u00e0 captur\u00e9 ce flag!",
+      "formatHint": "Format attendu : FLAG{...}",
+      "confirmHint": "Confirmer? (-%d pts)",
+      "welcome": "Bienvenue au laboratoire de test d'intrusion. Votre mission : exploiter les vuln\u00e9rabilit\u00e9s de cette application et capturer les 12 flags cach\u00e9s. Commencez par les d\u00e9fis faciles.",
+      "completion": "Bravo! Vous avez captur\u00e9 les 12 flags!",
+      "tierUnlocked": "Niveau %s d\u00e9bloqu\u00e9!",
+      "activeChallenge": "D\u00e9fi en cours",
+      "backToBoard": "\u2190 Retour aux d\u00e9fis",
+      "leaderboard": "Classement",
+      "heatmap": "Carte de progression",
+      "studentsActive": "\u00e9tudiants actifs",
+      "avgFlags": "Moy. flags",
+      "leader": "Leader",
+      "noStudents": "Aucun \u00e9tudiant n'a commenc\u00e9 le laboratoire.",
+      "reset": "R\u00e9initialiser",
+      "confirmReset": "\u00cates-vous s\u00fbr de vouloir r\u00e9initialiser cet \u00e9tudiant?"
+    }
   }
 }

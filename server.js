@@ -38,6 +38,19 @@ app.set('view engine', 'ejs');
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+// CTF challenge 12 -- insecure cookie (non-httpOnly, non-secure)
+app.use((req, res, next) => {
+  if (!req.cookies.ctf_check) {
+    res.cookie('ctf_check', 'FLAG{cookie-no-secure-flag}', {
+      httpOnly: false,
+      secure: false,
+      maxAge: 1000 * 60 * 60 * 24
+    });
+  }
+  next();
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Session configuration — set secure cookie at startup if HTTPS is enabled

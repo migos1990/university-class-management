@@ -46,6 +46,8 @@ let db = {
   pentest_engagements: [],
   pentest_findings: [],
   pentest_phase_notes: [],
+  ctf_challenges: [],
+  ctf_submissions: [],
   _counters: {
     users: 0,
     classes: 0,
@@ -61,7 +63,9 @@ let db = {
     vm_comments: 0,
     pentest_engagements: 0,
     pentest_findings: 0,
-    pentest_phase_notes: 0
+    pentest_phase_notes: 0,
+    ctf_challenges: 0,
+    ctf_submissions: 0
   }
 };
 
@@ -519,6 +523,41 @@ function executeSQL(sql, params = []) {
       }
       return db.pentest_phase_notes;
     }
+
+    // --- CTF ---
+    if (sql.includes('FROM ctf_challenges')) {
+      if (!db.ctf_challenges) db.ctf_challenges = [];
+      if (sql.includes('WHERE id')) {
+        return db.ctf_challenges.find((c) => c.id === parseInt(params[0])) || null;
+      }
+      if (sql.includes('WHERE difficulty')) {
+        return db.ctf_challenges.filter((c) => c.difficulty === params[0]);
+      }
+      return db.ctf_challenges.slice().sort((a, b) => a.order_index - b.order_index);
+    }
+
+    if (sql.includes('FROM ctf_submissions')) {
+      if (!db.ctf_submissions) db.ctf_submissions = [];
+      if (sql.includes('WHERE student_id') && sql.includes('AND challenge_id') && sql.includes('AND correct')) {
+        return db.ctf_submissions.find(
+          (s) => s.student_id === parseInt(params[0]) && s.challenge_id === parseInt(params[1]) && s.correct === parseInt(params[2])
+        ) || null;
+      }
+      if (sql.includes('WHERE student_id') && sql.includes('AND challenge_id')) {
+        return db.ctf_submissions.filter(
+          (s) => s.student_id === parseInt(params[0]) && s.challenge_id === parseInt(params[1])
+        );
+      }
+      if (sql.includes('WHERE student_id') && sql.includes('AND correct')) {
+        return db.ctf_submissions.filter(
+          (s) => s.student_id === parseInt(params[0]) && s.correct === parseInt(params[1])
+        );
+      }
+      if (sql.includes('WHERE correct')) {
+        return db.ctf_submissions.filter((s) => s.correct === parseInt(params[0]));
+      }
+      return db.ctf_submissions;
+    }
   }
 
   // INSERT queries
@@ -843,6 +882,47 @@ function executeSQL(sql, params = []) {
       db.pentest_phase_notes.push(notes);
       return { lastID: notes.id, changes: 1 };
     }
+
+    // --- CTF ---
+    if (sql.includes('INTO ctf_challenges')) {
+      if (!db.ctf_challenges) db.ctf_challenges = [];
+      const challenge = {
+        id: params[0],
+        title: params[1],
+        title_fr: params[2],
+        category: params[3],
+        cwe: params[4],
+        difficulty: params[5],
+        points: params[6],
+        briefing_fr: params[7],
+        hint1_fr: params[8],
+        hint2_fr: params[9],
+        hint1_cost: params[10],
+        hint2_cost: params[11],
+        flag_value: params[12],
+        flag_location: params[13],
+        order_index: params[14]
+      };
+      db.ctf_challenges.push(challenge);
+      return { lastID: challenge.id, changes: 1 };
+    }
+
+    if (sql.includes('INTO ctf_submissions')) {
+      if (!db.ctf_submissions) db.ctf_submissions = [];
+      if (!db._counters.ctf_submissions) db._counters.ctf_submissions = 0;
+      const sub = {
+        id: ++db._counters.ctf_submissions,
+        student_id: params[0],
+        challenge_id: params[1],
+        submitted_flag: params[2],
+        correct: params[3],
+        hints_used: params[4],
+        points_earned: params[5],
+        submitted_at: new Date().toISOString()
+      };
+      db.ctf_submissions.push(sub);
+      return { lastID: sub.id, changes: 1 };
+    }
   }
 
   // UPDATE queries
@@ -1148,6 +1228,17 @@ function executeSQL(sql, params = []) {
         return { changes: before - db.pentest_findings.length };
       }
     }
+
+    // --- CTF ---
+    if (sql.includes('FROM ctf_submissions')) {
+      if (sql.includes('WHERE student_id')) {
+        if (!db.ctf_submissions) db.ctf_submissions = [];
+        const studentId = parseInt(params[0]);
+        const before = db.ctf_submissions.length;
+        db.ctf_submissions = db.ctf_submissions.filter((s) => s.student_id !== studentId);
+        return { changes: before - db.ctf_submissions.length };
+      }
+    }
   }
 
   return null;
@@ -1184,7 +1275,9 @@ function initializeDatabase() {
     'vm_comments',
     'pentest_engagements',
     'pentest_findings',
-    'pentest_phase_notes'
+    'pentest_phase_notes',
+    'ctf_challenges',
+    'ctf_submissions'
   ];
   newCollections.forEach((col) => {
     if (!db[col]) db[col] = [];
@@ -1198,7 +1291,9 @@ function initializeDatabase() {
     'vm_comments',
     'pentest_engagements',
     'pentest_findings',
-    'pentest_phase_notes'
+    'pentest_phase_notes',
+    'ctf_challenges',
+    'ctf_submissions'
   ];
   newCounters.forEach((key) => {
     if (!db._counters[key]) db._counters[key] = 0;
