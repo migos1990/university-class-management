@@ -34,9 +34,9 @@ const BASE_PORT = config.basePort || 3001;
 const INSTANCE_COUNT = config.instanceCount || 12;
 const TEAMS = config.teams || [];
 
-const REQUEST_TIMEOUT = 5000;   // ms per request
-const HEALTH_RETRIES = 3;       // retry attempts for health check
-const HEALTH_DELAY = 2000;      // ms between retries
+const REQUEST_TIMEOUT = 5000; // ms per request
+const HEALTH_RETRIES = 3; // retry attempts for health check
+const HEALTH_DELAY = 2000; // ms between retries
 
 // Build port list: dashboard + team instances
 const ALL_PORTS = [DASHBOARD_PORT];
@@ -67,7 +67,7 @@ function request(options) {
 
     const req = http.request(reqOptions, (res) => {
       let data = '';
-      res.on('data', chunk => data += chunk);
+      res.on('data', (chunk) => (data += chunk));
       res.on('end', () => {
         resolve({
           statusCode: res.statusCode,
@@ -125,7 +125,7 @@ async function waitForInstance(port, maxRetries, delayMs) {
       // Retry on error
     }
     if (attempt < maxRetries) {
-      await new Promise(r => setTimeout(r, delayMs));
+      await new Promise((r) => setTimeout(r, delayMs));
     }
   }
   return false;
@@ -255,12 +255,14 @@ async function runTests() {
       try {
         const scaRes = await request({
           url: `http://localhost:${DEEP_PORT}/sca`,
-          headers: { 'Cookie': studentCookie }
+          headers: { Cookie: studentCookie }
         });
         if (scaRes.statusCode === 200 && scaRes.body.includes('Analyse statique')) {
           console.log('  \u2705 SCA lab page -- "Analyse statique" found');
         } else {
-          console.log(`  \u274C SCA lab page -- status ${scaRes.statusCode}, missing French content`);
+          console.log(
+            `  \u274C SCA lab page -- status ${scaRes.statusCode}, missing French content`
+          );
           allPassed = false;
         }
       } catch (e) {
@@ -272,12 +274,14 @@ async function runTests() {
       try {
         const findingRes = await request({
           url: `http://localhost:${DEEP_PORT}/sca/findings/1`,
-          headers: { 'Cookie': studentCookie }
+          headers: { Cookie: studentCookie }
         });
         if (findingRes.statusCode === 200 && findingRes.body.includes('Classification')) {
           console.log('  \u2705 Finding detail -- "Classification" found');
         } else {
-          console.log(`  \u274C Finding detail -- status ${findingRes.statusCode}, missing French content`);
+          console.log(
+            `  \u274C Finding detail -- status ${findingRes.statusCode}, missing French content`
+          );
           allPassed = false;
         }
       } catch (e) {
@@ -329,12 +333,14 @@ async function runTests() {
       try {
         const dashRes = await request({
           url: `http://localhost:${DASHBOARD_PORT}/sca`,
-          headers: { 'Cookie': profCookie }
+          headers: { Cookie: profCookie }
         });
         if (dashRes.statusCode === 200 && dashRes.body.includes('\u00C9tudiants')) {
           console.log('  \u2705 Instructor dashboard -- "\u00C9tudiants" found');
         } else {
-          console.log(`  \u274C Instructor dashboard -- status ${dashRes.statusCode}, missing French content`);
+          console.log(
+            `  \u274C Instructor dashboard -- status ${dashRes.statusCode}, missing French content`
+          );
           allPassed = false;
         }
       } catch (e) {
@@ -346,14 +352,15 @@ async function runTests() {
       try {
         const statsRes = await request({
           url: `http://localhost:${DASHBOARD_PORT}/sca/stats`,
-          headers: { 'Cookie': profCookie }
+          headers: { Cookie: profCookie }
         });
         if (statsRes.statusCode === 200) {
           const data = JSON.parse(statsRes.body);
-          const hasFields = 'studentsStarted' in data
-            && 'totalStudents' in data
-            && 'avgCompletion' in data
-            && 'pace' in data;
+          const hasFields =
+            'studentsStarted' in data &&
+            'totalStudents' in data &&
+            'avgCompletion' in data &&
+            'pace' in data;
           if (hasFields) {
             console.log('  \u2705 Stats endpoint -- valid JSON with required fields');
           } else {
@@ -384,12 +391,14 @@ async function runTests() {
     try {
       const akRes = await request({
         url: `http://localhost:${DASHBOARD_PORT}/sca/answer-key`,
-        headers: { 'Cookie': profCookie }
+        headers: { Cookie: profCookie }
       });
       if (akRes.statusCode === 200 && akRes.body.includes('Corrig')) {
         console.log('  \u2713 Answer key -- professor access OK');
       } else {
-        console.log(`  \u2717 Answer key -- professor got status ${akRes.statusCode}, missing French content`);
+        console.log(
+          `  \u2717 Answer key -- professor got status ${akRes.statusCode}, missing French content`
+        );
         allPassed = false;
       }
     } catch (e) {
@@ -403,12 +412,14 @@ async function runTests() {
     try {
       const akStudentRes = await request({
         url: `http://localhost:${DEEP_PORT}/sca/answer-key`,
-        headers: { 'Cookie': studentCookie }
+        headers: { Cookie: studentCookie }
       });
       if (akStudentRes.statusCode === 403) {
         console.log('  \u2713 Answer key -- student denied (403)');
       } else {
-        console.log(`  \u2717 Answer key -- student got status ${akStudentRes.statusCode} (expected 403)`);
+        console.log(
+          `  \u2717 Answer key -- student got status ${akStudentRes.statusCode} (expected 403)`
+        );
         allPassed = false;
       }
     } catch (e) {
@@ -422,9 +433,13 @@ async function runTests() {
     try {
       const findingRes = await request({
         url: `http://localhost:${DEEP_PORT}/sca/findings/1`,
-        headers: { 'Cookie': studentCookie }
+        headers: { Cookie: studentCookie }
       });
-      if (findingRes.statusCode === 200 && !findingRes.body.includes('answerKey') && !findingRes.body.includes('sca.answerKey.inlineTitle')) {
+      if (
+        findingRes.statusCode === 200 &&
+        !findingRes.body.includes('answerKey') &&
+        !findingRes.body.includes('sca.answerKey.inlineTitle')
+      ) {
         console.log('  \u2713 Finding detail -- no answer key in student page source');
       } else {
         console.log('  \u2717 Finding detail -- answer key content leaked to student page source!');
@@ -444,9 +459,7 @@ async function runTests() {
   console.log('==========================================================');
 
   // Count ports that passed all tests (health + French login)
-  const passedCount = ALL_PORTS.filter(p =>
-    healthyPorts.has(p) && frenchPorts.has(p)
-  ).length;
+  const passedCount = ALL_PORTS.filter((p) => healthyPorts.has(p) && frenchPorts.has(p)).length;
 
   const total = ALL_PORTS.length;
 
@@ -469,7 +482,7 @@ async function runTests() {
 // Run
 // ---------------------------------------------------------------------------
 
-runTests().catch(error => {
+runTests().catch((error) => {
   console.error('Smoke test error:', error.message);
   process.exit(1);
 });

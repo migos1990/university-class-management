@@ -24,10 +24,7 @@ function createBackup() {
 
     // Create timestamp in format: YYYY-MM-DD-HHMMSS
     const now = new Date();
-    const timestamp = now.toISOString()
-      .replace(/[:.]/g, '-')
-      .replace('T', '-')
-      .split('.')[0]; // Remove milliseconds
+    const timestamp = now.toISOString().replace(/[:.]/g, '-').replace('T', '-').split('.')[0]; // Remove milliseconds
 
     const filename = `backup-${timestamp}.json`;
     const filepath = path.join(BACKUP_DIR, filename);
@@ -49,11 +46,13 @@ function createBackup() {
 
     // Update last backup time in settings
     try {
-      db.prepare(`
+      db.prepare(
+        `
         UPDATE security_settings
         SET last_backup_time = ?
         WHERE id = 1
-      `).run(now.toISOString());
+      `
+      ).run(now.toISOString());
     } catch (error) {
       console.warn('Could not update last_backup_time:', error.message);
     }
@@ -72,9 +71,10 @@ function listBackups() {
   ensureBackupDir();
 
   try {
-    const files = fs.readdirSync(BACKUP_DIR)
-      .filter(f => f.startsWith('backup-') && f.endsWith('.json'))
-      .map(filename => {
+    const files = fs
+      .readdirSync(BACKUP_DIR)
+      .filter((f) => f.startsWith('backup-') && f.endsWith('.json'))
+      .map((filename) => {
         const filepath = path.join(BACKUP_DIR, filename);
         const stats = fs.statSync(filepath);
         return {
@@ -182,7 +182,7 @@ function cleanupOldBackups(keepCount = 50) {
     const toDelete = backups.slice(keepCount);
     let deletedCount = 0;
 
-    toDelete.forEach(backup => {
+    toDelete.forEach((backup) => {
       // Don't delete safety backups
       if (backup.filename.includes('before-restore')) {
         return;

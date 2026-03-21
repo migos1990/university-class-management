@@ -35,7 +35,7 @@ router.post('/login', checkRateLimit, async (req, res) => {
       passwordValid = await comparePassword(password, user.password_hash);
     } else {
       // Direct comparison (insecure, but demonstrative)
-      passwordValid = (password === user.password);
+      passwordValid = password === user.password;
     }
 
     if (!passwordValid) {
@@ -162,10 +162,12 @@ router.post('/mfa-verify', async (req, res) => {
  */
 router.get('/logout', (req, res) => {
   if (req.session.user && req.securitySettings.audit_logging) {
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO audit_logs (user_id, username, role, action, ip_address)
       VALUES (?, ?, ?, ?, ?)
-    `).run(req.session.user.id, req.session.user.username, req.session.user.role, 'LOGOUT', req.ip);
+    `
+    ).run(req.session.user.id, req.session.user.username, req.session.user.role, 'LOGOUT', req.ip);
   }
 
   req.session.destroy((err) => {

@@ -8,11 +8,11 @@
  */
 'use strict';
 
-const fs   = require('fs');
+const fs = require('fs');
 const path = require('path');
 
-const APP_ROOT  = path.join(__dirname, '..');
-const PID_FILE  = path.join(APP_ROOT, 'instances', '.pids.json');
+const APP_ROOT = path.join(__dirname, '..');
+const PID_FILE = path.join(APP_ROOT, 'instances', '.pids.json');
 
 if (!fs.existsSync(PID_FILE)) {
   console.log('No running classroom session found (no .pids.json).');

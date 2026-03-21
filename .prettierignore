@@ -6,3 +6,4 @@ instances/
 .planning/
 docs/
 node_modules/
+routes/pentest.js

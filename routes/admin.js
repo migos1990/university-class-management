@@ -6,7 +6,13 @@ const { auditLog } = require('../middleware/audit');
 const { db } = require('../config/database');
 const { updateSecuritySetting } = require('../config/security');
 const { hashPassword } = require('../utils/passwordHash');
-const { encrypt, decrypt, saveCustomKey, deleteCustomKey, getKeyInfo } = require('../utils/encryption');
+const {
+  encrypt,
+  decrypt,
+  saveCustomKey,
+  deleteCustomKey,
+  getKeyInfo
+} = require('../utils/encryption');
 const speakeasy = require('speakeasy');
 const qrcode = require('qrcode');
 const {
@@ -39,7 +45,8 @@ router.post('/security/toggle/:feature', requireAuth, requireRole(['admin']), as
   if (feature === 'https_enabled') {
     return res.json({
       success: false,
-      message: 'HTTPS is managed by the Codespaces proxy. This toggle is disabled to prevent connection issues.',
+      message:
+        'HTTPS is managed by the Codespaces proxy. This toggle is disabled to prevent connection issues.',
       blocked: true
     });
   }
@@ -55,11 +62,13 @@ router.post('/security/toggle/:feature', requireAuth, requireRole(['admin']), as
       const allUsers = db.prepare('SELECT * FROM users').all();
       for (const user of allUsers) {
         if (user.mfa_enabled || user.mfa_secret) {
-          db.prepare(`
+          db.prepare(
+            `
             UPDATE users
             SET mfa_enabled = 0, mfa_secret = NULL, mfa_backup_codes = NULL
             WHERE id = ?
-          `).run(user.id);
+          `
+          ).run(user.id);
         }
       }
       console.log('Cleared MFA secrets for all users');
@@ -86,10 +95,12 @@ router.post('/security/toggle/:feature', requireAuth, requireRole(['admin']), as
 
     // Log the change
     if (req.securitySettings.audit_logging) {
-      db.prepare(`
+      db.prepare(
+        `
         INSERT INTO audit_logs (user_id, username, role, action, details)
         VALUES (?, ?, ?, ?, ?)
-      `).run(
+      `
+      ).run(
         req.session.user.id,
         req.session.user.username,
         req.session.user.role,
@@ -119,29 +130,39 @@ router.post('/security/toggle/:feature', requireAuth, requireRole(['admin']), as
  * GET /admin/audit-logs
  * View audit logs
  */
-router.get('/audit-logs', requireAuth, requireRole(['admin']), auditLog('VIEW_AUDIT_LOGS'), (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = 50;
-  const offset = (page - 1) * limit;
+router.get(
+  '/audit-logs',
+  requireAuth,
+  requireRole(['admin']),
+  auditLog('VIEW_AUDIT_LOGS'),
+  (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 50;
+    const offset = (page - 1) * limit;
 
-  // Get total count
-  const totalCount = db.prepare('SELECT COUNT(*) as count FROM audit_logs').get().count;
-  const totalPages = Math.ceil(totalCount / limit);
+    // Get total count
+    const totalCount = db.prepare('SELECT COUNT(*) as count FROM audit_logs').get().count;
+    const totalPages = Math.ceil(totalCount / limit);
 
-  // Get logs
-  const logs = db.prepare(`
+    // Get logs
+    const logs = db
+      .prepare(
+        `
     SELECT * FROM audit_logs
     ORDER BY timestamp DESC
     LIMIT ? OFFSET ?
-  `).all(limit, offset);
+  `
+      )
+      .all(limit, offset);
 
-  res.render('admin/audit-logs', {
-    logs,
-    currentPage: page,
-    totalPages,
-    rbacBypass: req.rbacBypass
-  });
-});
+    res.render('admin/audit-logs', {
+      logs,
+      currentPage: page,
+      totalPages,
+      rbacBypass: req.rbacBypass
+    });
+  }
+);
 
 /**
  * GET /admin/mfa-setup
@@ -207,21 +228,25 @@ router.post('/mfa-setup', requireAuth, requireRole(['admin']), async (req, res) 
   }
 
   // Save MFA secret to user
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE users
     SET mfa_enabled = 1, mfa_secret = ?
     WHERE id = ?
-  `).run(secret, req.session.user.id);
+  `
+  ).run(secret, req.session.user.id);
 
   // Clear temporary secret
   delete req.session.tempMfaSecret;
 
   // Log the event
   if (req.securitySettings.audit_logging) {
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO audit_logs (user_id, username, role, action)
       VALUES (?, ?, ?, ?)
-    `).run(req.session.user.id, req.session.user.username, req.session.user.role, 'MFA_ENABLED');
+    `
+    ).run(req.session.user.id, req.session.user.username, req.session.user.role, 'MFA_ENABLED');
   }
 
   res.json({ success: true });
@@ -232,18 +257,22 @@ router.post('/mfa-setup', requireAuth, requireRole(['admin']), async (req, res) 
  * Disable MFA
  */
 router.post('/mfa-disable', requireAuth, requireRole(['admin']), (req, res) => {
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE users
     SET mfa_enabled = 0, mfa_secret = NULL, mfa_backup_codes = NULL
     WHERE id = ?
-  `).run(req.session.user.id);
+  `
+  ).run(req.session.user.id);
 
   // Log the event
   if (req.securitySettings.audit_logging) {
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO audit_logs (user_id, username, role, action)
       VALUES (?, ?, ?, ?)
-    `).run(req.session.user.id, req.session.user.username, req.session.user.role, 'MFA_DISABLED');
+    `
+    ).run(req.session.user.id, req.session.user.username, req.session.user.role, 'MFA_DISABLED');
   }
 
   res.json({ success: true });
@@ -267,23 +296,29 @@ async function migratePasswordsToHashed() {
   const applied = [];
   try {
     for (const update of updates) {
-      db.prepare(`
+      db.prepare(
+        `
         UPDATE users
         SET password_hash = ?, password_is_hashed = 1
         WHERE id = ?
-      `).run(update.hash, update.id);
+      `
+      ).run(update.hash, update.id);
       applied.push(update.id);
     }
   } catch (error) {
     // Rollback: revert any partially applied updates
     for (const id of applied) {
-      db.prepare(`
+      db.prepare(
+        `
         UPDATE users
         SET password_is_hashed = 0, password_hash = NULL
         WHERE id = ?
-      `).run(id);
+      `
+      ).run(id);
     }
-    throw new Error(`Password migration failed after ${applied.length}/${updates.length} users. Rolled back. ${error.message}`);
+    throw new Error(
+      `Password migration failed after ${applied.length}/${updates.length} users. Rolled back. ${error.message}`
+    );
   }
 
   console.log(`Migrated ${users.length} passwords to bcrypt hashes`);
@@ -293,10 +328,12 @@ async function migratePasswordsToHashed() {
  * Helper: Migrate passwords to plaintext
  */
 async function migratePasswordsToPlaintext() {
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE users
     SET password_is_hashed = 0, password_hash = NULL
-  `).run();
+  `
+  ).run();
 
   console.log('Reverted passwords to plaintext');
 }
@@ -306,11 +343,19 @@ async function migratePasswordsToPlaintext() {
  */
 async function encryptSensitiveFields() {
   // Phase 1: Collect all records and compute encrypted values
-  const users = db.prepare('SELECT id, ssn FROM users WHERE ssn IS NOT NULL AND ssn_encrypted = 0').all();
-  const enrollments = db.prepare('SELECT id, grade FROM enrollments WHERE grade IS NOT NULL AND grade_encrypted = 0').all();
+  const users = db
+    .prepare('SELECT id, ssn FROM users WHERE ssn IS NOT NULL AND ssn_encrypted = 0')
+    .all();
+  const enrollments = db
+    .prepare('SELECT id, grade FROM enrollments WHERE grade IS NOT NULL AND grade_encrypted = 0')
+    .all();
 
-  const userUpdates = users.map(u => ({ id: u.id, original: u.ssn, encrypted: encrypt(u.ssn) }));
-  const enrollmentUpdates = enrollments.map(e => ({ id: e.id, original: e.grade, encrypted: encrypt(e.grade) }));
+  const userUpdates = users.map((u) => ({ id: u.id, original: u.ssn, encrypted: encrypt(u.ssn) }));
+  const enrollmentUpdates = enrollments.map((e) => ({
+    id: e.id,
+    original: e.grade,
+    encrypted: encrypt(e.grade)
+  }));
 
   // Phase 2: Apply all updates
   const appliedUsers = [];
@@ -321,7 +366,10 @@ async function encryptSensitiveFields() {
       appliedUsers.push(u);
     }
     for (const e of enrollmentUpdates) {
-      db.prepare('UPDATE enrollments SET grade = ?, grade_encrypted = 1 WHERE id = ?').run(e.encrypted, e.id);
+      db.prepare('UPDATE enrollments SET grade = ?, grade_encrypted = 1 WHERE id = ?').run(
+        e.encrypted,
+        e.id
+      );
       appliedEnrollments.push(e);
     }
   } catch (error) {
@@ -330,7 +378,10 @@ async function encryptSensitiveFields() {
       db.prepare('UPDATE users SET ssn = ?, ssn_encrypted = 0 WHERE id = ?').run(u.original, u.id);
     }
     for (const e of appliedEnrollments) {
-      db.prepare('UPDATE enrollments SET grade = ?, grade_encrypted = 0 WHERE id = ?').run(e.original, e.id);
+      db.prepare('UPDATE enrollments SET grade = ?, grade_encrypted = 0 WHERE id = ?').run(
+        e.original,
+        e.id
+      );
     }
     throw new Error(`Encryption migration failed. Rolled back. ${error.message}`);
   }
@@ -343,11 +394,19 @@ async function encryptSensitiveFields() {
  */
 async function decryptSensitiveFields() {
   // Phase 1: Collect all records and compute decrypted values (throws on failure)
-  const users = db.prepare('SELECT id, ssn FROM users WHERE ssn IS NOT NULL AND ssn_encrypted = 1').all();
-  const enrollments = db.prepare('SELECT id, grade FROM enrollments WHERE grade IS NOT NULL AND grade_encrypted = 1').all();
+  const users = db
+    .prepare('SELECT id, ssn FROM users WHERE ssn IS NOT NULL AND ssn_encrypted = 1')
+    .all();
+  const enrollments = db
+    .prepare('SELECT id, grade FROM enrollments WHERE grade IS NOT NULL AND grade_encrypted = 1')
+    .all();
 
-  const userUpdates = users.map(u => ({ id: u.id, original: u.ssn, decrypted: decrypt(u.ssn) }));
-  const enrollmentUpdates = enrollments.map(e => ({ id: e.id, original: e.grade, decrypted: decrypt(e.grade) }));
+  const userUpdates = users.map((u) => ({ id: u.id, original: u.ssn, decrypted: decrypt(u.ssn) }));
+  const enrollmentUpdates = enrollments.map((e) => ({
+    id: e.id,
+    original: e.grade,
+    decrypted: decrypt(e.grade)
+  }));
 
   // Phase 2: Apply all updates
   const appliedUsers = [];
@@ -358,7 +417,10 @@ async function decryptSensitiveFields() {
       appliedUsers.push(u);
     }
     for (const e of enrollmentUpdates) {
-      db.prepare('UPDATE enrollments SET grade = ?, grade_encrypted = 0 WHERE id = ?').run(e.decrypted, e.id);
+      db.prepare('UPDATE enrollments SET grade = ?, grade_encrypted = 0 WHERE id = ?').run(
+        e.decrypted,
+        e.id
+      );
       appliedEnrollments.push(e);
     }
   } catch (error) {
@@ -367,7 +429,10 @@ async function decryptSensitiveFields() {
       db.prepare('UPDATE users SET ssn = ?, ssn_encrypted = 1 WHERE id = ?').run(u.original, u.id);
     }
     for (const e of appliedEnrollments) {
-      db.prepare('UPDATE enrollments SET grade = ?, grade_encrypted = 1 WHERE id = ?').run(e.original, e.id);
+      db.prepare('UPDATE enrollments SET grade = ?, grade_encrypted = 1 WHERE id = ?').run(
+        e.original,
+        e.id
+      );
     }
     throw new Error(`Decryption migration failed. Rolled back. ${error.message}`);
   }
@@ -402,10 +467,12 @@ router.post('/backups/create', requireAuth, requireRole(['admin']), (req, res) =
   const result = createBackup();
 
   if (req.securitySettings.audit_logging) {
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO audit_logs (user_id, username, role, action, details, success)
       VALUES (?, ?, ?, ?, ?, ?)
-    `).run(
+    `
+    ).run(
       req.session.user.id,
       req.session.user.username,
       req.session.user.role,
@@ -436,10 +503,12 @@ router.post('/backups/toggle', requireAuth, requireRole(['admin']), (req, res) =
   }
 
   if (req.securitySettings.audit_logging) {
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO audit_logs (user_id, username, role, action, details)
       VALUES (?, ?, ?, ?, ?)
-    `).run(
+    `
+    ).run(
       req.session.user.id,
       req.session.user.username,
       req.session.user.role,
@@ -462,11 +531,13 @@ router.post('/backups/set-frequency', requireAuth, requireRole(['admin']), (req,
     return res.status(400).json({ success: false, error: 'Invalid frequency' });
   }
 
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE security_settings
     SET backup_frequency = ?
     WHERE id = 1
-  `).run(parseInt(frequency));
+  `
+  ).run(parseInt(frequency));
 
   // Restart schedule if backups are enabled
   if (req.securitySettings.backup_enabled) {
@@ -485,10 +556,12 @@ router.post('/backups/restore/:filename', requireAuth, requireRole(['admin']), (
   const result = restoreBackup(filename);
 
   if (req.securitySettings.audit_logging) {
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO audit_logs (user_id, username, role, action, details, success)
       VALUES (?, ?, ?, ?, ?, ?)
-    `).run(
+    `
+    ).run(
       req.session.user.id,
       req.session.user.username,
       req.session.user.role,
@@ -508,7 +581,7 @@ router.post('/backups/restore/:filename', requireAuth, requireRole(['admin']), (
 router.get('/backups/download/:filename', requireAuth, requireRole(['admin']), (req, res) => {
   const { filename } = req.params;
   const backups = listBackups();
-  const backup = backups.find(b => b.filename === filename);
+  const backup = backups.find((b) => b.filename === filename);
 
   if (!backup) {
     return res.status(404).json({ error: 'Backup not found' });
@@ -552,7 +625,8 @@ router.post('/byok/upload', requireAuth, requireRole(['admin']), (req, res) => {
   if (req.securitySettings.field_encryption) {
     return res.status(400).json({
       success: false,
-      error: 'Cannot change encryption key while field encryption is enabled. Disable field encryption first to prevent data loss.'
+      error:
+        'Cannot change encryption key while field encryption is enabled. Disable field encryption first to prevent data loss.'
     });
   }
 
@@ -567,10 +641,12 @@ router.post('/byok/upload', requireAuth, requireRole(['admin']), (req, res) => {
 
   // Audit log
   if (req.securitySettings.audit_logging) {
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO audit_logs (user_id, username, role, action, details, success)
       VALUES (?, ?, ?, ?, ?, ?)
-    `).run(
+    `
+    ).run(
       req.session.user.id,
       req.session.user.username,
       req.session.user.role,
@@ -592,7 +668,8 @@ router.post('/byok/delete', requireAuth, requireRole(['admin']), (req, res) => {
   if (req.securitySettings.field_encryption) {
     return res.status(400).json({
       success: false,
-      error: 'Cannot delete encryption key while field encryption is enabled. Disable field encryption first to prevent data loss.'
+      error:
+        'Cannot delete encryption key while field encryption is enabled. Disable field encryption first to prevent data loss.'
     });
   }
 
@@ -600,10 +677,12 @@ router.post('/byok/delete', requireAuth, requireRole(['admin']), (req, res) => {
 
   // Audit log
   if (req.securitySettings.audit_logging) {
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO audit_logs (user_id, username, role, action, details, success)
       VALUES (?, ?, ?, ?, ?, ?)
-    `).run(
+    `
+    ).run(
       req.session.user.id,
       req.session.user.username,
       req.session.user.role,
@@ -622,16 +701,21 @@ router.post('/byok/delete', requireAuth, requireRole(['admin']), (req, res) => {
  */
 router.get('/deletion-requests', requireAuth, requireRole(['admin']), (req, res) => {
   // Get all deletion requests with class and user information
-  const allRequests = db.prepare(`
+  const allRequests = db
+    .prepare(
+      `
     SELECT dr.*, c.code, c.name, u.username
     FROM deletion_requests dr
     LEFT JOIN classes c ON dr.class_id = c.id
     LEFT JOIN users u ON dr.requested_by = u.id
-  `).all();
+  `
+    )
+    .all();
 
   // Separate pending and completed requests
-  const pendingRequests = allRequests.filter(r => r.status === 'pending');
-  const completedRequests = allRequests.filter(r => r.status !== 'pending')
+  const pendingRequests = allRequests.filter((r) => r.status === 'pending');
+  const completedRequests = allRequests
+    .filter((r) => r.status !== 'pending')
     .sort((a, b) => new Date(b.reviewed_at) - new Date(a.reviewed_at))
     .slice(0, 20); // Show last 20 completed
 
@@ -667,21 +751,25 @@ router.post('/deletion-requests/:id/approve', requireAuth, requireRole(['admin']
   }
 
   // Update request status
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE deletion_requests
     SET status = 'approved', reviewed_by = ?, reviewed_at = CURRENT_TIMESTAMP
     WHERE id = ?
-  `).run(adminId, requestId);
+  `
+  ).run(adminId, requestId);
 
   // Delete the class (cascades to sessions and enrollments)
   db.prepare('DELETE FROM classes WHERE id = ?').run(request.class_id);
 
   // Audit log
   if (req.securitySettings.audit_logging) {
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO audit_logs (user_id, username, role, action, details, success)
       VALUES (?, ?, ?, ?, ?, ?)
-    `).run(
+    `
+    ).run(
       adminId,
       req.session.user.username,
       req.session.user.role,
@@ -729,18 +817,22 @@ router.post('/deletion-requests/:id/reject', requireAuth, requireRole(['admin'])
   const classData = db.prepare('SELECT * FROM classes WHERE id = ?').get(request.class_id);
 
   // Update request status
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE deletion_requests
     SET status = 'rejected', reviewed_by = ?, reviewed_at = CURRENT_TIMESTAMP, rejection_reason = ?
     WHERE id = ?
-  `).run(adminId, reason.trim(), requestId);
+  `
+  ).run(adminId, reason.trim(), requestId);
 
   // Audit log
   if (req.securitySettings.audit_logging) {
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO audit_logs (user_id, username, role, action, details, success)
       VALUES (?, ?, ?, ?, ?, ?)
-    `).run(
+    `
+    ).run(
       adminId,
       req.session.user.username,
       req.session.user.role,
@@ -770,10 +862,12 @@ router.post('/rate-limit/reset', requireAuth, requireRole(['admin']), (req, res)
   db.prepare('DELETE FROM rate_limit_attempts').run();
 
   if (req.securitySettings.audit_logging) {
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO audit_logs (user_id, username, role, action, details)
       VALUES (?, ?, ?, ?, ?)
-    `).run(
+    `
+    ).run(
       req.session.user.id,
       req.session.user.username,
       req.session.user.role,

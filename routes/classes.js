@@ -15,12 +15,16 @@ router.get('/:id', requireAuth, auditLog('VIEW_CLASS', 'class'), (req, res) => {
   const userRole = req.session.user.role;
 
   // Get class details
-  const classData = db.prepare(`
+  const classData = db
+    .prepare(
+      `
     SELECT c.*, u.username as professor_name
     FROM classes c
     LEFT JOIN users u ON c.professor_id = u.id
     WHERE c.id = ?
-  `).get(classId);
+  `
+    )
+    .get(classId);
 
   if (!classData) {
     return res.status(404).render('error', {
@@ -31,10 +35,14 @@ router.get('/:id', requireAuth, auditLog('VIEW_CLASS', 'class'), (req, res) => {
 
   // Check if student is enrolled (if user is a student)
   if (userRole === 'student') {
-    const enrollment = db.prepare(`
+    const enrollment = db
+      .prepare(
+        `
       SELECT * FROM enrollments
       WHERE student_id = ? AND class_id = ?
-    `).get(userId, classId);
+    `
+      )
+      .get(userId, classId);
 
     if (!enrollment && req.securitySettings.rbac_enabled) {
       return res.status(403).render('error', {
@@ -48,20 +56,28 @@ router.get('/:id', requireAuth, auditLog('VIEW_CLASS', 'class'), (req, res) => {
   }
 
   // Get all sessions for this class
-  const sessions = db.prepare(`
+  const sessions = db
+    .prepare(
+      `
     SELECT * FROM sessions
     WHERE class_id = ?
     ORDER BY session_number
-  `).all(classId);
+  `
+    )
+    .all(classId);
 
   // Get enrolled students
-  const enrolledStudents = db.prepare(`
+  const enrolledStudents = db
+    .prepare(
+      `
     SELECT u.id, u.username, u.email, e.grade
     FROM enrollments e
     JOIN users u ON e.student_id = u.id
     WHERE e.class_id = ?
     ORDER BY u.username
-  `).all(classId);
+  `
+    )
+    .all(classId);
 
   res.render('class-details', {
     classData,
@@ -75,135 +91,162 @@ router.get('/:id', requireAuth, auditLog('VIEW_CLASS', 'class'), (req, res) => {
  * POST /classes/create
  * Create a new class (professor or admin only)
  */
-router.post('/create', requireAuth, requireRole(['professor', 'admin']), auditLog('CREATE_CLASS', 'class'), (req, res) => {
-  const { code, name, description, semester } = req.body;
-  const professorId = req.session.user.id;
+router.post(
+  '/create',
+  requireAuth,
+  requireRole(['professor', 'admin']),
+  auditLog('CREATE_CLASS', 'class'),
+  (req, res) => {
+    const { code, name, description, semester } = req.body;
+    const professorId = req.session.user.id;
 
-  // Validate required fields
-  if (!code || !name || !semester) {
-    return res.status(400).json({
-      success: false,
-      error: 'Code, name, and semester are required'
-    });
-  }
+    // Validate required fields
+    if (!code || !name || !semester) {
+      return res.status(400).json({
+        success: false,
+        error: 'Code, name, and semester are required'
+      });
+    }
 
-  // Check if class code already exists
-  const existing = db.prepare('SELECT * FROM classes WHERE code = ?').get(code);
-  if (existing) {
-    return res.status(400).json({
-      success: false,
-      error: 'Class code already exists'
-    });
-  }
-
-  // Insert new class
-  const result = db.prepare(`
-    INSERT INTO classes (code, name, description, semester, professor_id)
-    VALUES (?, ?, ?, ?, ?)
-  `).run(code, name, description || '', semester, professorId);
-
-  res.json({
-    success: true,
-    classId: result.lastID,
-    message: 'Class created successfully'
-  });
-});
-
-/**
- * PUT /classes/:id
- * Update class details (professor or admin only)
- */
-router.put('/:id', requireAuth, requireRole(['professor', 'admin']), auditLog('UPDATE_CLASS', 'class'), (req, res) => {
-  const classId = req.params.id;
-  const { code, name, description, semester } = req.body;
-  const userId = req.session.user.id;
-  const userRole = req.session.user.role;
-
-  // Get current class
-  const classData = db.prepare('SELECT * FROM classes WHERE id = ?').get(classId);
-  if (!classData) {
-    return res.status(404).json({ success: false, error: 'Class not found' });
-  }
-
-  // Check ownership (professor can only update their own classes, admin can update any)
-  if (userRole === 'professor' && classData.professor_id !== userId) {
-    return res.status(403).json({
-      success: false,
-      error: 'You can only update your own classes'
-    });
-  }
-
-  // Validate required fields
-  if (!code || !name || !semester) {
-    return res.status(400).json({
-      success: false,
-      error: 'Code, name, and semester are required'
-    });
-  }
-
-  // Check if new code conflicts with another class
-  if (code !== classData.code) {
-    const existing = db.prepare('SELECT * FROM classes WHERE code = ? AND id != ?').get(code, classId);
+    // Check if class code already exists
+    const existing = db.prepare('SELECT * FROM classes WHERE code = ?').get(code);
     if (existing) {
       return res.status(400).json({
         success: false,
         error: 'Class code already exists'
       });
     }
-  }
 
-  // Update class
-  db.prepare(`
+    // Insert new class
+    const result = db
+      .prepare(
+        `
+    INSERT INTO classes (code, name, description, semester, professor_id)
+    VALUES (?, ?, ?, ?, ?)
+  `
+      )
+      .run(code, name, description || '', semester, professorId);
+
+    res.json({
+      success: true,
+      classId: result.lastID,
+      message: 'Class created successfully'
+    });
+  }
+);
+
+/**
+ * PUT /classes/:id
+ * Update class details (professor or admin only)
+ */
+router.put(
+  '/:id',
+  requireAuth,
+  requireRole(['professor', 'admin']),
+  auditLog('UPDATE_CLASS', 'class'),
+  (req, res) => {
+    const classId = req.params.id;
+    const { code, name, description, semester } = req.body;
+    const userId = req.session.user.id;
+    const userRole = req.session.user.role;
+
+    // Get current class
+    const classData = db.prepare('SELECT * FROM classes WHERE id = ?').get(classId);
+    if (!classData) {
+      return res.status(404).json({ success: false, error: 'Class not found' });
+    }
+
+    // Check ownership (professor can only update their own classes, admin can update any)
+    if (userRole === 'professor' && classData.professor_id !== userId) {
+      return res.status(403).json({
+        success: false,
+        error: 'You can only update your own classes'
+      });
+    }
+
+    // Validate required fields
+    if (!code || !name || !semester) {
+      return res.status(400).json({
+        success: false,
+        error: 'Code, name, and semester are required'
+      });
+    }
+
+    // Check if new code conflicts with another class
+    if (code !== classData.code) {
+      const existing = db
+        .prepare('SELECT * FROM classes WHERE code = ? AND id != ?')
+        .get(code, classId);
+      if (existing) {
+        return res.status(400).json({
+          success: false,
+          error: 'Class code already exists'
+        });
+      }
+    }
+
+    // Update class
+    db.prepare(
+      `
     UPDATE classes
     SET code = ?, name = ?, description = ?, semester = ?, updated_at = CURRENT_TIMESTAMP
     WHERE id = ?
-  `).run(code, name, description || '', semester, classId);
+  `
+    ).run(code, name, description || '', semester, classId);
 
-  res.json({ success: true, message: 'Class updated successfully' });
-});
+    res.json({ success: true, message: 'Class updated successfully' });
+  }
+);
 
 /**
  * DELETE /classes/:id
  * Delete a class (with Segregation of Duties check)
  */
-router.delete('/:id', requireAuth, requireRole(['professor', 'admin']), auditLog('DELETE_CLASS', 'class'), (req, res) => {
-  const classId = req.params.id;
-  const userId = req.session.user.id;
-  const userRole = req.session.user.role;
+router.delete(
+  '/:id',
+  requireAuth,
+  requireRole(['professor', 'admin']),
+  auditLog('DELETE_CLASS', 'class'),
+  (req, res) => {
+    const classId = req.params.id;
+    const userId = req.session.user.id;
+    const userRole = req.session.user.role;
 
-  // Get current class
-  const classData = db.prepare('SELECT * FROM classes WHERE id = ?').get(classId);
-  if (!classData) {
-    return res.status(404).json({ success: false, error: 'Class not found' });
-  }
+    // Get current class
+    const classData = db.prepare('SELECT * FROM classes WHERE id = ?').get(classId);
+    if (!classData) {
+      return res.status(404).json({ success: false, error: 'Class not found' });
+    }
 
-  // Check ownership (professor can only delete their own classes, admin can delete any)
-  if (userRole === 'professor' && classData.professor_id !== userId) {
-    return res.status(403).json({
-      success: false,
-      error: 'You can only delete your own classes'
+    // Check ownership (professor can only delete their own classes, admin can delete any)
+    if (userRole === 'professor' && classData.professor_id !== userId) {
+      return res.status(403).json({
+        success: false,
+        error: 'You can only delete your own classes'
+      });
+    }
+
+    // Segregation of Duties check
+    const sodEnabled = req.securitySettings.segregation_of_duties;
+
+    if (sodEnabled && userRole === 'professor') {
+      return res.status(403).json({
+        success: false,
+        error:
+          'Segregation of Duties is enabled. You must submit a deletion request for admin approval.',
+        requiresRequest: true
+      });
+    }
+
+    // Perform deletion (cascades to sessions and enrollments)
+    db.prepare('DELETE FROM classes WHERE id = ?').run(classId);
+
+    res.json({
+      success: true,
+      message: 'Class deleted successfully'
     });
   }
-
-  // Segregation of Duties check
-  const sodEnabled = req.securitySettings.segregation_of_duties;
-
-  if (sodEnabled && userRole === 'professor') {
-    return res.status(403).json({
-      success: false,
-      error: 'Segregation of Duties is enabled. You must submit a deletion request for admin approval.',
-      requiresRequest: true
-    });
-  }
-
-  // Perform deletion (cascades to sessions and enrollments)
-  db.prepare('DELETE FROM classes WHERE id = ?').run(classId);
-
-  res.json({
-    success: true,
-    message: 'Class deleted successfully'
-  });
-});
+);
 
 /**
  * GET /classes/:id/delete-request
@@ -239,10 +282,14 @@ router.get('/:id/delete-request', requireAuth, requireRole(['professor']), (req,
   }
 
   // Check if there's already a pending request for this class
-  const existingRequest = db.prepare(`
+  const existingRequest = db
+    .prepare(
+      `
     SELECT * FROM deletion_requests
     WHERE class_id = ? AND status = 'pending'
-  `).get(classId);
+  `
+    )
+    .get(classId);
 
   res.render('classes/delete-request', {
     classData,
@@ -254,56 +301,70 @@ router.get('/:id/delete-request', requireAuth, requireRole(['professor']), (req,
  * POST /classes/:id/delete-request
  * Submit a deletion request (professor only, when SoD is enabled)
  */
-router.post('/:id/delete-request', requireAuth, requireRole(['professor']), auditLog('REQUEST_CLASS_DELETION', 'class'), (req, res) => {
-  const classId = req.params.id;
-  const userId = req.session.user.id;
+router.post(
+  '/:id/delete-request',
+  requireAuth,
+  requireRole(['professor']),
+  auditLog('REQUEST_CLASS_DELETION', 'class'),
+  (req, res) => {
+    const classId = req.params.id;
+    const userId = req.session.user.id;
 
-  // Get class details
-  const classData = db.prepare('SELECT * FROM classes WHERE id = ?').get(classId);
-  if (!classData) {
-    return res.status(404).json({ success: false, error: 'Class not found' });
-  }
+    // Get class details
+    const classData = db.prepare('SELECT * FROM classes WHERE id = ?').get(classId);
+    if (!classData) {
+      return res.status(404).json({ success: false, error: 'Class not found' });
+    }
 
-  // Check ownership
-  if (classData.professor_id !== userId) {
-    return res.status(403).json({
-      success: false,
-      error: 'You can only request deletion of your own classes'
-    });
-  }
+    // Check ownership
+    if (classData.professor_id !== userId) {
+      return res.status(403).json({
+        success: false,
+        error: 'You can only request deletion of your own classes'
+      });
+    }
 
-  // Check if SoD is enabled
-  if (!req.securitySettings.segregation_of_duties) {
-    return res.status(400).json({
-      success: false,
-      error: 'Segregation of Duties is not enabled'
-    });
-  }
+    // Check if SoD is enabled
+    if (!req.securitySettings.segregation_of_duties) {
+      return res.status(400).json({
+        success: false,
+        error: 'Segregation of Duties is not enabled'
+      });
+    }
 
-  // Check if there's already a pending request
-  const existingRequest = db.prepare(`
+    // Check if there's already a pending request
+    const existingRequest = db
+      .prepare(
+        `
     SELECT * FROM deletion_requests
     WHERE class_id = ? AND status = 'pending'
-  `).get(classId);
+  `
+      )
+      .get(classId);
 
-  if (existingRequest) {
-    return res.status(400).json({
-      success: false,
-      error: 'A deletion request for this class is already pending'
-    });
-  }
+    if (existingRequest) {
+      return res.status(400).json({
+        success: false,
+        error: 'A deletion request for this class is already pending'
+      });
+    }
 
-  // Create deletion request
-  const result = db.prepare(`
+    // Create deletion request
+    const result = db
+      .prepare(
+        `
     INSERT INTO deletion_requests (class_id, requested_by, status)
     VALUES (?, ?, 'pending')
-  `).run(classId, userId);
+  `
+      )
+      .run(classId, userId);
 
-  res.json({
-    success: true,
-    requestId: result.lastID,
-    message: 'Deletion request submitted successfully. An administrator will review your request.'
-  });
-});
+    res.json({
+      success: true,
+      requestId: result.lastID,
+      message: 'Deletion request submitted successfully. An administrator will review your request.'
+    });
+  }
+);
 
 module.exports = router;

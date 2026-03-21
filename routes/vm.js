@@ -10,36 +10,49 @@ const { db } = require('../config/database');
 //   in_progress → resolved      (professor / admin, requires resolution_notes)
 //   in_progress|resolved → open (any professor / admin — regression)
 const VALID_TRANSITIONS = {
-  open:        ['in_progress', 'wont_fix'],
+  open: ['in_progress', 'wont_fix'],
   in_progress: ['resolved', 'open'],
-  resolved:    ['open'],
-  wont_fix:    ['open']
+  resolved: ['open'],
+  wont_fix: ['open']
 };
 
 // Helper used by SCA/DAST/Pentest routes
 function importToVM(source, sourceId, fields) {
-  const existing = db.prepare(
-    'SELECT * FROM vulnerabilities WHERE source = ? AND source_id = ?'
-  ).get(source, sourceId);
+  const existing = db
+    .prepare('SELECT * FROM vulnerabilities WHERE source = ? AND source_id = ?')
+    .get(source, sourceId);
   if (existing) return { success: false, error: 'Already imported', vulnId: existing.id };
 
   const now = new Date().toISOString();
-  const result = db.prepare(`
+  const result = db
+    .prepare(
+      `
     INSERT INTO vulnerabilities (id, title, source, source_id, owasp_category, cwe, cvss_vector, cvss_score,
       severity, affected_component, description, status, assigned_to, priority,
       remediation_plan, remediation_deadline, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(
-    0, fields.title, source, sourceId,
-    fields.owasp_category || null, fields.cwe || null,
-    fields.cvss_vector || null, fields.cvss_score || null,
-    fields.severity || 'Medium',
-    fields.affected_component || null,
-    fields.description || '',
-    'open', null, fields.priority || 3,
-    fields.remediation_plan || null, null,
-    now, now
-  );
+  `
+    )
+    .run(
+      0,
+      fields.title,
+      source,
+      sourceId,
+      fields.owasp_category || null,
+      fields.cwe || null,
+      fields.cvss_vector || null,
+      fields.cvss_score || null,
+      fields.severity || 'Medium',
+      fields.affected_component || null,
+      fields.description || '',
+      'open',
+      null,
+      fields.priority || 3,
+      fields.remediation_plan || null,
+      null,
+      now,
+      now
+    );
   return { success: true, vulnId: result.lastID };
 }
 
@@ -55,11 +68,11 @@ router.get('/', requireAuth, (req, res) => {
 
   const stats = {
     total: vulns.length,
-    open: vulns.filter(v => v.status === 'open').length,
-    in_progress: vulns.filter(v => v.status === 'in_progress').length,
-    resolved: vulns.filter(v => v.status === 'resolved').length,
-    critical: vulns.filter(v => v.severity === 'Critical').length,
-    high: vulns.filter(v => v.severity === 'High').length
+    open: vulns.filter((v) => v.status === 'open').length,
+    in_progress: vulns.filter((v) => v.status === 'in_progress').length,
+    resolved: vulns.filter((v) => v.status === 'resolved').length,
+    critical: vulns.filter((v) => v.severity === 'Critical').length,
+    high: vulns.filter((v) => v.severity === 'High').length
   };
 
   if (user.role === 'student') {
@@ -74,21 +87,26 @@ router.get('/stats', requireAuth, (req, res) => {
   const vulns = db.prepare('SELECT * FROM vulnerabilities').all();
   res.json({
     total: vulns.length,
-    open: vulns.filter(v => v.status === 'open').length,
-    in_progress: vulns.filter(v => v.status === 'in_progress').length,
-    resolved: vulns.filter(v => v.status === 'resolved').length,
-    wont_fix: vulns.filter(v => v.status === 'wont_fix').length,
-    critical: vulns.filter(v => v.severity === 'Critical').length,
-    high: vulns.filter(v => v.severity === 'High').length,
-    medium: vulns.filter(v => v.severity === 'Medium').length,
-    low: vulns.filter(v => v.severity === 'Low').length
+    open: vulns.filter((v) => v.status === 'open').length,
+    in_progress: vulns.filter((v) => v.status === 'in_progress').length,
+    resolved: vulns.filter((v) => v.status === 'resolved').length,
+    wont_fix: vulns.filter((v) => v.status === 'wont_fix').length,
+    critical: vulns.filter((v) => v.severity === 'Critical').length,
+    high: vulns.filter((v) => v.severity === 'High').length,
+    medium: vulns.filter((v) => v.severity === 'Medium').length,
+    low: vulns.filter((v) => v.severity === 'Low').length
   });
 });
 
 // ─── GET /vm/vulns/:id ─── Detail
 router.get('/vulns/:id', requireAuth, (req, res) => {
-  const vuln = db.prepare('SELECT * FROM vulnerabilities WHERE id = ?').get(parseInt(req.params.id));
-  if (!vuln) return res.status(404).render('error', { message: 'Vulnerability not found', error: { status: 404 } });
+  const vuln = db
+    .prepare('SELECT * FROM vulnerabilities WHERE id = ?')
+    .get(parseInt(req.params.id));
+  if (!vuln)
+    return res
+      .status(404)
+      .render('error', { message: 'Vulnerability not found', error: { status: 404 } });
 
   const history = db.prepare('SELECT * FROM vm_status_history WHERE vuln_id = ?').all(vuln.id);
   const comments = db.prepare('SELECT * FROM vm_comments WHERE vuln_id = ?').all(vuln.id);
@@ -97,26 +115,52 @@ router.get('/vulns/:id', requireAuth, (req, res) => {
 
   res.render('vm/vuln-detail', {
     title: `VM: ${vuln.title}`,
-    vuln, history, comments,
-    SEVERITIES, STATUSES,
+    vuln,
+    history,
+    comments,
+    SEVERITIES,
+    STATUSES,
     validNext: VALID_TRANSITIONS[vuln.status] || []
   });
 });
 
 // ─── POST /vm/vulns ─── Manual create (instructor+)
 router.post('/vulns', requireAuth, requireRole(['admin', 'professor']), (req, res) => {
-  const { title, severity, owasp_category, cwe, affected_component, description, priority } = req.body;
-  if (!title || !severity) return res.status(400).json({ success: false, error: 'title and severity required' });
+  const { title, severity, owasp_category, cwe, affected_component, description, priority } =
+    req.body;
+  if (!title || !severity)
+    return res.status(400).json({ success: false, error: 'title and severity required' });
 
   const now = new Date().toISOString();
-  const result = db.prepare(`
+  const result = db
+    .prepare(
+      `
     INSERT INTO vulnerabilities (id, title, source, source_id, owasp_category, cwe, cvss_vector, cvss_score,
       severity, affected_component, description, status, assigned_to, priority,
       remediation_plan, remediation_deadline, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(0, title, 'manual', null, owasp_category || null, cwe || null, null, null,
-    severity, affected_component || null, description || '', 'open', null,
-    parseInt(priority) || 3, null, null, now, now);
+  `
+    )
+    .run(
+      0,
+      title,
+      'manual',
+      null,
+      owasp_category || null,
+      cwe || null,
+      null,
+      null,
+      severity,
+      affected_component || null,
+      description || '',
+      'open',
+      null,
+      parseInt(priority) || 3,
+      null,
+      null,
+      now,
+      now
+    );
 
   if (req.headers.accept && req.headers.accept.includes('application/json')) {
     return res.json({ success: true, vulnId: result.lastID });
@@ -130,17 +174,36 @@ router.post('/vulns/:id/update', requireAuth, requireRole(['admin', 'professor']
   const vuln = db.prepare('SELECT * FROM vulnerabilities WHERE id = ?').get(vulnId);
   if (!vuln) return res.status(404).json({ success: false, error: 'Not found' });
 
-  const { title, severity, priority, owasp_category, affected_component, description, remediation_plan, remediation_deadline, assigned_to } = req.body;
-  db.prepare(`
+  const {
+    title,
+    severity,
+    priority,
+    owasp_category,
+    affected_component,
+    description,
+    remediation_plan,
+    remediation_deadline,
+    assigned_to
+  } = req.body;
+  db.prepare(
+    `
     UPDATE vulnerabilities
     SET title = ?, severity = ?, priority = ?, owasp_category = ?, affected_component = ?,
         description = ?, remediation_plan = ?, remediation_deadline = ?, assigned_to = ?, updated_at = ?
     WHERE id = ?
-  `).run(
-    title || vuln.title, severity || vuln.severity, parseInt(priority) || vuln.priority,
-    owasp_category || vuln.owasp_category, affected_component || vuln.affected_component,
-    description || vuln.description, remediation_plan || null, remediation_deadline || null,
-    assigned_to || null, new Date().toISOString(), vulnId
+  `
+  ).run(
+    title || vuln.title,
+    severity || vuln.severity,
+    parseInt(priority) || vuln.priority,
+    owasp_category || vuln.owasp_category,
+    affected_component || vuln.affected_component,
+    description || vuln.description,
+    remediation_plan || null,
+    remediation_deadline || null,
+    assigned_to || null,
+    new Date().toISOString(),
+    vulnId
   );
 
   if (req.headers.accept && req.headers.accept.includes('application/json')) {
@@ -161,7 +224,9 @@ router.post('/vulns/:id/status', requireAuth, requireRole(['admin', 'professor']
   // Validate transition
   const allowed = VALID_TRANSITIONS[vuln.status] || [];
   if (!allowed.includes(newStatus)) {
-    return res.status(400).json({ success: false, error: `Invalid transition: ${vuln.status} → ${newStatus}` });
+    return res
+      .status(400)
+      .json({ success: false, error: `Invalid transition: ${vuln.status} → ${newStatus}` });
   }
 
   // Admin-only for wont_fix
@@ -171,16 +236,20 @@ router.post('/vulns/:id/status', requireAuth, requireRole(['admin', 'professor']
 
   // Resolve requires resolution notes
   if (newStatus === 'resolved' && !resolution_notes) {
-    return res.status(400).json({ success: false, error: 'resolution_notes required when resolving' });
+    return res
+      .status(400)
+      .json({ success: false, error: 'resolution_notes required when resolving' });
   }
 
   const now = new Date().toISOString();
 
   // Record history
-  db.prepare(`
+  db.prepare(
+    `
     INSERT INTO vm_status_history (vuln_id, changed_by, old_status, new_status, note, changed_at)
     VALUES (?, ?, ?, ?, ?, ?)
-  `).run(vulnId, user.id, vuln.status, newStatus, note || null, now);
+  `
+  ).run(vulnId, user.id, vuln.status, newStatus, note || null, now);
 
   // Update vuln
   if (newStatus === 'resolved') {
@@ -192,17 +261,25 @@ router.post('/vulns/:id/status', requireAuth, requireRole(['admin', 'professor']
     v.resolved_by = user.id;
     v.resolution_notes = resolution_notes;
     // Use a targeted update
-    db.prepare(`
+    db.prepare(
+      `
       UPDATE vulnerabilities SET status = ?, description = ?, updated_at = ?
       WHERE id = ?
-    `).run(newStatus, v.description, now, vulnId);
+    `
+    ).run(newStatus, v.description, now, vulnId);
     // Store resolved metadata via comment approach - store in history note
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO vm_status_history (vuln_id, changed_by, old_status, new_status, note, changed_at)
       VALUES (?, ?, ?, ?, ?, ?)
-    `).run(vulnId, user.id, newStatus, newStatus, `Resolution: ${resolution_notes}`, now);
+    `
+    ).run(vulnId, user.id, newStatus, newStatus, `Resolution: ${resolution_notes}`, now);
   } else {
-    db.prepare(`UPDATE vulnerabilities SET status = ?, updated_at = ? WHERE id = ?`).run(newStatus, now, vulnId);
+    db.prepare(`UPDATE vulnerabilities SET status = ?, updated_at = ? WHERE id = ?`).run(
+      newStatus,
+      now,
+      vulnId
+    );
   }
 
   res.json({ success: true, oldStatus: vuln.status, newStatus });
@@ -223,13 +300,16 @@ router.post('/vulns/:id/comments', requireAuth, (req, res) => {
   if (!vuln) return res.status(404).json({ success: false, error: 'Not found' });
 
   const { body } = req.body;
-  if (!body || !body.trim()) return res.status(400).json({ success: false, error: 'Comment body required' });
+  if (!body || !body.trim())
+    return res.status(400).json({ success: false, error: 'Comment body required' });
 
   const user = req.session.user;
-  db.prepare(`
+  db.prepare(
+    `
     INSERT INTO vm_comments (vuln_id, user_id, username, body, created_at)
     VALUES (?, ?, ?, ?, ?)
-  `).run(vulnId, user.id, user.username, body.trim(), new Date().toISOString());
+  `
+  ).run(vulnId, user.id, user.username, body.trim(), new Date().toISOString());
 
   if (req.headers.accept && req.headers.accept.includes('application/json')) {
     return res.json({ success: true });

@@ -31,7 +31,9 @@ router.get('/student', requireAuth, (req, res) => {
   const userId = req.session.user.id;
 
   // Get enrolled classes with decrypted grades
-  const enrollments = db.prepare(`
+  const enrollments = db
+    .prepare(
+      `
     SELECT
       e.id,
       e.grade,
@@ -45,10 +47,12 @@ router.get('/student', requireAuth, (req, res) => {
     JOIN classes c ON e.class_id = c.id
     WHERE e.student_id = ?
     ORDER BY c.code
-  `).all(userId);
+  `
+    )
+    .all(userId);
 
   // Decrypt grades if encrypted
-  enrollments.forEach(enrollment => {
+  enrollments.forEach((enrollment) => {
     if (enrollment.grade_encrypted && enrollment.grade) {
       enrollment.grade = decrypt(enrollment.grade);
     }
@@ -65,7 +69,9 @@ router.get('/student', requireAuth, (req, res) => {
  */
 router.get('/professor', requireAuth, (req, res) => {
   // Get all classes (or classes assigned to this professor)
-  const classes = db.prepare(`
+  const classes = db
+    .prepare(
+      `
     SELECT
       c.*,
       COUNT(DISTINCT e.student_id) as enrolled_count
@@ -73,7 +79,9 @@ router.get('/professor', requireAuth, (req, res) => {
     LEFT JOIN enrollments e ON c.id = e.class_id
     GROUP BY c.id
     ORDER BY c.code
-  `).all();
+  `
+    )
+    .all();
 
   res.render('professor/dashboard', {
     classes
@@ -88,17 +96,24 @@ router.get('/admin', requireAuth, (req, res) => {
   // Get statistics
   const stats = {
     totalUsers: db.prepare('SELECT COUNT(*) as count FROM users').get().count,
-    totalStudents: db.prepare('SELECT COUNT(*) as count FROM users WHERE role = ?').get('student').count,
-    totalProfessors: db.prepare('SELECT COUNT(*) as count FROM users WHERE role = ?').get('professor').count,
+    totalStudents: db.prepare('SELECT COUNT(*) as count FROM users WHERE role = ?').get('student')
+      .count,
+    totalProfessors: db
+      .prepare('SELECT COUNT(*) as count FROM users WHERE role = ?')
+      .get('professor').count,
     totalClasses: db.prepare('SELECT COUNT(*) as count FROM classes').get().count,
     totalEnrollments: db.prepare('SELECT COUNT(*) as count FROM enrollments').get().count,
-    recentLogins: db.prepare(`
+    recentLogins: db
+      .prepare(
+        `
       SELECT username, role, last_login
       FROM users
       WHERE last_login IS NOT NULL
       ORDER BY last_login DESC
       LIMIT 5
-    `).all()
+    `
+      )
+      .all()
   };
 
   res.render('admin/dashboard', {

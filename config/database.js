@@ -16,7 +16,22 @@ let db = {
   classes: [],
   sessions: [],
   enrollments: [],
-  security_settings: [{ id: 1, mfa_enabled: 0, rbac_enabled: 1, encryption_at_rest: 1, field_encryption: 0, https_enabled: 0, audit_logging: 0, rate_limiting: 0, backup_enabled: 0, backup_frequency: 60, last_backup_time: null, segregation_of_duties: 0 }],
+  security_settings: [
+    {
+      id: 1,
+      mfa_enabled: 0,
+      rbac_enabled: 1,
+      encryption_at_rest: 1,
+      field_encryption: 0,
+      https_enabled: 0,
+      audit_logging: 0,
+      rate_limiting: 0,
+      backup_enabled: 0,
+      backup_frequency: 60,
+      last_backup_time: null,
+      segregation_of_duties: 0
+    }
+  ],
   audit_logs: [],
   rate_limit_attempts: [],
   deletion_requests: [],
@@ -32,8 +47,13 @@ let db = {
   pentest_findings: [],
   pentest_phase_notes: [],
   _counters: {
-    users: 0, classes: 0, sessions: 0, enrollments: 0,
-    audit_logs: 0, rate_limit_attempts: 0, deletion_requests: 0,
+    users: 0,
+    classes: 0,
+    sessions: 0,
+    enrollments: 0,
+    audit_logs: 0,
+    rate_limit_attempts: 0,
+    deletion_requests: 0,
     sca_student_reviews: 0,
     dast_student_findings: 0,
     vulnerabilities: 0,
@@ -51,7 +71,9 @@ const REQUIRED_KEYS = ['users', 'classes', 'sessions', 'enrollments', 'security_
 // Validate that parsed data has the expected structure
 function isValidDatabase(data) {
   if (!data || typeof data !== 'object') return false;
-  return REQUIRED_KEYS.every(key => Array.isArray(data[key]) || (key === '_counters' && typeof data[key] === 'object'));
+  return REQUIRED_KEYS.every(
+    (key) => Array.isArray(data[key]) || (key === '_counters' && typeof data[key] === 'object')
+  );
 }
 
 // Attempt to recover database from the most recent backup
@@ -60,8 +82,9 @@ function attemptRecoveryFromBackup() {
   if (!fs.existsSync(backupDir)) return false;
 
   try {
-    const backupFiles = fs.readdirSync(backupDir)
-      .filter(f => f.startsWith('backup-') && f.endsWith('.json'))
+    const backupFiles = fs
+      .readdirSync(backupDir)
+      .filter((f) => f.startsWith('backup-') && f.endsWith('.json'))
       .sort()
       .reverse(); // Most recent first
 
@@ -164,28 +187,31 @@ function executeSQL(sql, params = []) {
   if (sql.startsWith('SELECT')) {
     if (sql.includes('FROM users')) {
       if (sql.includes('WHERE username')) {
-        return db.users.find(u => u.username === params[0]) || null;
+        return db.users.find((u) => u.username === params[0]) || null;
       }
       if (sql.includes('WHERE id')) {
-        return db.users.find(u => u.id === params[0]) || null;
+        return db.users.find((u) => u.id === params[0]) || null;
       }
       if (sql.includes('WHERE role')) {
-        return db.users.filter(u => u.role === params[0]);
+        return db.users.filter((u) => u.role === params[0]);
       }
       if (sql.includes('COUNT(*)')) {
         return { count: db.users.length };
       }
       if (sql.includes('last_login')) {
-        return db.users.filter(u => u.last_login).sort((a, b) => new Date(b.last_login) - new Date(a.last_login)).slice(0, 5);
+        return db.users
+          .filter((u) => u.last_login)
+          .sort((a, b) => new Date(b.last_login) - new Date(a.last_login))
+          .slice(0, 5);
       }
       return db.users;
     }
 
     if (sql.includes('FROM classes')) {
       if (sql.includes('WHERE id')) {
-        const cls = db.classes.find(c => c.id === parseInt(params[0]));
+        const cls = db.classes.find((c) => c.id === parseInt(params[0]));
         if (cls && sql.includes('u.username')) {
-          const prof = db.users.find(u => u.id === cls.professor_id);
+          const prof = db.users.find((u) => u.id === cls.professor_id);
           return { ...cls, professor_name: prof ? prof.username : null };
         }
         return cls || null;
@@ -194,49 +220,57 @@ function executeSQL(sql, params = []) {
         return { count: db.classes.length };
       }
       if (sql.includes('enrolled_count')) {
-        return db.classes.map(c => ({
+        return db.classes.map((c) => ({
           ...c,
-          enrolled_count: db.enrollments.filter(e => e.class_id === c.id).length
+          enrolled_count: db.enrollments.filter((e) => e.class_id === c.id).length
         }));
       }
       if (sql.includes('WHERE code')) {
-        return db.classes.find(c => c.code === params[0]) || null;
+        return db.classes.find((c) => c.code === params[0]) || null;
       }
       return db.classes;
     }
 
     if (sql.includes('FROM sessions')) {
       if (sql.includes('WHERE id')) {
-        const session = db.sessions.find(s => s.id === parseInt(params[0]));
+        const session = db.sessions.find((s) => s.id === parseInt(params[0]));
         if (session && sql.includes('c.code')) {
-          const cls = db.classes.find(c => c.id === session.class_id);
+          const cls = db.classes.find((c) => c.id === session.class_id);
           return { ...session, class_code: cls?.code, class_name: cls?.name };
         }
         return session || null;
       }
       if (sql.includes('WHERE class_id')) {
-        return db.sessions.filter(s => s.class_id === parseInt(params[0])).sort((a, b) => a.session_number - b.session_number);
+        return db.sessions
+          .filter((s) => s.class_id === parseInt(params[0]))
+          .sort((a, b) => a.session_number - b.session_number);
       }
       return db.sessions;
     }
 
     if (sql.includes('FROM enrollments')) {
       if (sql.includes('WHERE student_id') && sql.includes('AND class_id')) {
-        return db.enrollments.find(e => e.student_id === params[0] && e.class_id === params[1]) || null;
+        return (
+          db.enrollments.find((e) => e.student_id === params[0] && e.class_id === params[1]) || null
+        );
       }
       if (sql.includes('WHERE student_id')) {
         const studentId = params[0];
-        return db.enrollments.filter(e => e.student_id === studentId).map(e => {
-          const cls = db.classes.find(c => c.id === e.class_id);
-          return { ...e, ...cls };
-        });
+        return db.enrollments
+          .filter((e) => e.student_id === studentId)
+          .map((e) => {
+            const cls = db.classes.find((c) => c.id === e.class_id);
+            return { ...e, ...cls };
+          });
       }
       if (sql.includes('WHERE class_id')) {
         const classId = params[0];
-        return db.enrollments.filter(e => e.class_id === classId).map(e => {
-          const user = db.users.find(u => u.id === e.student_id);
-          return { ...e, ...user };
-        });
+        return db.enrollments
+          .filter((e) => e.class_id === classId)
+          .map((e) => {
+            const user = db.users.find((u) => u.id === e.student_id);
+            return { ...e, ...user };
+          });
       }
       if (sql.includes('COUNT(*)')) {
         return { count: db.enrollments.length };
@@ -252,7 +286,10 @@ function executeSQL(sql, params = []) {
       if (sql.includes('LIMIT') && sql.includes('OFFSET')) {
         const limit = parseInt(params[0]);
         const offset = parseInt(params[1]);
-        return db.audit_logs.slice().reverse().slice(offset, offset + limit);
+        return db.audit_logs
+          .slice()
+          .reverse()
+          .slice(offset, offset + limit);
       }
       if (sql.includes('COUNT(*)')) {
         return { count: db.audit_logs.length };
@@ -264,42 +301,50 @@ function executeSQL(sql, params = []) {
       if (sql.includes('COUNT(*)') && sql.includes('WHERE')) {
         const ip = params[0];
         const since = params[1];
-        return { count: db.rate_limit_attempts.filter(a => a.ip_address === ip && a.attempt_time > since && a.success === 0).length };
+        return {
+          count: db.rate_limit_attempts.filter(
+            (a) => a.ip_address === ip && a.attempt_time > since && a.success === 0
+          ).length
+        };
       }
       if (sql.includes('ORDER BY attempt_time')) {
         const ip = params[0];
         const since = params[1];
-        const attempt = db.rate_limit_attempts.filter(a => a.ip_address === ip && a.attempt_time > since && a.success === 0)[0];
+        const attempt = db.rate_limit_attempts.filter(
+          (a) => a.ip_address === ip && a.attempt_time > since && a.success === 0
+        )[0];
         return attempt || null;
       }
     }
 
     if (sql.includes('FROM deletion_requests')) {
       if (sql.includes('WHERE id')) {
-        return db.deletion_requests.find(dr => dr.id === parseInt(params[0])) || null;
+        return db.deletion_requests.find((dr) => dr.id === parseInt(params[0])) || null;
       }
       if (sql.includes('WHERE class_id')) {
-        return db.deletion_requests.find(dr => dr.class_id === parseInt(params[0])) || null;
+        return db.deletion_requests.find((dr) => dr.class_id === parseInt(params[0])) || null;
       }
       if (sql.includes('WHERE status')) {
         const status = params[0];
         if (sql.includes('AND requested_by')) {
           const requestedBy = params[1];
-          return db.deletion_requests.filter(dr => dr.status === status && dr.requested_by === requestedBy);
+          return db.deletion_requests.filter(
+            (dr) => dr.status === status && dr.requested_by === requestedBy
+          );
         }
-        return db.deletion_requests.filter(dr => dr.status === status);
+        return db.deletion_requests.filter((dr) => dr.status === status);
       }
       if (sql.includes('WHERE requested_by')) {
-        return db.deletion_requests.filter(dr => dr.requested_by === params[0]);
+        return db.deletion_requests.filter((dr) => dr.requested_by === params[0]);
       }
       if (sql.includes('COUNT(*)')) {
         return { count: db.deletion_requests.length };
       }
       if (sql.includes('c.code') && sql.includes('u.username')) {
-        return db.deletion_requests.map(dr => {
-          const cls = db.classes.find(c => c.id === dr.class_id);
-          const requester = db.users.find(u => u.id === dr.requested_by);
-          const reviewer = dr.reviewed_by ? db.users.find(u => u.id === dr.reviewed_by) : null;
+        return db.deletion_requests.map((dr) => {
+          const cls = db.classes.find((c) => c.id === dr.class_id);
+          const requester = db.users.find((u) => u.id === dr.requested_by);
+          const reviewer = dr.reviewed_by ? db.users.find((u) => u.id === dr.reviewed_by) : null;
           return {
             ...dr,
             class_code: cls?.code,
@@ -316,10 +361,10 @@ function executeSQL(sql, params = []) {
     if (sql.includes('FROM sca_findings')) {
       if (!db.sca_findings) db.sca_findings = [];
       if (sql.includes('WHERE id')) {
-        return db.sca_findings.find(f => f.id === parseInt(params[0])) || null;
+        return db.sca_findings.find((f) => f.id === parseInt(params[0])) || null;
       }
       if (sql.includes('WHERE severity')) {
-        return db.sca_findings.filter(f => f.severity === params[0]);
+        return db.sca_findings.filter((f) => f.severity === params[0]);
       }
       return db.sca_findings;
     }
@@ -327,13 +372,17 @@ function executeSQL(sql, params = []) {
     if (sql.includes('FROM sca_student_reviews')) {
       if (!db.sca_student_reviews) db.sca_student_reviews = [];
       if (sql.includes('WHERE finding_id') && sql.includes('AND student_id')) {
-        return db.sca_student_reviews.find(r => r.finding_id === parseInt(params[0]) && r.student_id === params[1]) || null;
+        return (
+          db.sca_student_reviews.find(
+            (r) => r.finding_id === parseInt(params[0]) && r.student_id === params[1]
+          ) || null
+        );
       }
       if (sql.includes('WHERE finding_id')) {
-        return db.sca_student_reviews.filter(r => r.finding_id === parseInt(params[0]));
+        return db.sca_student_reviews.filter((r) => r.finding_id === parseInt(params[0]));
       }
       if (sql.includes('WHERE student_id')) {
-        return db.sca_student_reviews.filter(r => r.student_id === params[0]);
+        return db.sca_student_reviews.filter((r) => r.student_id === params[0]);
       }
       return db.sca_student_reviews;
     }
@@ -342,10 +391,10 @@ function executeSQL(sql, params = []) {
     if (sql.includes('FROM dast_scenarios')) {
       if (!db.dast_scenarios) db.dast_scenarios = [];
       if (sql.includes('WHERE id')) {
-        return db.dast_scenarios.find(s => s.id === parseInt(params[0])) || null;
+        return db.dast_scenarios.find((s) => s.id === parseInt(params[0])) || null;
       }
       if (sql.includes('WHERE active')) {
-        return db.dast_scenarios.filter(s => s.active === 1);
+        return db.dast_scenarios.filter((s) => s.active === 1);
       }
       return db.dast_scenarios;
     }
@@ -353,16 +402,20 @@ function executeSQL(sql, params = []) {
     if (sql.includes('FROM dast_student_findings')) {
       if (!db.dast_student_findings) db.dast_student_findings = [];
       if (sql.includes('WHERE id')) {
-        return db.dast_student_findings.find(f => f.id === parseInt(params[0])) || null;
+        return db.dast_student_findings.find((f) => f.id === parseInt(params[0])) || null;
       }
       if (sql.includes('WHERE scenario_id') && sql.includes('AND student_id')) {
-        return db.dast_student_findings.find(f => f.scenario_id === parseInt(params[0]) && f.student_id === params[1]) || null;
+        return (
+          db.dast_student_findings.find(
+            (f) => f.scenario_id === parseInt(params[0]) && f.student_id === params[1]
+          ) || null
+        );
       }
       if (sql.includes('WHERE scenario_id')) {
-        return db.dast_student_findings.filter(f => f.scenario_id === parseInt(params[0]));
+        return db.dast_student_findings.filter((f) => f.scenario_id === parseInt(params[0]));
       }
       if (sql.includes('WHERE student_id')) {
-        return db.dast_student_findings.filter(f => f.student_id === params[0]);
+        return db.dast_student_findings.filter((f) => f.student_id === params[0]);
       }
       return db.dast_student_findings;
     }
@@ -371,27 +424,30 @@ function executeSQL(sql, params = []) {
     if (sql.includes('FROM vulnerabilities')) {
       if (!db.vulnerabilities) db.vulnerabilities = [];
       if (sql.includes('WHERE id')) {
-        return db.vulnerabilities.find(v => v.id === parseInt(params[0])) || null;
+        return db.vulnerabilities.find((v) => v.id === parseInt(params[0])) || null;
       }
       if (sql.includes('WHERE source') && sql.includes('AND source_id')) {
-        return db.vulnerabilities.find(v => v.source === params[0] && v.source_id === params[1]) || null;
+        return (
+          db.vulnerabilities.find((v) => v.source === params[0] && v.source_id === params[1]) ||
+          null
+        );
       }
       if (sql.includes('WHERE severity')) {
-        return db.vulnerabilities.filter(v => v.severity === params[0]);
+        return db.vulnerabilities.filter((v) => v.severity === params[0]);
       }
       if (sql.includes('WHERE status')) {
-        return db.vulnerabilities.filter(v => v.status === params[0]);
+        return db.vulnerabilities.filter((v) => v.status === params[0]);
       }
       if (sql.includes('WHERE assigned_to')) {
-        return db.vulnerabilities.filter(v => v.assigned_to === params[0]);
+        return db.vulnerabilities.filter((v) => v.assigned_to === params[0]);
       }
       if (sql.includes('COUNT(*)') && sql.includes('WHERE severity')) {
         const sev = params[0];
-        return { count: db.vulnerabilities.filter(v => v.severity === sev).length };
+        return { count: db.vulnerabilities.filter((v) => v.severity === sev).length };
       }
       if (sql.includes('COUNT(*)') && sql.includes('WHERE status')) {
         const st = params[0];
-        return { count: db.vulnerabilities.filter(v => v.status === st).length };
+        return { count: db.vulnerabilities.filter((v) => v.status === st).length };
       }
       if (sql.includes('COUNT(*)')) {
         return { count: db.vulnerabilities.length };
@@ -402,7 +458,9 @@ function executeSQL(sql, params = []) {
     if (sql.includes('FROM vm_status_history')) {
       if (!db.vm_status_history) db.vm_status_history = [];
       if (sql.includes('WHERE vuln_id')) {
-        return db.vm_status_history.filter(h => h.vuln_id === parseInt(params[0])).sort((a, b) => new Date(b.changed_at) - new Date(a.changed_at));
+        return db.vm_status_history
+          .filter((h) => h.vuln_id === parseInt(params[0]))
+          .sort((a, b) => new Date(b.changed_at) - new Date(a.changed_at));
       }
       return db.vm_status_history;
     }
@@ -410,7 +468,9 @@ function executeSQL(sql, params = []) {
     if (sql.includes('FROM vm_comments')) {
       if (!db.vm_comments) db.vm_comments = [];
       if (sql.includes('WHERE vuln_id')) {
-        return db.vm_comments.filter(c => c.vuln_id === parseInt(params[0])).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        return db.vm_comments
+          .filter((c) => c.vuln_id === parseInt(params[0]))
+          .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
       }
       return db.vm_comments;
     }
@@ -419,24 +479,28 @@ function executeSQL(sql, params = []) {
     if (sql.includes('FROM pentest_engagements')) {
       if (!db.pentest_engagements) db.pentest_engagements = [];
       if (sql.includes('WHERE id')) {
-        return db.pentest_engagements.find(e => e.id === parseInt(params[0])) || null;
+        return db.pentest_engagements.find((e) => e.id === parseInt(params[0])) || null;
       }
       if (sql.includes('WHERE student_id')) {
-        return db.pentest_engagements.find(e => e.student_id === params[0]) || null;
+        return db.pentest_engagements.find((e) => e.student_id === params[0]) || null;
       }
-      return db.pentest_engagements.slice().sort((a, b) => new Date(b.started_at) - new Date(a.started_at));
+      return db.pentest_engagements
+        .slice()
+        .sort((a, b) => new Date(b.started_at) - new Date(a.started_at));
     }
 
     if (sql.includes('FROM pentest_findings')) {
       if (!db.pentest_findings) db.pentest_findings = [];
       if (sql.includes('WHERE id')) {
-        return db.pentest_findings.find(f => f.id === parseInt(params[0])) || null;
+        return db.pentest_findings.find((f) => f.id === parseInt(params[0])) || null;
       }
       if (sql.includes('WHERE engagement_id') && sql.includes('AND phase')) {
-        return db.pentest_findings.filter(f => f.engagement_id === parseInt(params[0]) && f.phase === params[1]);
+        return db.pentest_findings.filter(
+          (f) => f.engagement_id === parseInt(params[0]) && f.phase === params[1]
+        );
       }
       if (sql.includes('WHERE engagement_id')) {
-        return db.pentest_findings.filter(f => f.engagement_id === parseInt(params[0]));
+        return db.pentest_findings.filter((f) => f.engagement_id === parseInt(params[0]));
       }
       return db.pentest_findings;
     }
@@ -444,10 +508,14 @@ function executeSQL(sql, params = []) {
     if (sql.includes('FROM pentest_phase_notes')) {
       if (!db.pentest_phase_notes) db.pentest_phase_notes = [];
       if (sql.includes('WHERE engagement_id') && sql.includes('AND phase')) {
-        return db.pentest_phase_notes.find(n => n.engagement_id === parseInt(params[0]) && n.phase === params[1]) || null;
+        return (
+          db.pentest_phase_notes.find(
+            (n) => n.engagement_id === parseInt(params[0]) && n.phase === params[1]
+          ) || null
+        );
       }
       if (sql.includes('WHERE engagement_id')) {
-        return db.pentest_phase_notes.filter(n => n.engagement_id === parseInt(params[0]));
+        return db.pentest_phase_notes.filter((n) => n.engagement_id === parseInt(params[0]));
       }
       return db.pentest_phase_notes;
     }
@@ -577,7 +645,7 @@ function executeSQL(sql, params = []) {
     if (sql.includes('INTO sca_findings')) {
       if (!db.sca_findings) db.sca_findings = [];
       const finding = {
-        id: params[0],  // pre-assigned id from seed
+        id: params[0], // pre-assigned id from seed
         title: params[1],
         file_path: params[2],
         line_number: params[3],
@@ -781,7 +849,7 @@ function executeSQL(sql, params = []) {
   if (sql.startsWith('UPDATE')) {
     if (sql.includes('UPDATE users')) {
       const userId = params[params.length - 1];
-      const user = db.users.find(u => u.id === userId);
+      const user = db.users.find((u) => u.id === userId);
       if (user) {
         if (sql.includes('password_hash')) {
           user.password_hash = params[0];
@@ -815,7 +883,7 @@ function executeSQL(sql, params = []) {
 
     if (sql.includes('UPDATE sessions')) {
       const sessionId = params[params.length - 1];
-      const session = db.sessions.find(s => s.id === sessionId);
+      const session = db.sessions.find((s) => s.id === sessionId);
       if (session) {
         session.title = params[0];
         session.description = params[1];
@@ -827,7 +895,7 @@ function executeSQL(sql, params = []) {
 
     if (sql.includes('UPDATE enrollments')) {
       const enrollmentId = params[params.length - 1];
-      const enrollment = db.enrollments.find(e => e.id === enrollmentId);
+      const enrollment = db.enrollments.find((e) => e.id === enrollmentId);
       if (enrollment) {
         enrollment.grade = params[0];
         enrollment.grade_encrypted = params[1];
@@ -854,7 +922,7 @@ function executeSQL(sql, params = []) {
 
     if (sql.includes('UPDATE deletion_requests')) {
       const requestId = params[params.length - 1];
-      const request = db.deletion_requests.find(dr => dr.id === requestId);
+      const request = db.deletion_requests.find((dr) => dr.id === requestId);
       if (request) {
         if (sql.includes('status')) {
           request.status = params[0];
@@ -872,13 +940,17 @@ function executeSQL(sql, params = []) {
     if (sql.includes('UPDATE sca_student_reviews')) {
       if (!db.sca_student_reviews) db.sca_student_reviews = [];
       const reviewId = params[params.length - 1];
-      const review = db.sca_student_reviews.find(r => r.id === reviewId);
+      const review = db.sca_student_reviews.find((r) => r.id === reviewId);
       if (review) {
         if (sql.includes('classification')) review.classification = params[0];
-        if (sql.includes('student_notes')) review.student_notes = params[1] !== undefined ? params[1] : review.student_notes;
-        if (sql.includes('remediation_notes')) review.remediation_notes = params[2] !== undefined ? params[2] : review.remediation_notes;
-        if (sql.includes('status')) review.status = params[3] !== undefined ? params[3] : review.status;
-        if (sql.includes('submitted_at')) review.submitted_at = params[4] !== undefined ? params[4] : review.submitted_at;
+        if (sql.includes('student_notes'))
+          review.student_notes = params[1] !== undefined ? params[1] : review.student_notes;
+        if (sql.includes('remediation_notes'))
+          review.remediation_notes = params[2] !== undefined ? params[2] : review.remediation_notes;
+        if (sql.includes('status'))
+          review.status = params[3] !== undefined ? params[3] : review.status;
+        if (sql.includes('submitted_at'))
+          review.submitted_at = params[4] !== undefined ? params[4] : review.submitted_at;
         review.updated_at = new Date().toISOString();
       }
       return { changes: review ? 1 : 0 };
@@ -888,7 +960,7 @@ function executeSQL(sql, params = []) {
     if (sql.includes('UPDATE dast_student_findings')) {
       if (!db.dast_student_findings) db.dast_student_findings = [];
       const findingId = params[params.length - 1];
-      const finding = db.dast_student_findings.find(f => f.id === findingId);
+      const finding = db.dast_student_findings.find((f) => f.id === findingId);
       if (finding) {
         if (sql.includes('instructor_feedback')) {
           finding.instructor_feedback = params[0];
@@ -911,7 +983,7 @@ function executeSQL(sql, params = []) {
     if (sql.includes('UPDATE vulnerabilities')) {
       if (!db.vulnerabilities) db.vulnerabilities = [];
       const vulnId = params[params.length - 1];
-      const vuln = db.vulnerabilities.find(v => v.id === parseInt(vulnId));
+      const vuln = db.vulnerabilities.find((v) => v.id === parseInt(vulnId));
       if (vuln) {
         if (sql.includes('status')) {
           vuln.status = params[0];
@@ -923,11 +995,15 @@ function executeSQL(sql, params = []) {
         }
         if (sql.includes('title')) vuln.title = params[0];
         if (sql.includes('description') && !sql.includes('status')) vuln.description = params[0];
-        if (sql.includes('severity') && !sql.includes('status')) vuln.severity = sql.includes('title') ? params[4] : params[0];
-        if (sql.includes('assigned_to')) vuln.assigned_to = sql.includes('title') ? params[5] : params[0];
+        if (sql.includes('severity') && !sql.includes('status'))
+          vuln.severity = sql.includes('title') ? params[4] : params[0];
+        if (sql.includes('assigned_to'))
+          vuln.assigned_to = sql.includes('title') ? params[5] : params[0];
         if (sql.includes('priority')) vuln.priority = sql.includes('title') ? params[6] : params[0];
-        if (sql.includes('remediation_plan')) vuln.remediation_plan = sql.includes('title') ? params[7] : params[0];
-        if (sql.includes('remediation_deadline')) vuln.remediation_deadline = sql.includes('title') ? params[8] : params[0];
+        if (sql.includes('remediation_plan'))
+          vuln.remediation_plan = sql.includes('title') ? params[7] : params[0];
+        if (sql.includes('remediation_deadline'))
+          vuln.remediation_deadline = sql.includes('title') ? params[8] : params[0];
         vuln.updated_at = new Date().toISOString();
       }
       return { changes: vuln ? 1 : 0 };
@@ -937,7 +1013,7 @@ function executeSQL(sql, params = []) {
     if (sql.includes('UPDATE pentest_engagements')) {
       if (!db.pentest_engagements) db.pentest_engagements = [];
       const engId = params[params.length - 1];
-      const eng = db.pentest_engagements.find(e => e.id === parseInt(engId));
+      const eng = db.pentest_engagements.find((e) => e.id === parseInt(engId));
       if (eng) {
         if (sql.includes('phase_current')) eng.phase_current = params[0];
         if (sql.includes('status') && !sql.includes('phase_current')) eng.status = params[0];
@@ -955,7 +1031,7 @@ function executeSQL(sql, params = []) {
     if (sql.includes('UPDATE pentest_findings')) {
       if (!db.pentest_findings) db.pentest_findings = [];
       const findId = params[params.length - 1];
-      const find = db.pentest_findings.find(f => f.id === parseInt(findId));
+      const find = db.pentest_findings.find((f) => f.id === parseInt(findId));
       if (find) {
         if (params[0] !== undefined) find.title = params[0];
         if (params[1] !== undefined) find.severity = params[1];
@@ -974,7 +1050,9 @@ function executeSQL(sql, params = []) {
       // WHERE engagement_id = ? AND phase = ? → params are [...fields, engId, phase]
       const phase = params[params.length - 1];
       const engId = params[params.length - 2];
-      const note = db.pentest_phase_notes.find(n => n.engagement_id === parseInt(engId) && n.phase === phase);
+      const note = db.pentest_phase_notes.find(
+        (n) => n.engagement_id === parseInt(engId) && n.phase === phase
+      );
       if (note) {
         note.notes = params[0];
         note.tools_used = params[1] || note.tools_used;
@@ -994,9 +1072,9 @@ function executeSQL(sql, params = []) {
       if (sql.includes('WHERE id')) {
         const classId = params[0];
         const before = db.classes.length;
-        db.classes = db.classes.filter(c => c.id !== classId);
-        db.sessions = db.sessions.filter(s => s.class_id !== classId);
-        db.enrollments = db.enrollments.filter(e => e.class_id !== classId);
+        db.classes = db.classes.filter((c) => c.id !== classId);
+        db.sessions = db.sessions.filter((s) => s.class_id !== classId);
+        db.enrollments = db.enrollments.filter((e) => e.class_id !== classId);
         return { changes: before - db.classes.length };
       }
       db.classes = [];
@@ -1006,7 +1084,7 @@ function executeSQL(sql, params = []) {
       if (sql.includes('WHERE class_id')) {
         const classId = params[0];
         const before = db.sessions.length;
-        db.sessions = db.sessions.filter(s => s.class_id !== classId);
+        db.sessions = db.sessions.filter((s) => s.class_id !== classId);
         return { changes: before - db.sessions.length };
       }
       db.sessions = [];
@@ -1016,7 +1094,7 @@ function executeSQL(sql, params = []) {
       if (sql.includes('WHERE class_id')) {
         const classId = params[0];
         const before = db.enrollments.length;
-        db.enrollments = db.enrollments.filter(e => e.class_id !== classId);
+        db.enrollments = db.enrollments.filter((e) => e.class_id !== classId);
         return { changes: before - db.enrollments.length };
       }
       db.enrollments = [];
@@ -1030,7 +1108,7 @@ function executeSQL(sql, params = []) {
       if (sql.includes('WHERE')) {
         const before = db.rate_limit_attempts.length;
         const since = params[0];
-        db.rate_limit_attempts = db.rate_limit_attempts.filter(a => a.attempt_time >= since);
+        db.rate_limit_attempts = db.rate_limit_attempts.filter((a) => a.attempt_time >= since);
         return { changes: before - db.rate_limit_attempts.length };
       }
       db.rate_limit_attempts = [];
@@ -1040,7 +1118,7 @@ function executeSQL(sql, params = []) {
       if (sql.includes('WHERE id')) {
         const requestId = params[0];
         const before = db.deletion_requests.length;
-        db.deletion_requests = db.deletion_requests.filter(dr => dr.id !== requestId);
+        db.deletion_requests = db.deletion_requests.filter((dr) => dr.id !== requestId);
         return { changes: before - db.deletion_requests.length };
       }
       db.deletion_requests = [];
@@ -1053,7 +1131,7 @@ function executeSQL(sql, params = []) {
         if (!db.vulnerabilities) db.vulnerabilities = [];
         const vulnId = parseInt(params[0]);
         const before = db.vulnerabilities.length;
-        db.vulnerabilities = db.vulnerabilities.filter(v => v.id !== vulnId);
+        db.vulnerabilities = db.vulnerabilities.filter((v) => v.id !== vulnId);
         return { changes: before - db.vulnerabilities.length };
       }
       db.vulnerabilities = [];
@@ -1066,7 +1144,7 @@ function executeSQL(sql, params = []) {
         if (!db.pentest_findings) db.pentest_findings = [];
         const findId = parseInt(params[0]);
         const before = db.pentest_findings.length;
-        db.pentest_findings = db.pentest_findings.filter(f => f.id !== findId);
+        db.pentest_findings = db.pentest_findings.filter((f) => f.id !== findId);
         return { changes: before - db.pentest_findings.length };
       }
     }
@@ -1081,35 +1159,48 @@ loadDatabase();
 // Initialize database schema
 function initializeDatabase() {
   if (!db.security_settings || db.security_settings.length === 0) {
-    db.security_settings = [{
-      id: 1,
-      mfa_enabled: 0,
-      rbac_enabled: 1,
-      encryption_at_rest: 1,
-      field_encryption: 0,
-      https_enabled: 0,
-      audit_logging: 0,
-      rate_limiting: 0,
-      updated_at: new Date().toISOString()
-    }];
+    db.security_settings = [
+      {
+        id: 1,
+        mfa_enabled: 0,
+        rbac_enabled: 1,
+        encryption_at_rest: 1,
+        field_encryption: 0,
+        https_enabled: 0,
+        audit_logging: 0,
+        rate_limiting: 0,
+        updated_at: new Date().toISOString()
+      }
+    ];
   }
   // Ensure new curriculum collections exist
   const newCollections = [
-    'sca_findings', 'sca_student_reviews',
-    'dast_scenarios', 'dast_student_findings',
-    'vulnerabilities', 'vm_status_history', 'vm_comments',
-    'pentest_engagements', 'pentest_findings', 'pentest_phase_notes'
+    'sca_findings',
+    'sca_student_reviews',
+    'dast_scenarios',
+    'dast_student_findings',
+    'vulnerabilities',
+    'vm_status_history',
+    'vm_comments',
+    'pentest_engagements',
+    'pentest_findings',
+    'pentest_phase_notes'
   ];
-  newCollections.forEach(col => {
+  newCollections.forEach((col) => {
     if (!db[col]) db[col] = [];
   });
   // Ensure new counter keys exist
   const newCounters = [
-    'sca_student_reviews', 'dast_student_findings',
-    'vulnerabilities', 'vm_status_history', 'vm_comments',
-    'pentest_engagements', 'pentest_findings', 'pentest_phase_notes'
+    'sca_student_reviews',
+    'dast_student_findings',
+    'vulnerabilities',
+    'vm_status_history',
+    'vm_comments',
+    'pentest_engagements',
+    'pentest_findings',
+    'pentest_phase_notes'
   ];
-  newCounters.forEach(key => {
+  newCounters.forEach((key) => {
     if (!db._counters[key]) db._counters[key] = 0;
   });
   saveDatabase();

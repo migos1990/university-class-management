@@ -13,10 +13,7 @@ describe('TEST-03: API Endpoints Require Auth', () => {
   before(async () => {
     // Health check -- ensure server is reachable
     const health = await request({ url: `${BASE_URL}/health` });
-    assert.ok(
-      health.statusCode === 200,
-      'Server not running. Start it first: npm start'
-    );
+    assert.ok(health.statusCode === 200, 'Server not running. Start it first: npm start');
   });
 
   it('GET /api/instructor-message returns 302 without auth', async () => {
@@ -24,10 +21,7 @@ describe('TEST-03: API Endpoints Require Auth', () => {
       url: `${BASE_URL}/api/instructor-message`
     });
 
-    assert.strictEqual(
-      res.statusCode, 302,
-      `Expected 302 redirect, got ${res.statusCode}`
-    );
+    assert.strictEqual(res.statusCode, 302, `Expected 302 redirect, got ${res.statusCode}`);
   });
 
   it('POST /api/instructor-message returns 302 without auth', async () => {
@@ -43,10 +37,7 @@ describe('TEST-03: API Endpoints Require Auth', () => {
       body
     });
 
-    assert.strictEqual(
-      res.statusCode, 302,
-      `Expected 302 redirect, got ${res.statusCode}`
-    );
+    assert.strictEqual(res.statusCode, 302, `Expected 302 redirect, got ${res.statusCode}`);
   });
 
   it('GET /api/summary returns 302 without auth', async () => {
@@ -54,9 +45,6 @@ describe('TEST-03: API Endpoints Require Auth', () => {
       url: `${BASE_URL}/api/summary`
     });
 
-    assert.strictEqual(
-      res.statusCode, 302,
-      `Expected 302 redirect, got ${res.statusCode}`
-    );
+    assert.strictEqual(res.statusCode, 302, `Expected 302 redirect, got ${res.statusCode}`);
   });
 });

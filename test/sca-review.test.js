@@ -16,10 +16,7 @@ describe('TEST-01: SCA Review Submission', () => {
   before(async () => {
     // Health check -- ensure server is reachable
     const health = await request({ url: `${BASE_URL}/health` });
-    assert.ok(
-      health.statusCode === 200,
-      'Server not running. Start it first: npm start'
-    );
+    assert.ok(health.statusCode === 200, 'Server not running. Start it first: npm start');
 
     studentCookie = await loginAs('student');
   });
@@ -32,7 +29,7 @@ describe('TEST-01: SCA Review Submission', () => {
       url: `${BASE_URL}/sca/findings/1/review`,
       method: 'POST',
       headers: {
-        'Cookie': studentCookie,
+        Cookie: studentCookie,
         'Content-Type': 'application/x-www-form-urlencoded',
         'Content-Length': Buffer.byteLength(body).toString()
       },
@@ -47,7 +44,7 @@ describe('TEST-01: SCA Review Submission', () => {
     // Verify persistence -- GET the finding detail page
     const detailRes = await request({
       url: `${BASE_URL}/sca/findings/1`,
-      headers: { 'Cookie': studentCookie }
+      headers: { Cookie: studentCookie }
     });
 
     assert.strictEqual(detailRes.statusCode, 200);
@@ -71,7 +68,8 @@ describe('TEST-01: SCA Review Submission', () => {
     });
 
     assert.strictEqual(
-      res.statusCode, 302,
+      res.statusCode,
+      302,
       `Expected 302 redirect for unauthenticated request, got ${res.statusCode}`
     );
   });

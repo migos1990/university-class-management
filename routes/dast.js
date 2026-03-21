@@ -7,27 +7,46 @@ const { dastLocalize, t } = require('../utils/i18n');
 
 // Helper: import a DAST scenario's confirmed finding into the VM
 function importToVM(scenarioId, _importedBy) {
-  const scenario = db.prepare('SELECT * FROM dast_scenarios WHERE id = ?').get(parseInt(scenarioId));
+  const scenario = db
+    .prepare('SELECT * FROM dast_scenarios WHERE id = ?')
+    .get(parseInt(scenarioId));
   if (!scenario) return { success: false, error: 'Scenario not found' };
 
-  const existing = db.prepare(
-    'SELECT * FROM vulnerabilities WHERE source = ? AND source_id = ?'
-  ).get('dast', scenario.id);
+  const existing = db
+    .prepare('SELECT * FROM vulnerabilities WHERE source = ? AND source_id = ?')
+    .get('dast', scenario.id);
   if (existing) return { success: false, error: 'Already imported', vulnId: existing.id };
 
   const now = new Date().toISOString();
-  const result = db.prepare(`
+  const result = db
+    .prepare(
+      `
     INSERT INTO vulnerabilities (id, title, source, source_id, owasp_category, cwe, cvss_vector, cvss_score,
       severity, affected_component, description, status, assigned_to, priority,
       remediation_plan, remediation_deadline, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(
-    0, scenario.title, 'dast', scenario.id,
-    scenario.owasp_category, null, null, scenario.cvss_base_score,
-    scenario.severity, scenario.affected_file,
-    scenario.expected_finding, 'open', null, 2,
-    null, null, now, now
-  );
+  `
+    )
+    .run(
+      0,
+      scenario.title,
+      'dast',
+      scenario.id,
+      scenario.owasp_category,
+      null,
+      null,
+      scenario.cvss_base_score,
+      scenario.severity,
+      scenario.affected_file,
+      scenario.expected_finding,
+      'open',
+      null,
+      2,
+      null,
+      null,
+      now,
+      now
+    );
   return { success: true, vulnId: result.lastID };
 }
 
@@ -37,14 +56,16 @@ router.get('/', requireAuth, (req, res) => {
   const scenarios = db.prepare('SELECT * FROM dast_scenarios').all();
 
   if (user.role === 'student') {
-    const myFindings = db.prepare(
-      'SELECT * FROM dast_student_findings WHERE student_id = ?'
-    ).all(user.id);
+    const myFindings = db
+      .prepare('SELECT * FROM dast_student_findings WHERE student_id = ?')
+      .all(user.id);
     const findingMap = {};
-    myFindings.forEach(f => { findingMap[f.scenario_id] = f; });
+    myFindings.forEach((f) => {
+      findingMap[f.scenario_id] = f;
+    });
 
     const lang = req.session.language || 'fr';
-    const localizedScenarios = scenarios.map(s => dastLocalize(s, lang));
+    const localizedScenarios = scenarios.map((s) => dastLocalize(s, lang));
     return res.render('dast/student-lab', {
       title: t(lang, 'dast.studentLab.title'),
       scenarios: localizedScenarios,
@@ -57,15 +78,15 @@ router.get('/', requireAuth, (req, res) => {
   const allFindings = db.prepare('SELECT * FROM dast_student_findings').all();
   const students = db.prepare('SELECT * FROM users WHERE role = ?').all('student');
   const countMap = {};
-  scenarios.forEach(s => {
-    countMap[s.id] = allFindings.filter(f => f.scenario_id === s.id);
+  scenarios.forEach((s) => {
+    countMap[s.id] = allFindings.filter((f) => f.scenario_id === s.id);
   });
 
   const vmImported = db.prepare("SELECT * FROM vulnerabilities WHERE source = 'dast'").all();
-  const importedIds = new Set(vmImported.map(v => v.source_id));
+  const importedIds = new Set(vmImported.map((v) => v.source_id));
 
   const lang = req.session.language || 'fr';
-  const localizedScenarios = scenarios.map(s => dastLocalize(s, lang));
+  const localizedScenarios = scenarios.map((s) => dastLocalize(s, lang));
   res.render('dast/instructor', {
     title: t(lang, 'dast.instructor.title'),
     scenarios: localizedScenarios,
@@ -77,30 +98,41 @@ router.get('/', requireAuth, (req, res) => {
 
 // ─── GET /dast/scenarios/:id ─── Detail view
 router.get('/scenarios/:id', requireAuth, (req, res) => {
-  const scenario = db.prepare('SELECT * FROM dast_scenarios WHERE id = ?').get(parseInt(req.params.id));
-  if (!scenario) return res.status(404).render('error', { message: 'Scenario not found', error: { status: 404 } });
+  const scenario = db
+    .prepare('SELECT * FROM dast_scenarios WHERE id = ?')
+    .get(parseInt(req.params.id));
+  if (!scenario)
+    return res
+      .status(404)
+      .render('error', { message: 'Scenario not found', error: { status: 404 } });
 
   const lang = req.session.language || 'fr';
   const localizedScenario = dastLocalize(scenario, lang);
 
   let steps = [];
-  try { steps = JSON.parse(localizedScenario.steps); } catch(_e) { steps = []; }
+  try {
+    steps = JSON.parse(localizedScenario.steps);
+  } catch (_e) {
+    steps = [];
+  }
 
   const user = req.session.user;
   let myFinding = null;
   let allFindings = [];
 
   if (user.role === 'student') {
-    myFinding = db.prepare(
-      'SELECT * FROM dast_student_findings WHERE scenario_id = ? AND student_id = ?'
-    ).get(scenario.id, user.id);
+    myFinding = db
+      .prepare('SELECT * FROM dast_student_findings WHERE scenario_id = ? AND student_id = ?')
+      .get(scenario.id, user.id);
   } else {
-    allFindings = db.prepare('SELECT * FROM dast_student_findings WHERE scenario_id = ?').all(scenario.id);
+    allFindings = db
+      .prepare('SELECT * FROM dast_student_findings WHERE scenario_id = ?')
+      .all(scenario.id);
   }
 
-  const vmEntry = db.prepare(
-    'SELECT * FROM vulnerabilities WHERE source = ? AND source_id = ?'
-  ).get('dast', scenario.id);
+  const vmEntry = db
+    .prepare('SELECT * FROM vulnerabilities WHERE source = ? AND source_id = ?')
+    .get('dast', scenario.id);
 
   res.render('dast/scenario-detail', {
     title: `DAST: ${localizedScenario.title}`,
@@ -114,7 +146,9 @@ router.get('/scenarios/:id', requireAuth, (req, res) => {
 
 // ─── GET /dast/scenarios/:id/precondition ─── JSON live check
 router.get('/scenarios/:id/precondition', requireAuth, (req, res) => {
-  const scenario = db.prepare('SELECT * FROM dast_scenarios WHERE id = ?').get(parseInt(req.params.id));
+  const scenario = db
+    .prepare('SELECT * FROM dast_scenarios WHERE id = ?')
+    .get(parseInt(req.params.id));
   if (!scenario) return res.json({ met: false, message: 'Scenario not found' });
 
   const settings = req.securitySettings;
@@ -128,9 +162,7 @@ router.get('/scenarios/:id/precondition', requireAuth, (req, res) => {
     const met = !settings.rbac_enabled;
     return res.json({
       met,
-      message: met
-        ? t(lang, 'dast.precondition.rbacMet')
-        : t(lang, 'dast.precondition.rbacUnmet')
+      message: met ? t(lang, 'dast.precondition.rbacMet') : t(lang, 'dast.precondition.rbacUnmet')
     });
   }
   if (pre === 'rate_limit_disabled') {
@@ -150,35 +182,57 @@ router.get('/scenarios/:id/precondition', requireAuth, (req, res) => {
 router.post('/scenarios/:id/findings', requireAuth, requireRole(['student']), (req, res) => {
   const scenarioId = parseInt(req.params.id);
   const studentId = req.session.user.id;
-  const { triggered, trigger_evidence, impact_assessment, reproduction_steps, recommendation, severity_rating, action } = req.body;
+  const {
+    triggered,
+    trigger_evidence,
+    impact_assessment,
+    reproduction_steps,
+    recommendation,
+    severity_rating,
+    action
+  } = req.body;
 
   const isSubmit = action === 'submit';
   const submittedAt = isSubmit ? new Date().toISOString() : null;
 
-  const existing = db.prepare(
-    'SELECT * FROM dast_student_findings WHERE scenario_id = ? AND student_id = ?'
-  ).get(scenarioId, studentId);
+  const existing = db
+    .prepare('SELECT * FROM dast_student_findings WHERE scenario_id = ? AND student_id = ?')
+    .get(scenarioId, studentId);
 
   if (existing) {
-    db.prepare(`
+    db.prepare(
+      `
       UPDATE dast_student_findings
       SET triggered = ?, trigger_evidence = ?, impact_assessment = ?,
           reproduction_steps = ?, recommendation = ?, severity_rating = ?, submitted_at = ?
       WHERE id = ?
-    `).run(
-      triggered ? 1 : 0, trigger_evidence || null, impact_assessment || null,
-      reproduction_steps || null, recommendation || null, severity_rating || null,
-      submittedAt, existing.id
+    `
+    ).run(
+      triggered ? 1 : 0,
+      trigger_evidence || null,
+      impact_assessment || null,
+      reproduction_steps || null,
+      recommendation || null,
+      severity_rating || null,
+      submittedAt,
+      existing.id
     );
   } else {
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO dast_student_findings (scenario_id, student_id, triggered, trigger_evidence, impact_assessment, reproduction_steps, recommendation, severity_rating, submitted_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      scenarioId, studentId, triggered ? 1 : 0,
-      trigger_evidence || null, impact_assessment || null,
-      reproduction_steps || null, recommendation || null,
-      severity_rating || null, submittedAt
+    `
+    ).run(
+      scenarioId,
+      studentId,
+      triggered ? 1 : 0,
+      trigger_evidence || null,
+      impact_assessment || null,
+      reproduction_steps || null,
+      recommendation || null,
+      severity_rating || null,
+      submittedAt
     );
   }
 
@@ -198,19 +252,34 @@ router.post('/findings/:id/update', requireAuth, requireRole(['student']), (req,
     return res.status(403).json({ success: false, error: 'Forbidden' });
   }
 
-  const { triggered, trigger_evidence, impact_assessment, reproduction_steps, recommendation, severity_rating, action } = req.body;
+  const {
+    triggered,
+    trigger_evidence,
+    impact_assessment,
+    reproduction_steps,
+    recommendation,
+    severity_rating,
+    action
+  } = req.body;
   const isSubmit = action === 'submit';
   const submittedAt = isSubmit ? new Date().toISOString() : finding.submitted_at;
 
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE dast_student_findings
     SET triggered = ?, trigger_evidence = ?, impact_assessment = ?,
         reproduction_steps = ?, recommendation = ?, severity_rating = ?, submitted_at = ?
     WHERE id = ?
-  `).run(
-    triggered ? 1 : 0, trigger_evidence || null, impact_assessment || null,
-    reproduction_steps || null, recommendation || null, severity_rating || null,
-    submittedAt, findingId
+  `
+  ).run(
+    triggered ? 1 : 0,
+    trigger_evidence || null,
+    impact_assessment || null,
+    reproduction_steps || null,
+    recommendation || null,
+    severity_rating || null,
+    submittedAt,
+    findingId
   );
 
   if (req.headers.accept && req.headers.accept.includes('application/json')) {
@@ -220,25 +289,37 @@ router.post('/findings/:id/update', requireAuth, requireRole(['student']), (req,
 });
 
 // ─── POST /dast/findings/:id/feedback ─── Instructor feedback + grade
-router.post('/findings/:id/feedback', requireAuth, requireRole(['admin', 'professor']), (req, res) => {
-  const findingId = parseInt(req.params.id);
-  const finding = db.prepare('SELECT * FROM dast_student_findings WHERE id = ?').get(findingId);
-  if (!finding) return res.status(404).json({ success: false, error: 'Not found' });
+router.post(
+  '/findings/:id/feedback',
+  requireAuth,
+  requireRole(['admin', 'professor']),
+  (req, res) => {
+    const findingId = parseInt(req.params.id);
+    const finding = db.prepare('SELECT * FROM dast_student_findings WHERE id = ?').get(findingId);
+    if (!finding) return res.status(404).json({ success: false, error: 'Not found' });
 
-  const { instructor_feedback, grade } = req.body;
-  db.prepare(`
+    const { instructor_feedback, grade } = req.body;
+    db.prepare(
+      `
     UPDATE dast_student_findings
     SET instructor_feedback = ?, grade = ?
     WHERE id = ?
-  `).run(instructor_feedback || null, grade || null, findingId);
+  `
+    ).run(instructor_feedback || null, grade || null, findingId);
 
-  res.json({ success: true });
-});
+    res.json({ success: true });
+  }
+);
 
 // ─── POST /dast/import-to-vm/:scenarioId ─── Instructor: push to VM
-router.post('/import-to-vm/:scenarioId', requireAuth, requireRole(['admin', 'professor']), (req, res) => {
-  const result = importToVM(req.params.scenarioId, req.session.user.id);
-  res.json(result);
-});
+router.post(
+  '/import-to-vm/:scenarioId',
+  requireAuth,
+  requireRole(['admin', 'professor']),
+  (req, res) => {
+    const result = importToVM(req.params.scenarioId, req.session.user.id);
+    res.json(result);
+  }
+);
 
 module.exports = { router, importToVM };

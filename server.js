@@ -42,16 +42,18 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Session configuration — set secure cookie at startup if HTTPS is enabled
 const startupSecuritySettings = getSecuritySettings();
-app.use(session({
-  secret: 'university-class-management-secret-key-change-in-production',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    maxAge: 1000 * 60 * 60 * 24, // 24 hours
-    httpOnly: true,
-    secure: !!startupSecuritySettings.https_enabled
-  }
-}));
+app.use(
+  session({
+    secret: 'university-class-management-secret-key-change-in-production',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24, // 24 hours
+      httpOnly: true,
+      secure: !!startupSecuritySettings.https_enabled
+    }
+  })
+);
 
 // Load security settings into all requests
 app.use(loadSecuritySettings);
@@ -132,87 +134,109 @@ app.get('/api/summary', requireAuth, (req, res) => {
     // Security config
     const settings = db.prepare('SELECT * FROM security_settings').get();
     const security = {
-      mfa_enabled:         !!(settings && settings.mfa_enabled),
-      rbac_enabled:        !!(settings && settings.rbac_enabled),
-      encryption_at_rest:  !!(settings && settings.encryption_at_rest),
-      field_encryption:    !!(settings && settings.field_encryption),
-      https_enabled:       !!(settings && settings.https_enabled),
-      audit_logging:       !!(settings && settings.audit_logging),
-      rate_limiting:       !!(settings && settings.rate_limiting)
+      mfa_enabled: !!(settings && settings.mfa_enabled),
+      rbac_enabled: !!(settings && settings.rbac_enabled),
+      encryption_at_rest: !!(settings && settings.encryption_at_rest),
+      field_encryption: !!(settings && settings.field_encryption),
+      https_enabled: !!(settings && settings.https_enabled),
+      audit_logging: !!(settings && settings.audit_logging),
+      rate_limiting: !!(settings && settings.rate_limiting)
     };
 
     // User counts
-    const allUsers   = db.prepare('SELECT * FROM users').all();
-    const students   = (allUsers || []).filter(u => u.role === 'student');
-    const professors = (allUsers || []).filter(u => u.role === 'professor');
+    const allUsers = db.prepare('SELECT * FROM users').all();
+    const students = (allUsers || []).filter((u) => u.role === 'student');
+    const professors = (allUsers || []).filter((u) => u.role === 'professor');
     const users = {
-      total:      (allUsers || []).length,
-      students:   students.length,
+      total: (allUsers || []).length,
+      students: students.length,
       professors: professors.length
     };
 
     // VM stats
     const vulns = db.prepare('SELECT * FROM vulnerabilities').all() || [];
     const vm = {
-      total:       vulns.length,
-      open:        vulns.filter(v => v.status === 'open').length,
-      in_progress: vulns.filter(v => v.status === 'in_progress').length,
-      resolved:    vulns.filter(v => v.status === 'resolved').length,
-      wont_fix:    vulns.filter(v => v.status === 'wont_fix').length,
-      critical:    vulns.filter(v => v.severity === 'Critical').length,
-      high:        vulns.filter(v => v.severity === 'High').length,
-      medium:      vulns.filter(v => v.severity === 'Medium').length,
-      low:         vulns.filter(v => v.severity === 'Low').length
+      total: vulns.length,
+      open: vulns.filter((v) => v.status === 'open').length,
+      in_progress: vulns.filter((v) => v.status === 'in_progress').length,
+      resolved: vulns.filter((v) => v.status === 'resolved').length,
+      wont_fix: vulns.filter((v) => v.status === 'wont_fix').length,
+      critical: vulns.filter((v) => v.severity === 'Critical').length,
+      high: vulns.filter((v) => v.severity === 'High').length,
+      medium: vulns.filter((v) => v.severity === 'Medium').length,
+      low: vulns.filter((v) => v.severity === 'Low').length
     };
 
     // SCA progress
     const scaFindings = db.prepare('SELECT * FROM sca_findings').all() || [];
-    const scaReviews  = db.prepare('SELECT * FROM sca_student_reviews').all() || [];
-    const scaTotal    = scaFindings.length;
-    const scaPerStudent = students.map(s => ({
-      username:        s.username,
-      submitted_count: scaReviews.filter(r => r.student_id === s.id && r.status === 'submitted').length
+    const scaReviews = db.prepare('SELECT * FROM sca_student_reviews').all() || [];
+    const scaTotal = scaFindings.length;
+    const scaPerStudent = students.map((s) => ({
+      username: s.username,
+      submitted_count: scaReviews.filter((r) => r.student_id === s.id && r.status === 'submitted')
+        .length
     }));
-    const scaAvgPct = scaTotal === 0 || students.length === 0 ? 0 : Math.round(
-      scaPerStudent.reduce((a, s) => a + s.submitted_count, 0) / (students.length * scaTotal) * 100
-    );
-    const sca = { total_findings: scaTotal, avg_completion_pct: scaAvgPct, per_student: scaPerStudent };
+    const scaAvgPct =
+      scaTotal === 0 || students.length === 0
+        ? 0
+        : Math.round(
+            (scaPerStudent.reduce((a, s) => a + s.submitted_count, 0) /
+              (students.length * scaTotal)) *
+              100
+          );
+    const sca = {
+      total_findings: scaTotal,
+      avg_completion_pct: scaAvgPct,
+      per_student: scaPerStudent
+    };
 
     // DAST progress
     const dastScenarios = db.prepare('SELECT * FROM dast_scenarios').all() || [];
-    const dastFindings  = db.prepare('SELECT * FROM dast_student_findings').all() || [];
-    const dastTotal     = dastScenarios.length;
-    const dastPerStudent = students.map(s => {
-      const mine = dastFindings.filter(f => f.student_id === s.id);
+    const dastFindings = db.prepare('SELECT * FROM dast_student_findings').all() || [];
+    const dastTotal = dastScenarios.length;
+    const dastPerStudent = students.map((s) => {
+      const mine = dastFindings.filter((f) => f.student_id === s.id);
       return {
-        username:  s.username,
-        submitted: mine.filter(f => f.submitted_at !== null).length,
-        triggered: mine.filter(f => f.triggered === 1).length
+        username: s.username,
+        submitted: mine.filter((f) => f.submitted_at !== null).length,
+        triggered: mine.filter((f) => f.triggered === 1).length
       };
     });
-    const dastAvgPct = dastTotal === 0 || students.length === 0 ? 0 : Math.round(
-      dastPerStudent.reduce((a, s) => a + s.submitted, 0) / (students.length * dastTotal) * 100
-    );
-    const dast = { total_scenarios: dastTotal, avg_completion_pct: dastAvgPct, per_student: dastPerStudent };
+    const dastAvgPct =
+      dastTotal === 0 || students.length === 0
+        ? 0
+        : Math.round(
+            (dastPerStudent.reduce((a, s) => a + s.submitted, 0) / (students.length * dastTotal)) *
+              100
+          );
+    const dast = {
+      total_scenarios: dastTotal,
+      avg_completion_pct: dastAvgPct,
+      per_student: dastPerStudent
+    };
 
     // Pentest progress
     const engagements = db.prepare('SELECT * FROM pentest_engagements').all() || [];
     const PHASES = ['recon', 'enumeration', 'vuln_id', 'exploitation', 'reporting'];
     const phaseDist = {};
-    PHASES.forEach(p => { phaseDist[p] = 0; });
-    engagements.forEach(e => { if (phaseDist[e.phase_current] !== undefined) phaseDist[e.phase_current]++; });
+    PHASES.forEach((p) => {
+      phaseDist[p] = 0;
+    });
+    engagements.forEach((e) => {
+      if (phaseDist[e.phase_current] !== undefined) phaseDist[e.phase_current]++;
+    });
     const pentest = {
       total_students: students.length,
-      in_progress:    engagements.filter(e => e.status === 'in_progress').length,
-      submitted:      engagements.filter(e => e.status === 'submitted').length,
-      graded:         engagements.filter(e => e.status === 'graded').length,
+      in_progress: engagements.filter((e) => e.status === 'in_progress').length,
+      submitted: engagements.filter((e) => e.status === 'submitted').length,
+      graded: engagements.filter((e) => e.status === 'graded').length,
       phase_distribution: phaseDist
     };
 
     res.json({
-      team:      process.env.TEAM_NAME || 'default',
-      port:      process.env.PORT || 3000,
-      uptime:    process.uptime(),
+      team: process.env.TEAM_NAME || 'default',
+      port: process.env.PORT || 3000,
+      uptime: process.uptime(),
       security,
       users,
       vm,
@@ -282,17 +306,18 @@ function startServer() {
     });
 
     // Also start HTTP server to redirect to HTTPS
-    http.createServer((req, res) => {
-      res.writeHead(301, {
-        Location: `https://${req.headers.host.replace(HTTP_PORT, HTTPS_PORT)}${req.url}`
+    http
+      .createServer((req, res) => {
+        res.writeHead(301, {
+          Location: `https://${req.headers.host.replace(HTTP_PORT, HTTPS_PORT)}${req.url}`
+        });
+        res.end();
+      })
+      .listen(HTTP_PORT, '0.0.0.0', () => {
+        if (!isChild) {
+          console.log(`HTTP redirect server running on: http://localhost:${HTTP_PORT}`);
+        }
       });
-      res.end();
-    }).listen(HTTP_PORT, '0.0.0.0', () => {
-      if (!isChild) {
-        console.log(`HTTP redirect server running on: http://localhost:${HTTP_PORT}`);
-      }
-    });
-
   } else {
     // Start HTTP server only
     http.createServer(app).listen(HTTP_PORT, '0.0.0.0', () => {

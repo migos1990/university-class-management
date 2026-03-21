@@ -12,16 +12,16 @@
  */
 'use strict';
 
-const { spawn }  = require('child_process');
-const http       = require('http');
-const fs         = require('fs');
-const path       = require('path');
+const { spawn } = require('child_process');
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
 
-const APP_ROOT    = path.join(__dirname, '..');
+const APP_ROOT = path.join(__dirname, '..');
 const CONFIG_PATH = path.join(APP_ROOT, 'classroom.config.json');
-const INSTANCES   = path.join(APP_ROOT, 'instances');
-const PID_FILE    = path.join(INSTANCES, '.pids.json');
-const SERVER_JS   = path.join(APP_ROOT, 'server.js');
+const INSTANCES = path.join(APP_ROOT, 'instances');
+const PID_FILE = path.join(INSTANCES, '.pids.json');
+const SERVER_JS = path.join(APP_ROOT, 'server.js');
 
 // ─── Load config ────────────────────────────────────────────────────────────
 if (!fs.existsSync(CONFIG_PATH)) {
@@ -40,8 +40,8 @@ const teams = config.teams.slice(0, teamCount);
 
 // ─── Codespaces URL detection ───────────────────────────────────────────────
 const CODESPACE_NAME = process.env.CODESPACE_NAME;
-const CS_DOMAIN      = process.env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN;
-const IS_CODESPACES  = !!CODESPACE_NAME;
+const CS_DOMAIN = process.env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN;
+const IS_CODESPACES = !!CODESPACE_NAME;
 
 function getExternalUrl(port) {
   if (IS_CODESPACES && CS_DOMAIN) {
@@ -52,16 +52,16 @@ function getExternalUrl(port) {
 
 // ─── Instance state ─────────────────────────────────────────────────────────
 const instances = teams.map((team, i) => ({
-  index:  i,
+  index: i,
   team,
-  port:   basePort + i,
-  url:    getExternalUrl(basePort + i),
-  slot:   `team-${i + 1}`,
-  pid:    null,
-  proc:   null,
-  status: 'stopped',   // stopped | starting | online | offline
+  port: basePort + i,
+  url: getExternalUrl(basePort + i),
+  slot: `team-${i + 1}`,
+  pid: null,
+  proc: null,
+  status: 'stopped', // stopped | starting | online | offline
   startedAt: null,
-  lastCheck:  null,
+  lastCheck: null,
   lastStatus: null
 }));
 
@@ -75,11 +75,11 @@ let broadcastMessage = null;
 function spawnInstance(inst) {
   const slotDir = path.join(INSTANCES, inst.slot);
   const dataDir = path.join(slotDir, 'database');
-  const bkDir   = path.join(slotDir, 'backups');
-  const sslDir  = path.join(slotDir, 'ssl');
+  const bkDir = path.join(slotDir, 'backups');
+  const sslDir = path.join(slotDir, 'ssl');
 
   // Ensure directories exist
-  [slotDir, dataDir, bkDir, sslDir].forEach(d => {
+  [slotDir, dataDir, bkDir, sslDir].forEach((d) => {
     if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
   });
 
@@ -90,31 +90,31 @@ function spawnInstance(inst) {
     cwd: APP_ROOT,
     env: {
       ...process.env,
-      PORT:      String(inst.port),
-      DATA_DIR:  dataDir,
+      PORT: String(inst.port),
+      DATA_DIR: dataDir,
       BACKUP_DIR: bkDir,
-      SSL_DIR:   sslDir,
+      SSL_DIR: sslDir,
       TEAM_NAME: inst.team,
-      NODE_ENV:  process.env.NODE_ENV || 'development'
+      NODE_ENV: process.env.NODE_ENV || 'development'
     },
     stdio: ['ignore', 'pipe', 'pipe']
   });
 
   inst.proc = child;
-  inst.pid  = child.pid;
+  inst.pid = child.pid;
 
-  child.stdout.on('data', d => {
+  child.stdout.on('data', (d) => {
     const line = d.toString().trim();
     if (line) console.log(`[${inst.team}] ${line}`);
   });
-  child.stderr.on('data', d => {
+  child.stderr.on('data', (d) => {
     const line = d.toString().trim();
     if (line) console.error(`[${inst.team}] ERR: ${line}`);
   });
   child.on('exit', (code, signal) => {
     inst.status = 'stopped';
-    inst.proc   = null;
-    inst.pid    = null;
+    inst.proc = null;
+    inst.pid = null;
     console.log(`[${inst.team}] Exited (code=${code}, signal=${signal})`);
   });
 
@@ -123,7 +123,7 @@ function spawnInstance(inst) {
 
 // ─── Health-check a single instance ─────────────────────────────────────────
 function healthCheck(inst) {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const opts = {
       hostname: 'localhost',
       port: inst.port,
@@ -131,9 +131,11 @@ function healthCheck(inst) {
       method: 'GET',
       timeout: 2000
     };
-    const req = http.request(opts, res => {
+    const req = http.request(opts, (res) => {
       let body = '';
-      res.on('data', d => { body += d; });
+      res.on('data', (d) => {
+        body += d;
+      });
       res.on('end', () => {
         try {
           const data = JSON.parse(body);
@@ -141,21 +143,28 @@ function healthCheck(inst) {
           inst.lastCheck = new Date().toISOString();
           inst.lastStatus = data;
           resolve(true);
-        } catch(_e) {
+        } catch (_e) {
           inst.status = 'offline';
           resolve(false);
         }
       });
     });
-    req.on('error', () => { inst.status = 'offline'; resolve(false); });
-    req.on('timeout', () => { req.destroy(); inst.status = 'offline'; resolve(false); });
+    req.on('error', () => {
+      inst.status = 'offline';
+      resolve(false);
+    });
+    req.on('timeout', () => {
+      req.destroy();
+      inst.status = 'offline';
+      resolve(false);
+    });
     req.end();
   });
 }
 
 // ─── Fetch /api/summary from a single instance ───────────────────────────────
 function fetchSummary(inst) {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const opts = {
       hostname: 'localhost',
       port: inst.port,
@@ -163,27 +172,32 @@ function fetchSummary(inst) {
       method: 'GET',
       timeout: 4000
     };
-    const req = http.request(opts, res => {
+    const req = http.request(opts, (res) => {
       let body = '';
-      res.on('data', d => { body += d; });
+      res.on('data', (d) => {
+        body += d;
+      });
       res.on('end', () => {
         try {
           summaryCache[inst.index] = JSON.parse(body);
           resolve(true);
-        } catch(_e) {
+        } catch (_e) {
           resolve(false);
         }
       });
     });
-    req.on('error',   () => resolve(false));
-    req.on('timeout', () => { req.destroy(); resolve(false); });
+    req.on('error', () => resolve(false));
+    req.on('timeout', () => {
+      req.destroy();
+      resolve(false);
+    });
     req.end();
   });
 }
 
 // ─── Push broadcast message to one instance ──────────────────────────────────
 function broadcastToInstance(inst, message) {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const body = JSON.stringify({ message });
     const opts = {
       hostname: 'localhost',
@@ -196,12 +210,15 @@ function broadcastToInstance(inst, message) {
         'Content-Length': Buffer.byteLength(body)
       }
     };
-    const req = http.request(opts, res => {
+    const req = http.request(opts, (res) => {
       res.resume();
       res.on('end', () => resolve(true));
     });
-    req.on('error',   () => resolve(false));
-    req.on('timeout', () => { req.destroy(); resolve(false); });
+    req.on('error', () => resolve(false));
+    req.on('timeout', () => {
+      req.destroy();
+      resolve(false);
+    });
     req.write(body);
     req.end();
   });
@@ -211,7 +228,7 @@ function broadcastToInstance(inst, message) {
 async function resetInstance(inst) {
   if (inst.proc) {
     inst.proc.kill('SIGTERM');
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, 2000));
   }
 
   const dbFile = path.join(INSTANCES, inst.slot, 'database', 'data.json');
@@ -224,7 +241,7 @@ async function resetInstance(inst) {
   console.log(`[${inst.team}] Restarted on port ${inst.port}`);
 
   for (let i = 0; i < 30; i++) {
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise((r) => setTimeout(r, 1000));
     const ok = await healthCheck(inst);
     if (ok) return { success: true, pid: inst.pid, startedAt: inst.startedAt };
   }
@@ -234,28 +251,28 @@ async function resetInstance(inst) {
 // ─── Persist PIDs so classroom-stop.js can read them ────────────────────────
 function savePIDs() {
   if (!fs.existsSync(INSTANCES)) fs.mkdirSync(INSTANCES, { recursive: true });
-  const data = instances.map(i => ({ team: i.team, port: i.port, pid: i.pid }));
+  const data = instances.map((i) => ({ team: i.team, port: i.port, pid: i.pid }));
   fs.writeFileSync(PID_FILE, JSON.stringify(data, null, 2));
 }
 
 // ─── Dashboard section helpers ───────────────────────────────────────────────
 
 const SECURITY_FEATURES = [
-  ['mfa_enabled',        'MFA'],
-  ['rbac_enabled',       'RBAC'],
+  ['mfa_enabled', 'MFA'],
+  ['rbac_enabled', 'RBAC'],
   ['encryption_at_rest', 'Pwd Encryption'],
-  ['field_encryption',   'Field Encryption'],
-  ['https_enabled',      'HTTPS'],
-  ['audit_logging',      'Audit Logging'],
-  ['rate_limiting',      'Rate Limiting']
+  ['field_encryption', 'Field Encryption'],
+  ['https_enabled', 'HTTPS'],
+  ['audit_logging', 'Audit Logging'],
+  ['rate_limiting', 'Rate Limiting']
 ];
 
 const PENTEST_PHASES = [
-  ['recon',        'Recon'],
-  ['enumeration',  'Enumeration'],
-  ['vuln_id',      'Vuln ID'],
+  ['recon', 'Recon'],
+  ['enumeration', 'Enumeration'],
+  ['vuln_id', 'Vuln ID'],
   ['exploitation', 'Exploitation'],
-  ['reporting',    'Reporting']
+  ['reporting', 'Reporting']
 ];
 
 function fmtUptime(seconds) {
@@ -267,11 +284,12 @@ function fmtUptime(seconds) {
 }
 
 function renderHealthGrid() {
-  const cards = instances.map(inst => {
-    const s     = summaryCache[inst.index];
-    const uptime = s ? fmtUptime(s.uptime) : '';
-    const users  = s ? `${s.users.students} student${s.users.students !== 1 ? 's' : ''}` : '';
-    return `<div class="health-card ${inst.status}">
+  const cards = instances
+    .map((inst) => {
+      const s = summaryCache[inst.index];
+      const uptime = s ? fmtUptime(s.uptime) : '';
+      const users = s ? `${s.users.students} student${s.users.students !== 1 ? 's' : ''}` : '';
+      return `<div class="health-card ${inst.status}">
       <div class="hcard-name"><a href="${inst.url}" target="_blank">${inst.team}</a></div>
       <div class="hcard-status"><span class="dot dot-${inst.status}"></span>${inst.status}</div>
       <div class="hcard-meta">${uptime}${uptime && users ? ' · ' : ''}${users}</div>
@@ -280,7 +298,8 @@ function renderHealthGrid() {
         <button class="btn-sm danger" onclick="resetOne(${inst.index})">Reset</button>
       </div>
     </div>`;
-  }).join('');
+    })
+    .join('');
   return `<section class="dash-section">
     <h2>Health Grid</h2>
     <div class="health-grid" id="health-grid">${cards}</div>
@@ -288,18 +307,21 @@ function renderHealthGrid() {
 }
 
 function renderSecurityMatrix() {
-  const teamHeaders = instances.map(inst =>
-    `<th title="${inst.team}">T${inst.index + 1}</th>`).join('');
+  const teamHeaders = instances
+    .map((inst) => `<th title="${inst.team}">T${inst.index + 1}</th>`)
+    .join('');
 
   const rows = SECURITY_FEATURES.map(([key, label]) => {
-    const cells = instances.map(inst => {
-      const s = summaryCache[inst.index];
-      if (!s) return '<td class="mat-unknown">?</td>';
-      const on = s.security && s.security[key];
-      return `<td><span class="${on ? 'check-on' : 'check-off'}">${on ? '✓' : '✗'}</span></td>`;
-    }).join('');
-    const onCount = summaryCache.filter(s => s && s.security && s.security[key]).length;
-    const total   = summaryCache.filter(Boolean).length;
+    const cells = instances
+      .map((inst) => {
+        const s = summaryCache[inst.index];
+        if (!s) return '<td class="mat-unknown">?</td>';
+        const on = s.security && s.security[key];
+        return `<td><span class="${on ? 'check-on' : 'check-off'}">${on ? '✓' : '✗'}</span></td>`;
+      })
+      .join('');
+    const onCount = summaryCache.filter((s) => s && s.security && s.security[key]).length;
+    const total = summaryCache.filter(Boolean).length;
     return `<tr><td class="mat-label">${label}</td>${cells}<td class="mat-total">${onCount}/${total}</td></tr>`;
   }).join('');
 
@@ -315,8 +337,9 @@ function renderSecurityMatrix() {
 }
 
 function renderLabProgress() {
-  const teamHeaders = instances.map(inst =>
-    `<th title="${inst.team}">T${inst.index + 1}</th>`).join('');
+  const teamHeaders = instances
+    .map((inst) => `<th title="${inst.team}">T${inst.index + 1}</th>`)
+    .join('');
 
   function pctBar(pct) {
     const cls = pct >= 80 ? 'good' : pct >= 40 ? '' : 'warn';
@@ -326,35 +349,41 @@ function renderLabProgress() {
   const modules = [
     {
       label: 'SCA',
-      pct: s => s && s.sca ? s.sca.avg_completion_pct : 0
+      pct: (s) => (s && s.sca ? s.sca.avg_completion_pct : 0)
     },
     {
       label: 'DAST',
-      pct: s => s && s.dast ? s.dast.avg_completion_pct : 0
+      pct: (s) => (s && s.dast ? s.dast.avg_completion_pct : 0)
     },
     {
       label: 'VM',
-      pct: s => {
+      pct: (s) => {
         if (!s || !s.vm || !s.vm.total) return 0;
         return Math.round(((s.vm.resolved + s.vm.wont_fix) / s.vm.total) * 100);
       }
     },
     {
       label: 'Pentest',
-      pct: s => {
+      pct: (s) => {
         if (!s || !s.pentest || !s.pentest.total_students) return 0;
-        return Math.round(((s.pentest.submitted + s.pentest.graded) / s.pentest.total_students) * 100);
+        return Math.round(
+          ((s.pentest.submitted + s.pentest.graded) / s.pentest.total_students) * 100
+        );
       }
     }
   ];
 
-  const rows = modules.map(mod => {
-    const cells = instances.map(inst => {
-      const pct = mod.pct(summaryCache[inst.index]);
-      return `<td>${pctBar(pct)}</td>`;
-    }).join('');
-    return `<tr><td class="mat-label"><strong>${mod.label}</strong></td>${cells}</tr>`;
-  }).join('');
+  const rows = modules
+    .map((mod) => {
+      const cells = instances
+        .map((inst) => {
+          const pct = mod.pct(summaryCache[inst.index]);
+          return `<td>${pctBar(pct)}</td>`;
+        })
+        .join('');
+      return `<tr><td class="mat-label"><strong>${mod.label}</strong></td>${cells}</tr>`;
+    })
+    .join('');
 
   return `<section class="dash-section">
     <h2>Lab Progress Tracker</h2>
@@ -368,8 +397,9 @@ function renderLabProgress() {
 }
 
 function renderVMHeatmap() {
-  const teamHeaders = instances.map(inst =>
-    `<th title="${inst.team}">T${inst.index + 1}</th>`).join('');
+  const teamHeaders = instances
+    .map((inst) => `<th title="${inst.team}">T${inst.index + 1}</th>`)
+    .join('');
 
   function heatCls(val, r, o, y) {
     if (val > r) return 'heat-red';
@@ -378,19 +408,23 @@ function renderVMHeatmap() {
     return 'heat-green';
   }
 
-  const openRow = instances.map(inst => {
-    const s = summaryCache[inst.index];
-    const v = s && s.vm != null ? s.vm.open : null;
-    const cls = v !== null ? heatCls(v, 10, 5, 2) : '';
-    return `<td><span class="heatmap-cell ${cls}">${v !== null ? v : '?'}</span></td>`;
-  }).join('');
+  const openRow = instances
+    .map((inst) => {
+      const s = summaryCache[inst.index];
+      const v = s && s.vm != null ? s.vm.open : null;
+      const cls = v !== null ? heatCls(v, 10, 5, 2) : '';
+      return `<td><span class="heatmap-cell ${cls}">${v !== null ? v : '?'}</span></td>`;
+    })
+    .join('');
 
-  const critRow = instances.map(inst => {
-    const s = summaryCache[inst.index];
-    const v = s && s.vm != null ? s.vm.critical : null;
-    const cls = v !== null ? heatCls(v, 3, 1, 0) : '';
-    return `<td><span class="heatmap-cell ${cls}">${v !== null ? v : '?'}</span></td>`;
-  }).join('');
+  const critRow = instances
+    .map((inst) => {
+      const s = summaryCache[inst.index];
+      const v = s && s.vm != null ? s.vm.critical : null;
+      const cls = v !== null ? heatCls(v, 3, 1, 0) : '';
+      return `<td><span class="heatmap-cell ${cls}">${v !== null ? v : '?'}</span></td>`;
+    })
+    .join('');
 
   return `<section class="dash-section">
     <h2>VM Vulnerability Heatmap</h2>
@@ -409,7 +443,12 @@ function renderVMHeatmap() {
 function renderPentestBoard() {
   const cols = PENTEST_PHASES.map(([key, label]) => {
     const count = summaryCache.reduce((acc, s) => {
-      return acc + (s && s.pentest && s.pentest.phase_distribution ? (s.pentest.phase_distribution[key] || 0) : 0);
+      return (
+        acc +
+        (s && s.pentest && s.pentest.phase_distribution
+          ? s.pentest.phase_distribution[key] || 0
+          : 0)
+      );
     }, 0);
     return `<div class="kanban-col">
       <div class="kanban-label">${label}</div>
@@ -567,7 +606,9 @@ function dashboardHTML() {
           </tr>
         </thead>
         <tbody id="instance-tbody">
-          ${instances.map(inst => `
+          ${instances
+            .map(
+              (inst) => `
           <tr id="row-${inst.index}">
             <td>${inst.team}</td>
             <td>${inst.port}</td>
@@ -576,7 +617,9 @@ function dashboardHTML() {
             <td id="pid-${inst.index}">${inst.pid || '—'}</td>
             <td id="check-${inst.index}">${inst.lastCheck ? new Date(inst.lastCheck).toLocaleTimeString() : '—'}</td>
             <td><button onclick="resetOne(${inst.index})">Reset</button></td>
-          </tr>`).join('')}
+          </tr>`
+            )
+            .join('')}
         </tbody>
       </table>
     </div>
@@ -591,7 +634,7 @@ function dashboardHTML() {
 
 </div>
 <script>
-const TEAM_URLS = ${JSON.stringify(instances.map(inst => inst.url))};
+const TEAM_URLS = ${JSON.stringify(instances.map((inst) => inst.url))};
 const FEATURES = [
   ['mfa_enabled','MFA'],['rbac_enabled','RBAC'],
   ['encryption_at_rest','Pwd Encryption'],['field_encryption','Field Encryption'],
@@ -819,16 +862,20 @@ const dashboard = http.createServer(async (req, res) => {
 
   if (req.method === 'GET' && url === '/api/instances') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify(instances.map(i => ({
-      index:     i.index,
-      team:      i.team,
-      port:      i.port,
-      url:       i.url,
-      pid:       i.pid,
-      status:    i.status,
-      startedAt: i.startedAt,
-      lastCheck: i.lastCheck
-    }))));
+    return res.end(
+      JSON.stringify(
+        instances.map((i) => ({
+          index: i.index,
+          team: i.team,
+          port: i.port,
+          url: i.url,
+          pid: i.pid,
+          status: i.status,
+          startedAt: i.startedAt,
+          lastCheck: i.lastCheck
+        }))
+      )
+    );
   }
 
   if (req.method === 'GET' && url === '/api/class-overview') {
@@ -837,52 +884,72 @@ const dashboard = http.createServer(async (req, res) => {
 
     const secAdoption = {};
     SECURITY_FEATURES.forEach(([key]) => {
-      secAdoption[key] = live.filter(s => s.security && s.security[key]).length;
+      secAdoption[key] = live.filter((s) => s.security && s.security[key]).length;
     });
 
     const phaseDist = {};
-    PENTEST_PHASES.forEach(([key]) => { phaseDist[key] = 0; });
-    live.forEach(s => {
+    PENTEST_PHASES.forEach(([key]) => {
+      phaseDist[key] = 0;
+    });
+    live.forEach((s) => {
       if (s.pentest && s.pentest.phase_distribution) {
-        PENTEST_PHASES.forEach(([key]) => { phaseDist[key] += s.pentest.phase_distribution[key] || 0; });
+        PENTEST_PHASES.forEach(([key]) => {
+          phaseDist[key] += s.pentest.phase_distribution[key] || 0;
+        });
       }
     });
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({
-      teams_online:  instances.filter(i => i.status === 'online').length,
-      teams_total:   total,
-      security:      secAdoption,
-      sca_avg_pct:   live.length === 0 ? 0 : Math.round(live.reduce((a, s) => a + (s.sca ? s.sca.avg_completion_pct : 0), 0) / live.length),
-      dast_avg_pct:  live.length === 0 ? 0 : Math.round(live.reduce((a, s) => a + (s.dast ? s.dast.avg_completion_pct : 0), 0) / live.length),
-      pentest_phases: phaseDist,
-      per_team:      instances.map((inst, i) => ({
-        index:   inst.index,
-        team:    inst.team,
-        port:    inst.port,
-        status:  inst.status,
-        summary: summaryCache[i]
-      })),
-      timestamp: new Date().toISOString()
-    }));
+    return res.end(
+      JSON.stringify({
+        teams_online: instances.filter((i) => i.status === 'online').length,
+        teams_total: total,
+        security: secAdoption,
+        sca_avg_pct:
+          live.length === 0
+            ? 0
+            : Math.round(
+                live.reduce((a, s) => a + (s.sca ? s.sca.avg_completion_pct : 0), 0) / live.length
+              ),
+        dast_avg_pct:
+          live.length === 0
+            ? 0
+            : Math.round(
+                live.reduce((a, s) => a + (s.dast ? s.dast.avg_completion_pct : 0), 0) / live.length
+              ),
+        pentest_phases: phaseDist,
+        per_team: instances.map((inst, i) => ({
+          index: inst.index,
+          team: inst.team,
+          port: inst.port,
+          status: inst.status,
+          summary: summaryCache[i]
+        })),
+        timestamp: new Date().toISOString()
+      })
+    );
   }
 
   if (req.method === 'POST' && url === '/api/broadcast') {
     let body = '';
-    req.on('data', d => { body += d; });
+    req.on('data', (d) => {
+      body += d;
+    });
     req.on('end', async () => {
       try {
         const parsed = JSON.parse(body);
         broadcastMessage = parsed.message || null;
         const results = await Promise.allSettled(
           instances
-            .filter(inst => inst.status === 'online')
-            .map(inst => broadcastToInstance(inst, broadcastMessage))
+            .filter((inst) => inst.status === 'online')
+            .map((inst) => broadcastToInstance(inst, broadcastMessage))
         );
-        const delivered = results.filter(r => r.status === 'fulfilled' && r.value === true).length;
+        const delivered = results.filter(
+          (r) => r.status === 'fulfilled' && r.value === true
+        ).length;
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, message: broadcastMessage, delivered }));
-      } catch(_e) {
+      } catch (_e) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: false, error: 'Invalid JSON' }));
       }
@@ -892,9 +959,12 @@ const dashboard = http.createServer(async (req, res) => {
 
   const resetOneMatch = url.match(/^\/api\/instances\/(\d+)\/reset$/);
   if (req.method === 'POST' && resetOneMatch) {
-    const idx  = parseInt(resetOneMatch[1]);
+    const idx = parseInt(resetOneMatch[1]);
     const inst = instances[idx];
-    if (!inst) { res.writeHead(404); return res.end('Not found'); }
+    if (!inst) {
+      res.writeHead(404);
+      return res.end('Not found');
+    }
     const result = await resetInstance(inst);
     savePIDs();
     res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -911,7 +981,9 @@ const dashboard = http.createServer(async (req, res) => {
   }
 
   if (req.method === 'POST' && url === '/api/stop-all') {
-    instances.forEach(inst => { if (inst.proc) inst.proc.kill('SIGTERM'); });
+    instances.forEach((inst) => {
+      if (inst.proc) inst.proc.kill('SIGTERM');
+    });
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ success: true }));
   }
@@ -926,7 +998,9 @@ async function main() {
   console.log('='.repeat(60));
   console.log(' University Class Management System');
   console.log('='.repeat(60));
-  console.log(`  Teams:     ${teams.length}${teamCount < config.teams.length ? ` (of ${config.teams.length}, set via TEAM_COUNT)` : ''}`);
+  console.log(
+    `  Teams:     ${teams.length}${teamCount < config.teams.length ? ` (of ${config.teams.length}, set via TEAM_COUNT)` : ''}`
+  );
   console.log(`  Ports:     ${basePort} – ${basePort + teams.length - 1}`);
   console.log(`  Dashboard: ${getExternalUrl(dashboardPort)}`);
   if (IS_CODESPACES) console.log(`  Mode:      GitHub Codespaces`);
@@ -934,14 +1008,14 @@ async function main() {
 
   if (autoResetOnStart) {
     console.log('  autoResetOnStart=true: wiping all instance data…');
-    instances.forEach(inst => {
+    instances.forEach((inst) => {
       const dbFile = path.join(INSTANCES, inst.slot, 'database', 'data.json');
       if (fs.existsSync(dbFile)) fs.unlinkSync(dbFile);
     });
   }
 
   // Spawn all instances
-  instances.forEach(inst => spawnInstance(inst));
+  instances.forEach((inst) => spawnInstance(inst));
   savePIDs();
 
   // Start dashboard
@@ -969,14 +1043,19 @@ async function main() {
   // Graceful shutdown
   function shutdown() {
     console.log('\nShutting down classroom…');
-    instances.forEach(inst => { if (inst.proc) inst.proc.kill('SIGTERM'); });
+    instances.forEach((inst) => {
+      if (inst.proc) inst.proc.kill('SIGTERM');
+    });
     dashboard.close();
     if (fs.existsSync(PID_FILE)) fs.unlinkSync(PID_FILE);
     setTimeout(() => process.exit(0), 2000);
   }
 
-  process.on('SIGINT',  shutdown);
+  process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);
 }
 
-main().catch(err => { console.error(err); process.exit(1); });
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

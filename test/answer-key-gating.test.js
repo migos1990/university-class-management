@@ -20,10 +20,7 @@ describe('TEST-02: Answer Key Role-Gating', () => {
   before(async () => {
     // Health check -- ensure server is reachable
     const health = await request({ url: `${BASE_URL}/health` });
-    assert.ok(
-      health.statusCode === 200,
-      'Server not running. Start it first: npm start'
-    );
+    assert.ok(health.statusCode === 200, 'Server not running. Start it first: npm start');
 
     studentCookie = await loginAs('student');
     professorCookie = await loginAs('professor');
@@ -33,7 +30,7 @@ describe('TEST-02: Answer Key Role-Gating', () => {
   it('should deny student access with 403', async () => {
     const res = await request({
       url: `${BASE_URL}/sca/answer-key`,
-      headers: { 'Cookie': studentCookie }
+      headers: { Cookie: studentCookie }
     });
 
     assert.strictEqual(res.statusCode, 403);
@@ -46,27 +43,21 @@ describe('TEST-02: Answer Key Role-Gating', () => {
   it('should allow professor access with 200', async () => {
     const res = await request({
       url: `${BASE_URL}/sca/answer-key`,
-      headers: { 'Cookie': professorCookie }
+      headers: { Cookie: professorCookie }
     });
 
     assert.strictEqual(res.statusCode, 200);
-    assert.ok(
-      res.body.includes('placeholder'),
-      'Response body should contain "placeholder"'
-    );
+    assert.ok(res.body.includes('placeholder'), 'Response body should contain "placeholder"');
   });
 
   it('should allow admin access with 200', async () => {
     const res = await request({
       url: `${BASE_URL}/sca/answer-key`,
-      headers: { 'Cookie': adminCookie }
+      headers: { Cookie: adminCookie }
     });
 
     assert.strictEqual(res.statusCode, 200);
-    assert.ok(
-      res.body.includes('placeholder'),
-      'Response body should contain "placeholder"'
-    );
+    assert.ok(res.body.includes('placeholder'), 'Response body should contain "placeholder"');
   });
 
   it('should redirect unauthenticated request', async () => {
@@ -75,7 +66,8 @@ describe('TEST-02: Answer Key Role-Gating', () => {
     });
 
     assert.strictEqual(
-      res.statusCode, 302,
+      res.statusCode,
+      302,
       `Expected 302 redirect for unauthenticated request, got ${res.statusCode}`
     );
   });

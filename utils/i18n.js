@@ -125,9 +125,8 @@ function dastLocalize(scenario, lang) {
     const translated = t(lang, key);
     if (translated !== key) {
       // steps is stored as JSON string in DB; t() returns a JS array from fr.json
-      localized[field] = (field === 'steps' && Array.isArray(translated))
-        ? JSON.stringify(translated)
-        : translated;
+      localized[field] =
+        field === 'steps' && Array.isArray(translated) ? JSON.stringify(translated) : translated;
     }
   }
 

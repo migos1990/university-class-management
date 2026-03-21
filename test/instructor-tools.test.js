@@ -20,10 +20,7 @@ describe('INST-01 / INST-02: Instructor Student Activity Tracking', () => {
   before(async () => {
     // Health check
     const health = await request({ url: `${BASE_URL}/health` });
-    assert.ok(
-      health.statusCode === 200,
-      'Server not running. Start it first: npm start'
-    );
+    assert.ok(health.statusCode === 200, 'Server not running. Start it first: npm start');
 
     profCookie = await loginAs('professor');
     studentCookie = await loginAs('student');
@@ -32,59 +29,71 @@ describe('INST-01 / INST-02: Instructor Student Activity Tracking', () => {
   it('INST-01: /sca/stats returns students array and totalFindings', async () => {
     const res = await request({
       url: `${BASE_URL}/sca/stats`,
-      headers: { 'Cookie': profCookie }
+      headers: { Cookie: profCookie }
     });
 
     assert.strictEqual(res.statusCode, 200);
     const data = JSON.parse(res.body);
     assert.ok(Array.isArray(data.students), 'Response should have a students array');
-    assert.strictEqual(typeof data.totalFindings, 'number', 'Response should have totalFindings as a number');
+    assert.strictEqual(
+      typeof data.totalFindings,
+      'number',
+      'Response should have totalFindings as a number'
+    );
   });
 
   it('INST-01: Activity tracked on finding view', async () => {
     // Student visits finding 1 (triggers tracking)
     const findingRes = await request({
       url: `${BASE_URL}/sca/findings/1`,
-      headers: { 'Cookie': studentCookie }
+      headers: { Cookie: studentCookie }
     });
     assert.strictEqual(findingRes.statusCode, 200);
 
     // Professor checks stats
     const statsRes = await request({
       url: `${BASE_URL}/sca/stats`,
-      headers: { 'Cookie': profCookie }
+      headers: { Cookie: profCookie }
     });
     assert.strictEqual(statsRes.statusCode, 200);
     const data = JSON.parse(statsRes.body);
 
     // Find alice_student in the array
-    const alice = data.students.find(s => s.username === 'alice_student');
+    const alice = data.students.find((s) => s.username === 'alice_student');
     assert.ok(alice, 'alice_student should be in students array');
     assert.ok(alice.lastActiveAt !== null, 'lastActiveAt should be non-null after finding view');
-    assert.strictEqual(alice.currentFindingId, 1, 'currentFindingId should be 1 after viewing finding 1');
+    assert.strictEqual(
+      alice.currentFindingId,
+      1,
+      'currentFindingId should be 1 after viewing finding 1'
+    );
   });
 
   it('INST-01: Lab page tracks activity without setting currentFindingId', async () => {
     // Student visits the SCA lab page (not a specific finding)
     const labRes = await request({
       url: `${BASE_URL}/sca/`,
-      headers: { 'Cookie': studentCookie }
+      headers: { Cookie: studentCookie }
     });
     assert.strictEqual(labRes.statusCode, 200);
 
     // Professor checks stats
     const statsRes = await request({
       url: `${BASE_URL}/sca/stats`,
-      headers: { 'Cookie': profCookie }
+      headers: { Cookie: profCookie }
     });
     assert.strictEqual(statsRes.statusCode, 200);
     const data = JSON.parse(statsRes.body);
 
-    const alice = data.students.find(s => s.username === 'alice_student');
+    const alice = data.students.find((s) => s.username === 'alice_student');
     assert.ok(alice, 'alice_student should be in students array');
     assert.ok(alice.lastActiveAt !== null, 'lastActiveAt should be non-null after lab page visit');
     // currentFindingId should still be 1 from the previous test (lab page does not change it)
-    assert.strictEqual(alice.currentFindingId, 1, 'currentFindingId should remain 1 (lab page does not set it)');
+    assert.strictEqual(
+      alice.currentFindingId,
+      1,
+      'currentFindingId should remain 1 (lab page does not set it)'
+    );
   });
 
   it('INST-02: Per-student submitted count', async () => {
@@ -94,7 +103,7 @@ describe('INST-01 / INST-02: Instructor Student Activity Tracking', () => {
       url: `${BASE_URL}/sca/findings/2/review`,
       method: 'POST',
       headers: {
-        'Cookie': studentCookie,
+        Cookie: studentCookie,
         'Content-Type': 'application/x-www-form-urlencoded',
         'Content-Length': Buffer.byteLength(body).toString()
       },
@@ -103,21 +112,24 @@ describe('INST-01 / INST-02: Instructor Student Activity Tracking', () => {
 
     const statsRes = await request({
       url: `${BASE_URL}/sca/stats`,
-      headers: { 'Cookie': profCookie }
+      headers: { Cookie: profCookie }
     });
     assert.strictEqual(statsRes.statusCode, 200);
     const data = JSON.parse(statsRes.body);
 
-    const alice = data.students.find(s => s.username === 'alice_student');
+    const alice = data.students.find((s) => s.username === 'alice_student');
     assert.ok(alice, 'alice_student should be in students array');
     assert.strictEqual(typeof alice.submitted, 'number', 'submitted should be a number');
-    assert.ok(alice.submitted >= 1, `alice_student should have >= 1 submitted review, got ${alice.submitted}`);
+    assert.ok(
+      alice.submitted >= 1,
+      `alice_student should have >= 1 submitted review, got ${alice.submitted}`
+    );
   });
 
   it('INST-02: Students sorted by completion descending', async () => {
     const statsRes = await request({
       url: `${BASE_URL}/sca/stats`,
-      headers: { 'Cookie': profCookie }
+      headers: { Cookie: profCookie }
     });
     assert.strictEqual(statsRes.statusCode, 200);
     const data = JSON.parse(statsRes.body);
@@ -136,7 +148,8 @@ describe('INST-01 / INST-02: Instructor Student Activity Tracking', () => {
       url: `${BASE_URL}/sca/stats`
     });
     assert.strictEqual(
-      res.statusCode, 302,
+      res.statusCode,
+      302,
       `Expected 302 for unauthenticated request, got ${res.statusCode}`
     );
   });

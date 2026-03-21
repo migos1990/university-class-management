@@ -11,9 +11,9 @@ const BASE_URL = process.env.TEST_URL || 'http://localhost:3001';
 const REQUEST_TIMEOUT = 5000;
 
 const CREDENTIALS = {
-  student:   { username: 'alice_student', password: 'student123' },
-  professor: { username: 'prof_jones',    password: 'prof123' },
-  admin:     { username: 'admin',         password: 'admin123' }
+  student: { username: 'alice_student', password: 'student123' },
+  professor: { username: 'prof_jones', password: 'prof123' },
+  admin: { username: 'admin', password: 'admin123' }
 };
 
 /**
@@ -38,7 +38,9 @@ function request(options) {
 
     const req = http.request(reqOptions, (res) => {
       let data = '';
-      res.on('data', (chunk) => { data += chunk; });
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
       res.on('end', () => {
         resolve({
           statusCode: res.statusCode,

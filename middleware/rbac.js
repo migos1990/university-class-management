@@ -28,10 +28,12 @@ function requireRole(allowedRoles) {
 
     // Access denied - log to audit if enabled
     if (req.securitySettings.audit_logging) {
-      db.prepare(`
+      db.prepare(
+        `
         INSERT INTO audit_logs (user_id, username, role, action, resource_type, ip_address, success)
         VALUES (?, ?, ?, ?, ?, ?, ?)
-      `).run(
+      `
+      ).run(
         req.session.user.id,
         req.session.user.username,
         req.session.user.role,

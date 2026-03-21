@@ -20,13 +20,15 @@ function auditLog(action, resourceType = null) {
     try {
       const user = req.session.user;
 
-      db.prepare(`
+      db.prepare(
+        `
         INSERT INTO audit_logs (
           user_id, username, role, action, resource_type, resource_id,
           ip_address, user_agent, details, success
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(
+      `
+      ).run(
         user.id,
         user.username,
         user.role,
@@ -57,10 +59,12 @@ function auditLog(action, resourceType = null) {
 function logAuthAttempt(username, success, ip, reason = null) {
   return new Promise((resolve, _reject) => {
     try {
-      db.prepare(`
+      db.prepare(
+        `
         INSERT INTO audit_logs (username, action, ip_address, success, details)
         VALUES (?, ?, ?, ?, ?)
-      `).run(
+      `
+      ).run(
         username,
         success ? 'LOGIN_SUCCESS' : 'LOGIN_FAILURE',
         ip,
