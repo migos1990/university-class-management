@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Polish & Pedagogy
 status: completed
-stopped_at: Completed 14-01-PLAN.md
-last_updated: "2026-03-21T18:27:51.879Z"
-last_activity: 2026-03-21 -- Completed Phase 14 Plan 1 (ESLint 9 + Prettier 3 tooling)
+stopped_at: Completed 14-02-PLAN.md
+last_updated: "2026-03-21T18:34:19Z"
+last_activity: 2026-03-21 -- Completed Phase 14 Plan 2 (ESLint fix + Prettier format)
 progress:
   total_phases: 11
-  completed_phases: 8
+  completed_phases: 9
   total_plans: 12
-  completed_plans: 11
-  percent: 92
+  completed_plans: 12
+  percent: 100
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** The SCA lab must work flawlessly end-to-end in French -- from Codespace boot to student submission to instructor review -- with zero friction for non-technical students.
-**Current focus:** Phase 14 in progress -- Code Quality tooling
+**Current focus:** Phase 14 complete -- Code Quality (lint + format)
 
 ## Current Position
 
 Phase: 14 of 16 (Code Quality)
-Plan: 1 of 2 (14-01 complete)
-Status: Phase 14 Plan 01 complete (Linting and Formatting Tooling)
-Last activity: 2026-03-21 -- Completed Phase 14 Plan 1 (ESLint 9 + Prettier 3 tooling)
+Plan: 2 of 2 (14-02 complete)
+Status: Phase 14 complete (Code Quality)
+Last activity: 2026-03-21 -- Completed Phase 14 Plan 2 (ESLint fix + Prettier format)
 
-Progress: [█████████░] 92%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -51,7 +51,7 @@ Progress: [█████████░] 92%
 | 11. Instructor Tools | 1/? | 5min | 5min |
 | 12. Instructor Answer Key | 0/2 | - | - |
 | 13. Documentation | 0/? | - | - |
-| 14. Code Quality | 0/? | - | - |
+| 14. Code Quality | 2/2 | 7min | 3.5min |
 | 15. CSS Extraction | 0/? | - | - |
 | 16. CTF Pentest Lab | 0/? | - | - |
 
@@ -67,6 +67,7 @@ Progress: [█████████░] 92%
 | Phase 12 P02 | 3min | 2 tasks | 3 files |
 | Phase 13 P01 | 3min | 2 tasks | 2 files |
 | Phase 14 P01 | 2min | 2 tasks | 4 files |
+| Phase 14 P02 | 5min | 2 tasks | 28 files |
 
 ## Accumulated Context
 
@@ -104,6 +105,9 @@ Recent decisions affecting current work:
 - [Phase 14]: eslint-config-prettier/flat as last config entry to disable conflicting rules
 - [Phase 14]: EJS templates excluded from Prettier via .prettierignore (breaks template syntax)
 - [Phase 14]: no-console disabled globally (console output is teaching experience)
+- [Phase 14]: caughtErrorsIgnorePattern added to no-unused-vars (catch clause vars need separate ESLint option)
+- [Phase 14]: routes/pentest.js excluded from ESLint and Prettier (Phase 16 replaces entirely)
+- [Phase 14]: Dead hashPassword import removed from routes/auth.js (intentional vuln #4 uses plaintext)
 
 ### Roadmap Evolution
 
@@ -122,6 +126,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-21T18:27:51.874Z
-Stopped at: Completed 14-01-PLAN.md
+Last session: 2026-03-21T18:34:19Z
+Stopped at: Completed 14-02-PLAN.md
 Resume file: None

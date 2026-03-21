@@ -35,7 +35,7 @@ Full details: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 - [ ] **Phase 11: Instructor Tools** - Student activity tracking (last_active_at, current finding) and progress summary on dashboard
 - [ ] **Phase 12: Instructor Answer Key** - Role-gated answer key with classifications, reasoning, and discussion prompts in French
 - [ ] **Phase 13: Documentation** - README and instructor docs reflecting the v1.1 feature set
-- [ ] **Phase 14: Code Quality** - ESLint/Prettier tooling, dead code removal (preserving intentional vulnerabilities)
+- [x] **Phase 14: Code Quality** - ESLint/Prettier tooling, dead code removal (preserving intentional vulnerabilities) (completed 2026-03-21)
 - [ ] **Phase 15: CSS Extraction** - Move shared severity/badge/card CSS from inline styles into public/styles.css
 - [ ] **Phase 16: CTF Pentest Lab** - CTF-style challenge board replacing the pentest form-filling module with 12 exploit challenges
 
@@ -155,7 +155,7 @@ Plans:
   2. Running `npm run format` executes Prettier 3 and the codebase is already formatted (no changes needed after a fresh format pass)
   3. No dead code or unused variables remain in the codebase (verified by ESLint rules)
   4. All 12 intentional SCA vulnerabilities and the SQL pattern-matching DB adapter are preserved exactly as-is -- `npm test` smoke test passes before and after every code quality change
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 14-01-PLAN.md -- Install ESLint 9 + Prettier 3 devDependencies, create config files, add npm scripts
@@ -215,6 +215,6 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 11. Instructor Tools | v1.1 | 0/? | Not started | - |
 | 12. Instructor Answer Key | v1.1 | 0/2 | Planned | - |
 | 13. Documentation | v1.1 | 0/? | Not started | - |
-| 14. Code Quality | 1/2 | In Progress|  | - |
+| 14. Code Quality | 2/2 | Complete   | 2026-03-21 | - |
 | 15. CSS Extraction | v1.1 | 0/? | Not started | - |
 | 16. CTF Pentest Lab | v1.1 | 0/? | Not started | - |
