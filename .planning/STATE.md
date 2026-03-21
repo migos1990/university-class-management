@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Polish & Pedagogy
-status: in-progress
-stopped_at: Completed 15-01-PLAN.md
-last_updated: "2026-03-21T19:09:59Z"
-last_activity: 2026-03-21 -- Completed Phase 15 Plan 1 (CSS stylesheet extraction + SCA/DAST cleanup)
+status: completed
+stopped_at: Completed 15-02-PLAN.md
+last_updated: "2026-03-21T19:18:07.041Z"
+last_activity: 2026-03-21 -- Completed Phase 15 Plan 2 (VM/Pentest/Admin inline CSS removal, CSS-01 complete)
 progress:
   total_phases: 11
-  completed_phases: 9
+  completed_phases: 10
   total_plans: 14
-  completed_plans: 13
-  percent: 93
+  completed_plans: 14
+  percent: 100
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** The SCA lab must work flawlessly end-to-end in French -- from Codespace boot to student submission to instructor review -- with zero friction for non-technical students.
-**Current focus:** Phase 15 in progress -- CSS Extraction (Plan 1 of 2 complete)
+**Current focus:** Phase 15 complete -- CSS Extraction (all plans done)
 
 ## Current Position
 
 Phase: 15 of 16 (CSS Extraction)
-Plan: 1 of 2 (15-01 complete)
-Status: Phase 15 in progress (CSS Extraction)
-Last activity: 2026-03-21 -- Completed Phase 15 Plan 1 (CSS stylesheet extraction + SCA/DAST cleanup)
+Plan: 2 of 2 (15-02 complete)
+Status: Phase 15 complete (CSS Extraction)
+Last activity: 2026-03-21 -- Completed Phase 15 Plan 2 (VM/Pentest/Admin inline CSS removal, CSS-01 complete)
 
-Progress: [█████████░] 93%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -52,7 +52,7 @@ Progress: [█████████░] 93%
 | 12. Instructor Answer Key | 0/2 | - | - |
 | 13. Documentation | 0/? | - | - |
 | 14. Code Quality | 2/2 | 7min | 3.5min |
-| 15. CSS Extraction | 1/2 | 8min | 8min |
+| 15. CSS Extraction | 2/2 | 12min | 6min |
 | 16. CTF Pentest Lab | 0/? | - | - |
 
 *Updated after each plan completion*
@@ -69,6 +69,7 @@ Progress: [█████████░] 93%
 | Phase 14 P01 | 2min | 2 tasks | 4 files |
 | Phase 14 P02 | 5min | 2 tasks | 28 files |
 | Phase 15 P01 | 8min | 2 tasks | 10 files |
+| Phase 15 P02 | 4min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -111,6 +112,7 @@ Recent decisions affecting current work:
 - [Phase 14]: Dead hashPassword import removed from routes/auth.js (intentional vuln #4 uses plaintext)
 - [Phase 15]: Included VM/Pentest/Admin page-specific CSS in styles.css upfront so Plan 02 only needs to delete style blocks
 - [Phase 15]: Section comment headers (/* ===== Section Name ===== */) for CSS organization
+- [Phase 15]: Only standalone pages (login, error, mfa-verify) and Prism conditional retain inline styles -- all authenticated templates use external stylesheet
 
 ### Roadmap Evolution
 
@@ -129,6 +131,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-21T19:09:59Z
-Stopped at: Completed 15-01-PLAN.md
+Last session: 2026-03-21T19:18:07.037Z
+Stopped at: Completed 15-02-PLAN.md
 Resume file: None
