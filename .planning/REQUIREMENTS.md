@@ -66,7 +66,7 @@ Requirements for v1.1 Polish & Pedagogy release. Each maps to roadmap phases.
 
 ### CSS Extraction
 
-- [ ] **CSS-01**: Common CSS patterns (severity badges, card layouts, status indicators) moved from inline styles to public/styles.css
+- [x] **CSS-01**: Common CSS patterns (severity badges, card layouts, status indicators) moved from inline styles to public/styles.css
 
 ### CTF Pentest Lab
 
@@ -150,7 +150,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | QUAL-02 | Phase 14 | Complete |
 | QUAL-03 | Phase 14 | Complete |
 | QUAL-04 | Phase 14 | Complete |
-| CSS-01 | Phase 15 | Pending |
+| CSS-01 | Phase 15 | Complete |
 | CTF-01 | Phase 16 | Pending |
 | CTF-02 | Phase 16 | Pending |
 | CTF-03 | Phase 16 | Pending |

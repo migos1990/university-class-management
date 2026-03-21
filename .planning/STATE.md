@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Polish & Pedagogy
-status: completed
-stopped_at: Completed 14-02-PLAN.md
-last_updated: "2026-03-21T18:43:14.444Z"
-last_activity: 2026-03-21 -- Completed Phase 14 Plan 2 (ESLint fix + Prettier format)
+status: in-progress
+stopped_at: Completed 15-01-PLAN.md
+last_updated: "2026-03-21T19:09:59Z"
+last_activity: 2026-03-21 -- Completed Phase 15 Plan 1 (CSS stylesheet extraction + SCA/DAST cleanup)
 progress:
   total_phases: 11
   completed_phases: 9
-  total_plans: 12
-  completed_plans: 12
-  percent: 100
+  total_plans: 14
+  completed_plans: 13
+  percent: 93
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** The SCA lab must work flawlessly end-to-end in French -- from Codespace boot to student submission to instructor review -- with zero friction for non-technical students.
-**Current focus:** Phase 14 complete -- Code Quality (lint + format)
+**Current focus:** Phase 15 in progress -- CSS Extraction (Plan 1 of 2 complete)
 
 ## Current Position
 
-Phase: 14 of 16 (Code Quality)
-Plan: 2 of 2 (14-02 complete)
-Status: Phase 14 complete (Code Quality)
-Last activity: 2026-03-21 -- Completed Phase 14 Plan 2 (ESLint fix + Prettier format)
+Phase: 15 of 16 (CSS Extraction)
+Plan: 1 of 2 (15-01 complete)
+Status: Phase 15 in progress (CSS Extraction)
+Last activity: 2026-03-21 -- Completed Phase 15 Plan 1 (CSS stylesheet extraction + SCA/DAST cleanup)
 
-Progress: [██████████] 100%
+Progress: [█████████░] 93%
 
 ## Performance Metrics
 
@@ -52,7 +52,7 @@ Progress: [██████████] 100%
 | 12. Instructor Answer Key | 0/2 | - | - |
 | 13. Documentation | 0/? | - | - |
 | 14. Code Quality | 2/2 | 7min | 3.5min |
-| 15. CSS Extraction | 0/? | - | - |
+| 15. CSS Extraction | 1/2 | 8min | 8min |
 | 16. CTF Pentest Lab | 0/? | - | - |
 
 *Updated after each plan completion*
@@ -68,6 +68,7 @@ Progress: [██████████] 100%
 | Phase 13 P01 | 3min | 2 tasks | 2 files |
 | Phase 14 P01 | 2min | 2 tasks | 4 files |
 | Phase 14 P02 | 5min | 2 tasks | 28 files |
+| Phase 15 P01 | 8min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -108,6 +109,8 @@ Recent decisions affecting current work:
 - [Phase 14]: caughtErrorsIgnorePattern added to no-unused-vars (catch clause vars need separate ESLint option)
 - [Phase 14]: routes/pentest.js excluded from ESLint and Prettier (Phase 16 replaces entirely)
 - [Phase 14]: Dead hashPassword import removed from routes/auth.js (intentional vuln #4 uses plaintext)
+- [Phase 15]: Included VM/Pentest/Admin page-specific CSS in styles.css upfront so Plan 02 only needs to delete style blocks
+- [Phase 15]: Section comment headers (/* ===== Section Name ===== */) for CSS organization
 
 ### Roadmap Evolution
 
@@ -126,6 +129,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-21T18:34:19Z
-Stopped at: Completed 14-02-PLAN.md
+Last session: 2026-03-21T19:09:59Z
+Stopped at: Completed 15-01-PLAN.md
 Resume file: None

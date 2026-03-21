@@ -167,7 +167,7 @@ Plans:
 **Requirements**: CSS-01
 **Success Criteria** (what must be TRUE):
   1. Common CSS patterns (severity badges, card layouts, status indicators) are in public/styles.css and referenced from templates instead of inline `<style>` blocks
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 - [ ] 15-01-PLAN.md -- Create public/styles.css with all shared and page-specific CSS, update header.ejs, clean SCA and DAST templates
@@ -217,5 +217,5 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 12. Instructor Answer Key | v1.1 | 0/2 | Planned | - |
 | 13. Documentation | v1.1 | 0/? | Not started | - |
 | 14. Code Quality | 2/2 | Complete    | 2026-03-21 | - |
-| 15. CSS Extraction | v1.1 | 0/2 | Planned | - |
+| 15. CSS Extraction | 1/2 | In Progress|  | - |
 | 16. CTF Pentest Lab | v1.1 | 0/? | Not started | - |
