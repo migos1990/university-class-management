@@ -140,10 +140,10 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. README describes current features (inline code snippets, answer key, DAST French, CTF lab, code quality tooling), setup instructions, and usage -- reflecting the actual shipped v1.1 state
   2. Instructor documentation explains how to access and use the answer key, what the code snippets show students, and any new classroom workflow considerations
-**Plans**: TBD
+**Plans:** 1 plan
 
 Plans:
-- [ ] 13-01: TBD
+- [ ] 13-01-PLAN.md -- Update README.md (SCA expansion, instructor features, version history v3.1) and SOLUTION-GUIDE.md (SCA lab, DAST French, classroom management, pre-class checklist, footer)
 
 ### Phase 14: Code Quality
 **Goal**: Codebase has consistent formatting and linting enforced by tooling, with dead code removed -- without touching the 12 intentional SCA vulnerabilities
@@ -213,7 +213,7 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 10. DAST French | 1/1 | Complete    | 2026-03-20 | - |
 | 11. Instructor Tools | 1/1 | Complete    | 2026-03-20 | - |
 | 12. Instructor Answer Key | 2/2 | Complete    | 2026-03-20 | - |
-| 13. Documentation | v1.1 | 0/? | Not started | - |
+| 13. Documentation | v1.1 | 0/1 | Planned | - |
 | 14. Code Quality | v1.1 | 0/? | Not started | - |
 | 15. CSS Extraction | v1.1 | 0/? | Not started | - |
 | 16. CTF Pentest Lab | v1.1 | 0/? | Not started | - |
