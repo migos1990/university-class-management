@@ -167,10 +167,11 @@ Plans:
 **Requirements**: CSS-01
 **Success Criteria** (what must be TRUE):
   1. Common CSS patterns (severity badges, card layouts, status indicators) are in public/styles.css and referenced from templates instead of inline `<style>` blocks
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 15-01: TBD
+- [ ] 15-01-PLAN.md -- Create public/styles.css with all shared and page-specific CSS, update header.ejs, clean SCA and DAST templates
+- [ ] 15-02-PLAN.md -- Clean VM, Pentest, and Admin templates, final codebase-wide verification
 
 ### Phase 16: CTF Pentest Lab
 **Goal**: Students exploit the same 12 vulnerabilities they analyzed in SCA -- but now as attackers capturing hidden flags -- completing the pedagogical loop from analyst to attacker to class discussion
@@ -216,5 +217,5 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 12. Instructor Answer Key | v1.1 | 0/2 | Planned | - |
 | 13. Documentation | v1.1 | 0/? | Not started | - |
 | 14. Code Quality | 2/2 | Complete    | 2026-03-21 | - |
-| 15. CSS Extraction | v1.1 | 0/? | Not started | - |
+| 15. CSS Extraction | v1.1 | 0/2 | Planned | - |
 | 16. CTF Pentest Lab | v1.1 | 0/? | Not started | - |
