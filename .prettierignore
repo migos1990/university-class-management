@@ -1,0 +1,8 @@
+**/*.ejs
+public/vendor/
+database/
+backups/
+instances/
+.planning/
+docs/
+node_modules/
