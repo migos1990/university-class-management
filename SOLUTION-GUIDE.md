@@ -640,6 +640,19 @@ Students learn to review code for security vulnerabilities, classify findings, a
 | 11 | Outdated express-session | `package.json:24` | CWE-1035 | Medium | **Needs Investigation** — requires `npm audit` to verify |
 | 12 | Session Cookie Missing secure Flag | `server.js:50` | CWE-614 | Medium | **Confirmed** — `secure: false` in config |
 
+### Student Experience
+
+- **Code snippets:** Each finding displays 5-10 lines of actual source code with Prism.js syntax highlighting. The vulnerable line is visually called out with a highlighted background and left border. Line numbers match the real file.
+- **Compact code preview:** Student-lab cards show a one-line preview of the vulnerable code for quick scanning.
+- **Difficulty levels:** Findings are tagged Easy, Medium, or Advanced with color-coded badges, sorted easiest-first so students can build confidence before tackling harder issues.
+- **Navigation:** Prev/next arrows on finding detail pages let students move between findings without returning to the list.
+- **Completion banner:** A celebration banner appears when a student submits all 12 findings.
+- **Language:** All SCA content (findings, UI labels, hints, difficulty badges) displays in Quebec French.
+
+### Answer Key
+
+The instructor can access a standalone answer key at `/sca/answer-key` showing expected classifications (True Positive, False Positive, Needs Investigation), pedagogical reasoning, and discussion prompts for each of the 12 findings. An inline collapsible version also appears on each finding's detail page. Both are role-gated to professor and admin roles -- students cannot access them even if RBAC is disabled. All answer key content is in Quebec French.
+
 ### Teaching Flow
 
 1. **Introduction (instructor):**
@@ -649,17 +662,19 @@ Students learn to review code for security vulnerabilities, classify findings, a
 
 2. **Student lab work:**
    - Students log in and navigate to the SCA lab.
-   - They see all 12 findings with code snippets, CWE references, and severity levels.
+   - They see all 12 findings with syntax-highlighted code snippets, CWE references, difficulty levels, and severity ratings.
    - For each finding, they must:
      - Read the code snippet and description
      - Navigate to the actual file to verify
      - Classify: confirmed, false positive, or needs investigation
      - Write notes explaining their reasoning
      - Suggest remediation if confirmed
+   - Students can use prev/next arrows to move between findings.
 
 3. **Review (instructor):**
    - Use the instructor dashboard to view the review matrix.
    - Click on individual students to see their classifications and reasoning.
+   - Consult the answer key at `/sca/answer-key` for expected classifications and discussion prompts.
    - Import confirmed findings to the Vulnerability Manager for tracking.
 
 4. **Grading rubric suggestion:**
@@ -689,6 +704,7 @@ Students learn to actively test a running application for vulnerabilities, execu
 - **Student workflow:** Follow step-by-step exploitation guides, trigger the vulnerability, document evidence, assess impact, submit findings with severity ratings
 - **Instructor workflow:** View submission counts per scenario, review student findings, provide feedback and grades, import to VM
 - **Preconditions:** Some scenarios require specific security settings (e.g., RBAC disabled)
+- **Language:** All 6 DAST scenarios (descriptions, instructions, and results) display in Quebec French using the platform's localization system
 - **Code:** `routes/dast.js` (235 lines)
 
 ### The 6 DAST Scenarios
@@ -1012,6 +1028,8 @@ Students learn the structured methodology of a penetration test by conducting th
 - **Broadcast Messages:** Send a message to all team instances simultaneously.
 - **Security Summary:** Pull `/api/summary` from each team to see their security settings.
 - **Reset Teams:** Reset individual team databases to the initial seeded state.
+- **Student Activity Tracking:** The dashboard shows each student's last-active timestamp and the finding they are currently analyzing, updated via 30-second live polling.
+- **Progress Summary Cards:** A progress table shows per-student completion across labs, letting the instructor identify students who may need help.
 
 ### Common Operations
 
@@ -1046,6 +1064,8 @@ Run through this checklist before every class to ensure the platform is working 
 - [ ] Have the Google Authenticator app ready on your phone (for MFA demos)
 - [ ] Verify ports 3000-3012 are accessible (or whichever ports you need)
 - [ ] If using Codespaces, set required ports to Public visibility
+- [ ] Verify answer key is accessible: Log in as professor, navigate to `/sca/answer-key`, confirm all 12 findings display with classifications and discussion prompts
+- [ ] Verify code snippets render: Open any SCA finding detail page, confirm syntax-highlighted code snippet appears with the vulnerable line highlighted
 
 ### Important Operational Notes
 
@@ -1108,4 +1128,4 @@ These are documented issues in the platform. They do not need to be fixed before
 
 ---
 
-*This guide was created for the HEC Montreal Application Security Platform v3.0. For updates and issues, check the repository's README.md and QA-CLASSROOM-ISSUES.md.*
+*This guide was created for the HEC Montreal Application Security Platform v3.1. For updates and issues, check the repository's README.md and QA-CLASSROOM-ISSUES.md.*
