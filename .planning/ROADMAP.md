@@ -187,12 +187,13 @@ Plans:
   7. Hint system uses two-click inline confirmation to prevent accidental point loss
   8. All CTF content (challenge descriptions, hints, UI) is in Quebec French
   9. Old pentest form-filling module is replaced (old routes/views/tables removed)
-**Plans**: TBD
+**Plans:** 4 plans
 
 Plans:
-- [ ] 16-01: TBD
-- [ ] 16-02: TBD
-- [ ] 16-03: TBD
+- [ ] 16-01-PLAN.md -- CTF database handlers, seed data (12 challenges), flag planting, i18n keys, and test scaffold
+- [ ] 16-02-PLAN.md -- Student CTF routes, challenge board view, challenge detail, flag submission, hints, celebrations, and sticky reminder bar
+- [ ] 16-03-PLAN.md -- Instructor leaderboard, challenge heatmap, stats polling, student reset, and /api/summary update
+- [ ] 16-04-PLAN.md -- Old pentest module removal (views, DB handlers, seeds) and test finalization
 
 **Full spec:** `docs/superpowers/specs/2026-03-19-ctf-pentest-lab-design.md`
 
@@ -218,4 +219,4 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 13. Documentation | v1.1 | 0/? | Not started | - |
 | 14. Code Quality | 2/2 | Complete    | 2026-03-21 | - |
 | 15. CSS Extraction | 2/2 | Complete    | 2026-03-21 | - |
-| 16. CTF Pentest Lab | v1.1 | 0/? | Not started | - |
+| 16. CTF Pentest Lab | v1.1 | 0/4 | Planned | - |
