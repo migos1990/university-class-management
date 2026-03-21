@@ -190,7 +190,7 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 16-01-PLAN.md -- CTF database handlers, seed data (12 challenges), flag planting, i18n keys, and test scaffold
+- [x] 16-01-PLAN.md -- CTF database handlers, seed data (12 challenges), flag planting, i18n keys, and test scaffold
 - [ ] 16-02-PLAN.md -- Student CTF routes, challenge board view, challenge detail, flag submission, hints, celebrations, and sticky reminder bar
 - [ ] 16-03-PLAN.md -- Instructor leaderboard, challenge heatmap, stats polling, student reset, and /api/summary update
 - [ ] 16-04-PLAN.md -- Old pentest module removal (views, DB handlers, seeds) and test finalization

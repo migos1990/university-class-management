@@ -70,14 +70,14 @@ Requirements for v1.1 Polish & Pedagogy release. Each maps to roadmap phases.
 
 ### CTF Pentest Lab
 
-- [ ] **CTF-01**: 12 CTF challenges available, each corresponding to an SCA finding, with flags planted in the codebase
+- [x] **CTF-01**: 12 CTF challenges available, each corresponding to an SCA finding, with flags planted in the codebase
 - [ ] **CTF-02**: Progressive unlock system (4 Easy at start, solve 2 Easy unlocks 3 Medium, solve 2 Medium unlocks 5 Advanced)
 - [ ] **CTF-03**: Scoring system (Easy=100, Medium=200, Advanced=300 pts; hints deduct 10/20 pts; max 2,500)
 - [ ] **CTF-04**: Instructor leaderboard with ranked student progress and challenge heatmap
 - [ ] **CTF-05**: Flag capture celebration animation (radial pulse + counter tick-up) with tier unlock banner
 - [ ] **CTF-06**: Sticky hunt reminder bar on all pages showing active challenge
 - [ ] **CTF-07**: Two-click hint confirmation to prevent accidental point loss
-- [ ] **CTF-08**: All CTF content (challenge descriptions, hints, UI) in Quebec French
+- [x] **CTF-08**: All CTF content (challenge descriptions, hints, UI) in Quebec French
 - [ ] **CTF-09**: Old pentest form-filling module replaced (old routes/views/tables removed)
 
 ## Future Requirements
@@ -151,14 +151,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | QUAL-03 | Phase 14 | Complete |
 | QUAL-04 | Phase 14 | Complete |
 | CSS-01 | Phase 15 | Complete |
-| CTF-01 | Phase 16 | Pending |
+| CTF-01 | Phase 16 | Complete |
 | CTF-02 | Phase 16 | Pending |
 | CTF-03 | Phase 16 | Pending |
 | CTF-04 | Phase 16 | Pending |
 | CTF-05 | Phase 16 | Pending |
 | CTF-06 | Phase 16 | Pending |
 | CTF-07 | Phase 16 | Pending |
-| CTF-08 | Phase 16 | Pending |
+| CTF-08 | Phase 16 | Complete |
 | CTF-09 | Phase 16 | Pending |
 
 **Coverage:**

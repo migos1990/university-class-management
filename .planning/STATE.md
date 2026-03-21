@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Polish & Pedagogy
-status: completed
-stopped_at: Phase 16 context gathered
-last_updated: "2026-03-21T19:57:43.857Z"
-last_activity: 2026-03-21 -- Completed Phase 15 Plan 2 (VM/Pentest/Admin inline CSS removal, CSS-01 complete)
+status: in_progress
+stopped_at: Completed 16-01-PLAN.md
+last_updated: "2026-03-21T20:27:00Z"
+last_activity: 2026-03-21 -- Completed Phase 16 Plan 1 (CTF database infrastructure, seeds, flag planting, test scaffold)
 progress:
   total_phases: 11
   completed_phases: 10
-  total_plans: 14
-  completed_plans: 14
-  percent: 100
+  total_plans: 18
+  completed_plans: 16
+  percent: 89
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** The SCA lab must work flawlessly end-to-end in French -- from Codespace boot to student submission to instructor review -- with zero friction for non-technical students.
-**Current focus:** Phase 15 complete -- CSS Extraction (all plans done)
+**Current focus:** Phase 16 in progress -- CTF Pentest Lab (Plan 01 complete)
 
 ## Current Position
 
-Phase: 15 of 16 (CSS Extraction)
-Plan: 2 of 2 (15-02 complete)
-Status: Phase 15 complete (CSS Extraction)
-Last activity: 2026-03-21 -- Completed Phase 15 Plan 2 (VM/Pentest/Admin inline CSS removal, CSS-01 complete)
+Phase: 16 of 16 (CTF Pentest Lab)
+Plan: 1 of 4 (16-01 complete)
+Status: Phase 16 in progress
+Last activity: 2026-03-21 -- Completed Phase 16 Plan 1 (CTF database infrastructure, seeds, flag planting, test scaffold)
 
-Progress: [██████████] 100%
+Progress: [████████░░] 89%
 
 ## Performance Metrics
 
@@ -53,7 +53,7 @@ Progress: [██████████] 100%
 | 13. Documentation | 0/? | - | - |
 | 14. Code Quality | 2/2 | 7min | 3.5min |
 | 15. CSS Extraction | 2/2 | 12min | 6min |
-| 16. CTF Pentest Lab | 0/? | - | - |
+| 16. CTF Pentest Lab | 1/4 | 5min | 5min |
 
 *Updated after each plan completion*
 | Phase 06 P01 | 4min | 2 tasks | 10 files |
@@ -70,6 +70,7 @@ Progress: [██████████] 100%
 | Phase 14 P02 | 5min | 2 tasks | 28 files |
 | Phase 15 P01 | 8min | 2 tasks | 10 files |
 | Phase 15 P02 | 4min | 2 tasks | 8 files |
+| Phase 16 P01 | 5min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -131,6 +132,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-21T19:57:43.846Z
-Stopped at: Phase 16 context gathered
-Resume file: .planning/phases/16-ctf-pentest-lab/16-CONTEXT.md
+Last session: 2026-03-21T20:26:34Z
+Stopped at: Completed 16-01-PLAN.md
+Resume file: .planning/phases/16-ctf-pentest-lab/16-02-PLAN.md
