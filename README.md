@@ -92,10 +92,10 @@ This project contains **intentional security vulnerabilities** for educational p
 The platform includes four specialized labs for hands-on security training:
 
 ### Static Code Analysis (SCA)
-Instructors create code findings with CWE references and severity levels. Students classify and assess each finding. A review matrix tracks student submission progress. Findings can be imported into the Vulnerability Manager.
+The SCA lab presents 12 pre-seeded findings mapped to real code in the codebase. Each finding displays a syntax-highlighted code snippet (via Prism.js) with the vulnerable line visually called out, along with CWE references and a difficulty level (Easy, Medium, or Advanced) so students can tackle simpler issues first. Students classify each finding as Confirmed, False Positive, or Needs Investigation, add reasoning notes, and navigate between findings using prev/next arrows without returning to the list. When all 12 findings are submitted, a completion celebration banner appears. An instructor review matrix tracks each student's submission progress, and confirmed findings can be imported into the Vulnerability Manager. All SCA content displays in Quebec French.
 
 ### Dynamic Application Security Testing (DAST)
-Pre-built vulnerability scenarios with step-by-step exploitation guides. Students execute tests and submit findings with severity ratings and CVSS scores. Scenarios can be imported into the Vulnerability Manager.
+Pre-built vulnerability scenarios with step-by-step exploitation guides. Students execute tests and submit findings with severity ratings and CVSS scores. All 6 DAST scenarios display in Quebec French (descriptions, instructions, and results). Scenarios can be imported into the Vulnerability Manager.
 
 ### Vulnerability Manager (VM)
 A central vulnerability registry that aggregates findings from SCA, DAST, and Pentest labs. Tracks vulnerability status (`open` → `in_progress` → `resolved` → `wont_fix`) with priority levels, remediation tracking, comments, and full status history.
@@ -171,6 +171,7 @@ The application uses a JSON-based database. Each team instance stores its data i
 | `npm start` | Start the instructor dashboard + all team instances |
 | `npm stop` | Stop all running instances |
 | `npm test` | Run smoke tests against Team Alpha (port 3001) |
+| `npm run test:integration` | Run integration tests (SCA review, role-gating, API auth). No running server needed. |
 | `npm run test:open` | Run smoke tests and automatically open the report in a browser |
 
 ---
@@ -205,6 +206,14 @@ This generates an HTML report (`test-report.html`) showing:
 - Custom encryption key management (BYOK)
 - Hands-on security labs: SCA, DAST, Vulnerability Management, and Penetration Testing
 
+### Instructor Tools
+
+- **Answer key:** A standalone page at `/sca/answer-key` (professor and admin only) displays expected classifications, pedagogical reasoning, and discussion prompts for all 12 SCA findings. An inline collapsible version also appears on each finding's detail page.
+- **Student activity tracking:** The instructor dashboard shows each student's last-active timestamp and the finding they are currently analyzing, updated via 30-second live polling.
+- **Progress cards:** A per-student completion summary on the instructor dashboard lets instructors quickly identify students who may need help.
+
+For detailed teaching workflows, grading rubrics, and scenario-by-scenario solutions, see [SOLUTION-GUIDE.md](SOLUTION-GUIDE.md).
+
 ### Security Panel
 
 The redesigned Security Panel (Admin → Security) shows each feature as a card with:
@@ -215,6 +224,14 @@ The redesigned Security Panel (Admin → Security) shows each feature as a card 
 ---
 
 ## Version History
+
+### Version 3.1 (2026-03-20)
+**Polish and Pedagogy:**
+
+- **Pedagogy:** Inline code snippets with Prism.js syntax highlighting and vulnerable-line callout on each SCA finding, difficulty levels (Easy/Medium/Advanced) with color-coded badges, prev/next finding navigation, completion celebration banner when all 12 findings are submitted
+- **French:** All SCA content in Quebec French (findings, UI, hints, difficulty badges), all 6 DAST scenarios in Quebec French (descriptions, instructions, results), security status bar badges in French
+- **Instructor Tools:** Student activity tracking (last-active timestamp, current finding) with 30-second live polling, progress summary cards on the instructor dashboard, standalone answer key page at `/sca/answer-key` with expected classifications, pedagogical reasoning, and discussion prompts, inline collapsible answer key on finding detail pages, role-gated access (professor/admin only)
+- **Quality:** Integration test suite covering SCA review workflow, answer key role-gating, and API auth (no running server needed), security boundary documentation (SECURITY-BOUNDARY.md), API endpoint auth hardening
 
 ### Version 3.0 (2026-02-27)
 **Codespaces-First Simplification:**
@@ -254,70 +271,8 @@ The redesigned Security Panel (Admin → Security) shows each feature as a card 
 
 ---
 
-### Version 1.9 (2026-02-01)
-**Major Fix - Reverted to Working Template Pattern:**
-- Reverted all EJS templates back to v1.2's working `<%- include('partials/header') %>` / `<%- include('partials/footer') %>` pattern
-- The broken `const body = \`...\`` template literal pattern has been completely removed
-- All templates now use standard EJS syntax that works reliably
-- Restored `views/partials/header.ejs` and `views/partials/footer.ejs`
-- Updated header with translation support (French) and SoD badge
-- Removed `views/layout.ejs` (not needed with header/footer partials)
-- **IMPORTANT**: Delete your old `university-class-management` folder completely before extracting
-
-### Version 1.8 (2026-02-01)
-**Note:**
-- Fresh build with all EJS template fixes confirmed (still had issues due to broken template pattern)
-- **Use v1.9 instead**
-
-### Version 1.7 (2026-02-01)
-**Bug Fixes:**
-- Thorough automated audit found and fixed remaining unescaped EJS tag
-- Fixed `views/admin/audit-logs.ejs` line 56: `<% }); %>` → `\<% }); %>`
-
-### Version 1.6
-**Bug Fixes:**
-- Complete audit and fix of ALL EJS template syntax errors across the entire application
-- Fixed files with unescaped EJS tags inside template literals (`<%` → `\<%`):
-  - `views/classes/delete-request.ejs`
-  - `views/admin/backups.ejs`
-  - `views/admin/byok.ejs`
-  - `views/admin/dashboard.ejs`
-  - `views/admin/security-panel.ejs`
-  - `views/admin/audit-logs.ejs`
-  - `views/admin/mfa-setup.ejs`
-  - `views/admin/deletion-requests.ejs`
-  - `views/class-details.ejs`
-  - `views/student/dashboard.ejs`
-  - `views/session-view.ejs`
-  - `views/professor/edit-session.ejs`
-  - `views/professor/dashboard.ejs`
-
-### Version 1.5
-**Bug Fixes:**
-- Partial fix for EJS template syntax errors (incomplete)
-
-### Version 1.4
-**Updates:**
-- Initial bug fix attempt for EJS template errors
-
-### Version 1.3
-**Updates:**
-- Package updates and maintenance
-
-### Version 1.2
-**New Features:**
-- **French Translation System** - Toggle between English and French UI
-- **Segregation of Duties** - Admin approval required for class deletions
-- **Bring Your Own Key (BYOK)** - Upload custom encryption keys
-- **Scheduled Database Backups** - Automatic backups (5min - 24hr intervals)
-- **Enhanced Documentation** - Windows startup instructions, JSON database viewing
-
-**Technical Changes:**
-- Added i18n translation infrastructure
-- Added `deletion_requests` database table
-- Added backup scheduling system
-- Added custom encryption key support
-- Expanded `security_settings` table with 3 new toggles
+### Version 1.2 (2026-02-01)
+**Feature Expansion:** Added French translation system, Segregation of Duties, BYOK encryption key management, scheduled database backups, and enhanced documentation. Versions 1.3-1.9 addressed EJS template fixes and maintenance.
 
 ### Version 1.1 (Initial Release - 2026-02-01)
 **Features:**
