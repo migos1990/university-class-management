@@ -217,5 +217,5 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 12. Instructor Answer Key | v1.1 | 0/2 | Planned | - |
 | 13. Documentation | v1.1 | 0/? | Not started | - |
 | 14. Code Quality | 2/2 | Complete    | 2026-03-21 | - |
-| 15. CSS Extraction | 2/2 | Complete   | 2026-03-21 | - |
+| 15. CSS Extraction | 2/2 | Complete    | 2026-03-21 | - |
 | 16. CTF Pentest Lab | v1.1 | 0/? | Not started | - |
