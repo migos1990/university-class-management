@@ -43,9 +43,6 @@ let db = {
   vulnerabilities: [],
   vm_status_history: [],
   vm_comments: [],
-  pentest_engagements: [],
-  pentest_findings: [],
-  pentest_phase_notes: [],
   ctf_challenges: [],
   ctf_submissions: [],
   _counters: {
@@ -61,9 +58,6 @@ let db = {
     vulnerabilities: 0,
     vm_status_history: 0,
     vm_comments: 0,
-    pentest_engagements: 0,
-    pentest_findings: 0,
-    pentest_phase_notes: 0,
     ctf_challenges: 0,
     ctf_submissions: 0
   }
@@ -479,51 +473,6 @@ function executeSQL(sql, params = []) {
       return db.vm_comments;
     }
 
-    // --- Pentest ---
-    if (sql.includes('FROM pentest_engagements')) {
-      if (!db.pentest_engagements) db.pentest_engagements = [];
-      if (sql.includes('WHERE id')) {
-        return db.pentest_engagements.find((e) => e.id === parseInt(params[0])) || null;
-      }
-      if (sql.includes('WHERE student_id')) {
-        return db.pentest_engagements.find((e) => e.student_id === params[0]) || null;
-      }
-      return db.pentest_engagements
-        .slice()
-        .sort((a, b) => new Date(b.started_at) - new Date(a.started_at));
-    }
-
-    if (sql.includes('FROM pentest_findings')) {
-      if (!db.pentest_findings) db.pentest_findings = [];
-      if (sql.includes('WHERE id')) {
-        return db.pentest_findings.find((f) => f.id === parseInt(params[0])) || null;
-      }
-      if (sql.includes('WHERE engagement_id') && sql.includes('AND phase')) {
-        return db.pentest_findings.filter(
-          (f) => f.engagement_id === parseInt(params[0]) && f.phase === params[1]
-        );
-      }
-      if (sql.includes('WHERE engagement_id')) {
-        return db.pentest_findings.filter((f) => f.engagement_id === parseInt(params[0]));
-      }
-      return db.pentest_findings;
-    }
-
-    if (sql.includes('FROM pentest_phase_notes')) {
-      if (!db.pentest_phase_notes) db.pentest_phase_notes = [];
-      if (sql.includes('WHERE engagement_id') && sql.includes('AND phase')) {
-        return (
-          db.pentest_phase_notes.find(
-            (n) => n.engagement_id === parseInt(params[0]) && n.phase === params[1]
-          ) || null
-        );
-      }
-      if (sql.includes('WHERE engagement_id')) {
-        return db.pentest_phase_notes.filter((n) => n.engagement_id === parseInt(params[0]));
-      }
-      return db.pentest_phase_notes;
-    }
-
     // --- CTF ---
     if (sql.includes('FROM ctf_challenges')) {
       if (!db.ctf_challenges) db.ctf_challenges = [];
@@ -829,60 +778,6 @@ function executeSQL(sql, params = []) {
       return { lastID: comment.id, changes: 1 };
     }
 
-    // --- Pentest ---
-    if (sql.includes('INTO pentest_engagements')) {
-      if (!db.pentest_engagements) db.pentest_engagements = [];
-      if (!db._counters.pentest_engagements) db._counters.pentest_engagements = 0;
-      const engagement = {
-        id: ++db._counters.pentest_engagements,
-        student_id: params[0],
-        title: params[1],
-        status: params[2] || 'in_progress',
-        phase_current: params[3] || 'recon',
-        started_at: new Date().toISOString(),
-        submitted_at: null,
-        instructor_grade: null,
-        instructor_feedback: null
-      };
-      db.pentest_engagements.push(engagement);
-      return { lastID: engagement.id, changes: 1 };
-    }
-
-    if (sql.includes('INTO pentest_findings')) {
-      if (!db.pentest_findings) db.pentest_findings = [];
-      if (!db._counters.pentest_findings) db._counters.pentest_findings = 0;
-      const finding = {
-        id: ++db._counters.pentest_findings,
-        engagement_id: params[0],
-        phase: params[1],
-        title: params[2],
-        severity: params[3],
-        cvss_score: params[4] || null,
-        description: params[5],
-        affected_url: params[6] || null,
-        evidence: params[7] || null,
-        recommendation: params[8] || null,
-        created_at: new Date().toISOString()
-      };
-      db.pentest_findings.push(finding);
-      return { lastID: finding.id, changes: 1 };
-    }
-
-    if (sql.includes('INTO pentest_phase_notes')) {
-      if (!db.pentest_phase_notes) db.pentest_phase_notes = [];
-      if (!db._counters.pentest_phase_notes) db._counters.pentest_phase_notes = 0;
-      const notes = {
-        id: ++db._counters.pentest_phase_notes,
-        engagement_id: params[0],
-        phase: params[1],
-        notes: params[2] || '',
-        tools_used: params[3] || '',
-        updated_at: new Date().toISOString()
-      };
-      db.pentest_phase_notes.push(notes);
-      return { lastID: notes.id, changes: 1 };
-    }
-
     // --- CTF ---
     if (sql.includes('INTO ctf_challenges')) {
       if (!db.ctf_challenges) db.ctf_challenges = [];
@@ -1089,57 +984,6 @@ function executeSQL(sql, params = []) {
       return { changes: vuln ? 1 : 0 };
     }
 
-    // --- Pentest ---
-    if (sql.includes('UPDATE pentest_engagements')) {
-      if (!db.pentest_engagements) db.pentest_engagements = [];
-      const engId = params[params.length - 1];
-      const eng = db.pentest_engagements.find((e) => e.id === parseInt(engId));
-      if (eng) {
-        if (sql.includes('phase_current')) eng.phase_current = params[0];
-        if (sql.includes('status') && !sql.includes('phase_current')) eng.status = params[0];
-        if (sql.includes('submitted_at')) eng.submitted_at = params[0] || new Date().toISOString();
-        if (sql.includes('instructor_grade')) {
-          eng.instructor_grade = params[0];
-          eng.instructor_feedback = params[1];
-          eng.status = 'graded';
-        }
-        eng.updated_at = new Date().toISOString();
-      }
-      return { changes: eng ? 1 : 0 };
-    }
-
-    if (sql.includes('UPDATE pentest_findings')) {
-      if (!db.pentest_findings) db.pentest_findings = [];
-      const findId = params[params.length - 1];
-      const find = db.pentest_findings.find((f) => f.id === parseInt(findId));
-      if (find) {
-        if (params[0] !== undefined) find.title = params[0];
-        if (params[1] !== undefined) find.severity = params[1];
-        if (params[2] !== undefined) find.cvss_score = params[2];
-        if (params[3] !== undefined) find.description = params[3];
-        if (params[4] !== undefined) find.affected_url = params[4];
-        if (params[5] !== undefined) find.evidence = params[5];
-        if (params[6] !== undefined) find.recommendation = params[6];
-        find.updated_at = new Date().toISOString();
-      }
-      return { changes: find ? 1 : 0 };
-    }
-
-    if (sql.includes('UPDATE pentest_phase_notes')) {
-      if (!db.pentest_phase_notes) db.pentest_phase_notes = [];
-      // WHERE engagement_id = ? AND phase = ? → params are [...fields, engId, phase]
-      const phase = params[params.length - 1];
-      const engId = params[params.length - 2];
-      const note = db.pentest_phase_notes.find(
-        (n) => n.engagement_id === parseInt(engId) && n.phase === phase
-      );
-      if (note) {
-        note.notes = params[0];
-        note.tools_used = params[1] || note.tools_used;
-        note.updated_at = new Date().toISOString();
-      }
-      return { changes: note ? 1 : 0 };
-    }
   }
 
   // DELETE queries
@@ -1218,17 +1062,6 @@ function executeSQL(sql, params = []) {
       return { changes: 1 };
     }
 
-    // --- Pentest ---
-    if (sql.includes('FROM pentest_findings')) {
-      if (sql.includes('WHERE id')) {
-        if (!db.pentest_findings) db.pentest_findings = [];
-        const findId = parseInt(params[0]);
-        const before = db.pentest_findings.length;
-        db.pentest_findings = db.pentest_findings.filter((f) => f.id !== findId);
-        return { changes: before - db.pentest_findings.length };
-      }
-    }
-
     // --- CTF ---
     if (sql.includes('FROM ctf_submissions')) {
       if (sql.includes('WHERE student_id')) {
@@ -1273,9 +1106,6 @@ function initializeDatabase() {
     'vulnerabilities',
     'vm_status_history',
     'vm_comments',
-    'pentest_engagements',
-    'pentest_findings',
-    'pentest_phase_notes',
     'ctf_challenges',
     'ctf_submissions'
   ];
@@ -1289,9 +1119,6 @@ function initializeDatabase() {
     'vulnerabilities',
     'vm_status_history',
     'vm_comments',
-    'pentest_engagements',
-    'pentest_findings',
-    'pentest_phase_notes',
     'ctf_challenges',
     'ctf_submissions'
   ];
