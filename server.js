@@ -6,6 +6,12 @@ const http = require('http');
 const https = require('https');
 const fs = require('fs');
 
+// Load .env if present (optional -- env vars may come from parent process or Codespaces)
+const envPath = path.join(__dirname, '.env');
+if (fs.existsSync(envPath)) {
+  process.loadEnvFile(envPath);
+}
+
 // Initialize database
 const { db, initializeDatabase, isDatabaseSeeded } = require('./config/database');
 const { seedDatabase } = require('./utils/seedData');
