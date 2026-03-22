@@ -123,17 +123,39 @@
   "dashboard": {
     "admin": {
       "title": "Admin Dashboard",
+      "subtitle": "System overview and quick actions",
       "statistics": "System Statistics",
       "totalUsers": "Total Users",
+      "totalStudents": "Students",
+      "totalProfessors": "Professors",
       "totalClasses": "Total Classes",
       "totalSessions": "Total Sessions",
       "totalEnrollments": "Total Enrollments",
+      "quickActions": "Quick Actions",
+      "securitySettings": "Security Settings",
+      "viewAuditLogs": "View Audit Logs",
+      "configureMfa": "Configure MFA",
+      "databaseBackups": "Database Backups",
+      "recentLogins": "Recent Logins",
+      "user": "User",
+      "role": "Role",
+      "lastLogin": "Last Login",
+      "noRecentLogins": "No recent logins recorded",
       "recentUsers": "Recent Login Activity",
       "viewAll": "View All"
     },
     "professor": {
       "title": "Professor Dashboard",
+      "subtitle": "Manage your classes and student enrollments",
       "myClasses": "My Classes",
+      "allClasses": "All Classes",
+      "code": "Code",
+      "className": "Class Name",
+      "semester": "Semester",
+      "students": "Students",
+      "enrolled": "enrolled",
+      "actions": "Actions",
+      "viewDetails": "View Details",
       "totalStudents": "Total Students",
       "noClasses": "You are not assigned to any classes yet.",
       "createClass": "Create New Class",
@@ -142,9 +164,18 @@
     },
     "student": {
       "title": "Student Dashboard",
+      "subtitle": "View your enrolled classes and grades",
       "enrolledClasses": "Enrolled Classes",
+      "code": "Code",
+      "className": "Class Name",
+      "semester": "Semester",
       "grade": "Grade",
-      "noEnrollments": "You are not enrolled in any classes yet."
+      "actions": "Actions",
+      "viewDetails": "View Details",
+      "inProgress": "In Progress",
+      "noEnrollments": "You are not enrolled in any classes yet.",
+      "aboutTitle": "About This Platform",
+      "aboutText": "This platform demonstrates various application security concepts. Notice the security status bar at the top showing which security features are currently enabled. Ask your instructor to toggle features to see how they affect the application's behavior and data storage."
     }
   },
   "classes": {
@@ -840,6 +871,52 @@
       "noStudents": "No student has started the lab yet.",
       "reset": "Reset",
       "confirmReset": "Are you sure you want to reset this student?"
+    }
+  },
+  "vm": {
+    "studentLab": {
+      "title": "Vulnerability Manager — Registry",
+      "subtitle": "Read-only view of all discovered vulnerabilities aggregated from SCA, DAST, and Pentest labs."
+    },
+    "instructor": {
+      "title": "Vulnerability Manager",
+      "addVuln": "+ Add Vulnerability"
+    },
+    "common": {
+      "total": "Total",
+      "critical": "Critical",
+      "high": "High",
+      "open": "Open",
+      "resolved": "Resolved",
+      "inProgress": "In Progress",
+      "search": "Search…",
+      "allSeverities": "All severities",
+      "allStatuses": "All statuses",
+      "allSources": "All sources"
+    },
+    "table": {
+      "id": "#",
+      "title": "Title",
+      "severity": "Severity",
+      "status": "Status",
+      "source": "Source",
+      "cvss": "CVSS",
+      "owasp": "OWASP",
+      "priority": "Priority",
+      "actions": "Actions",
+      "view": "View →"
+    },
+    "modal": {
+      "title": "Add Vulnerability (Manual)",
+      "titleLabel": "Title *",
+      "severityLabel": "Severity *",
+      "priorityLabel": "Priority (1=highest)",
+      "cweLabel": "CWE",
+      "cwePlaceholder": "e.g. CWE-79",
+      "componentLabel": "Affected Component",
+      "descriptionLabel": "Description",
+      "cancel": "Cancel",
+      "create": "Create"
     }
   }
 }

@@ -1,18 +1,18 @@
 <%- include('../partials/header') %>
 
 <div class="page-header">
-  <h1 class="page-title">Vulnerability Manager — Registry</h1>
-  <p class="page-subtitle">Read-only view of all discovered vulnerabilities aggregated from SCA, DAST, and Pentest labs.</p>
+  <h1 class="page-title"><%= t('vm.studentLab.title') %></h1>
+  <p class="page-subtitle"><%= t('vm.studentLab.subtitle') %></p>
 </div>
 
 <!-- Stats -->
 <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:1rem; margin-bottom:1.5rem;">
   <% [
-    {label:'Total', val:stats.total, cls:'#e8f0ff', col:'#1a5276'},
-    {label:'Critical', val:stats.critical, cls:'#ffe0e0', col:'#c0392b'},
-    {label:'High', val:stats.high, cls:'#fff0e0', col:'#c0732a'},
-    {label:'Open', val:stats.open, cls:'#fde8e8', col:'#a93226'},
-    {label:'Resolved', val:stats.resolved, cls:'#e8f8e8', col:'#1e8449'},
+    {label: t('vm.common.total'), val:stats.total, cls:'#e8f0ff', col:'#1a5276'},
+    {label: t('vm.common.critical'), val:stats.critical, cls:'#ffe0e0', col:'#c0392b'},
+    {label: t('vm.common.high'), val:stats.high, cls:'#fff0e0', col:'#c0732a'},
+    {label: t('vm.common.open'), val:stats.open, cls:'#fde8e8', col:'#a93226'},
+    {label: t('vm.common.resolved'), val:stats.resolved, cls:'#e8f8e8', col:'#1e8449'},
   ].forEach(s => { %>
   <div class="card" style="background:<%= s.cls %>; text-align:center; padding:0.75rem;">
     <div style="font-size:1.6rem; font-weight:700; color:<%= s.col %>;"><%= s.val %></div>
@@ -23,14 +23,14 @@
 
 <div class="card">
   <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem; align-items:center;">
-    <input id="filterText" type="text" placeholder="Search…" oninput="applyFilter()"
+    <input id="filterText" type="text" placeholder="<%= t('vm.common.search') %>" oninput="applyFilter()"
       style="flex:1; min-width:180px; padding:8px; border:1px solid #ced4da; border-radius:4px; font-size:0.9rem;">
     <select id="filterSev" onchange="applyFilter()" style="padding:8px; border:1px solid #ced4da; border-radius:4px;">
-      <option value="">All severities</option>
+      <option value=""><%= t('vm.common.allSeverities') %></option>
       <% ['Critical','High','Medium','Low','Info'].forEach(s => { %><option value="<%= s %>"><%= s %></option><% }) %>
     </select>
     <select id="filterStatus" onchange="applyFilter()" style="padding:8px; border:1px solid #ced4da; border-radius:4px;">
-      <option value="">All statuses</option>
+      <option value=""><%= t('vm.common.allStatuses') %></option>
       <% ['open','in_progress','resolved','wont_fix'].forEach(s => { %><option value="<%= s %>"><%= s.replace('_',' ') %></option><% }) %>
     </select>
   </div>
@@ -38,13 +38,13 @@
   <table id="vulnTable">
     <thead>
       <tr>
-        <th>#</th>
-        <th>Title</th>
-        <th>Severity</th>
-        <th>Status</th>
-        <th>Source</th>
-        <th>CVSS</th>
-        <th>OWASP</th>
+        <th><%= t('vm.table.id') %></th>
+        <th><%= t('vm.table.title') %></th>
+        <th><%= t('vm.table.severity') %></th>
+        <th><%= t('vm.table.status') %></th>
+        <th><%= t('vm.table.source') %></th>
+        <th><%= t('vm.table.cvss') %></th>
+        <th><%= t('vm.table.owasp') %></th>
       </tr>
     </thead>
     <tbody>

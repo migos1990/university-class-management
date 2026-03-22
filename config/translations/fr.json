@@ -123,17 +123,39 @@
   "dashboard": {
     "admin": {
       "title": "Tableau de bord administrateur",
+      "subtitle": "Aperçu du système et actions rapides",
       "statistics": "Statistiques du système",
       "totalUsers": "Total des utilisateurs",
+      "totalStudents": "Étudiants",
+      "totalProfessors": "Professeurs",
       "totalClasses": "Total des cours",
       "totalSessions": "Total des séances",
       "totalEnrollments": "Total des inscriptions",
+      "quickActions": "Actions rapides",
+      "securitySettings": "Paramètres de sécurité",
+      "viewAuditLogs": "Voir les journaux d'audit",
+      "configureMfa": "Configurer l'AMF",
+      "databaseBackups": "Sauvegardes de base de données",
+      "recentLogins": "Connexions récentes",
+      "user": "Utilisateur",
+      "role": "Rôle",
+      "lastLogin": "Dernière connexion",
+      "noRecentLogins": "Aucune connexion récente enregistrée",
       "recentUsers": "Activité de connexion récente",
       "viewAll": "Voir tout"
     },
     "professor": {
       "title": "Tableau de bord professeur",
+      "subtitle": "Gérez vos cours et les inscriptions de vos étudiants",
       "myClasses": "Mes cours",
+      "allClasses": "Tous les cours",
+      "code": "Code",
+      "className": "Nom du cours",
+      "semester": "Semestre",
+      "students": "Étudiants",
+      "enrolled": "inscrits",
+      "actions": "Actions",
+      "viewDetails": "Voir les détails",
       "totalStudents": "Total des étudiants",
       "noClasses": "Vous n'êtes assigné à aucun cours pour le moment.",
       "createClass": "Créer un nouveau cours",
@@ -142,9 +164,18 @@
     },
     "student": {
       "title": "Tableau de bord étudiant",
+      "subtitle": "Consultez vos cours et vos notes",
       "enrolledClasses": "Cours inscrits",
+      "code": "Code",
+      "className": "Nom du cours",
+      "semester": "Semestre",
       "grade": "Note",
-      "noEnrollments": "Vous n'êtes inscrit à aucun cours pour le moment."
+      "actions": "Actions",
+      "viewDetails": "Voir les détails",
+      "inProgress": "En cours",
+      "noEnrollments": "Vous n'êtes inscrit à aucun cours pour le moment.",
+      "aboutTitle": "À propos de cette plateforme",
+      "aboutText": "Cette plateforme illustre divers concepts de sécurité applicative. Remarquez la barre de statut de sécurité en haut de la page affichant les fonctionnalités de sécurité actuellement activées. Demandez à votre professeur d'activer ou désactiver ces fonctionnalités pour observer leur impact sur le comportement de l'application et le stockage des données."
     }
   },
   "classes": {
@@ -840,6 +871,52 @@
       "noStudents": "Aucun \u00e9tudiant n'a commenc\u00e9 le laboratoire.",
       "reset": "R\u00e9initialiser",
       "confirmReset": "\u00cates-vous s\u00fbr de vouloir r\u00e9initialiser cet \u00e9tudiant?"
+    }
+  },
+  "vm": {
+    "studentLab": {
+      "title": "Gestionnaire de vulnérabilités — Registre",
+      "subtitle": "Vue en lecture seule de toutes les vulnérabilités découvertes issues des laboratoires SCA, DAST et Pentest."
+    },
+    "instructor": {
+      "title": "Gestionnaire de vulnérabilités",
+      "addVuln": "+ Ajouter une vulnérabilité"
+    },
+    "common": {
+      "total": "Total",
+      "critical": "Critique",
+      "high": "Élevé",
+      "open": "Ouvert",
+      "resolved": "Résolu",
+      "inProgress": "En cours",
+      "search": "Rechercher…",
+      "allSeverities": "Toutes les sévérités",
+      "allStatuses": "Tous les statuts",
+      "allSources": "Toutes les sources"
+    },
+    "table": {
+      "id": "#",
+      "title": "Titre",
+      "severity": "Sévérité",
+      "status": "Statut",
+      "source": "Source",
+      "cvss": "CVSS",
+      "owasp": "OWASP",
+      "priority": "Priorité",
+      "actions": "Actions",
+      "view": "Voir →"
+    },
+    "modal": {
+      "title": "Ajouter une vulnérabilité (manuelle)",
+      "titleLabel": "Titre *",
+      "severityLabel": "Sévérité *",
+      "priorityLabel": "Priorité (1=la plus haute)",
+      "cweLabel": "CWE",
+      "cwePlaceholder": "ex. CWE-79",
+      "componentLabel": "Composant affecté",
+      "descriptionLabel": "Description",
+      "cancel": "Annuler",
+      "create": "Créer"
     }
   }
 }
