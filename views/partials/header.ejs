@@ -184,3 +184,10 @@
   <% } else { %>
   <div class="page-content" style="padding: 2rem;">
   <% } %>
+<% if (typeof activeChallenge !== 'undefined' && activeChallenge && typeof user !== 'undefined' && user && user.role === 'student') { %>
+<div class="ctf-reminder-bar" id="ctf-reminder-bar">
+  <%= typeof t === 'function' ? t('pentest.ctf.activeChallenge') : 'Defi en cours' %>: <%= activeChallenge.title_fr %> -- <%= activeChallenge.points %> pts
+  <a href="/pentest/challenges/<%= activeChallenge.id %>">Continuer</a>
+  <button onclick="fetch('/pentest/dismiss-reminder',{method:'POST'}).then(function(){document.getElementById('ctf-reminder-bar').remove();})">&#215;</button>
+</div>
+<% } %>
