@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Polish & Pedagogy
 status: executing
-stopped_at: Completed 16-02-PLAN.md
-last_updated: "2026-03-22T14:34:24.026Z"
-last_activity: 2026-03-22 -- Completed Phase 16 Plan 2 (CTF student routes, views, CSS animations, hint UX)
+stopped_at: Completed 16-03-PLAN.md
+last_updated: "2026-03-22T14:45:05.538Z"
+last_activity: 2026-03-22 -- Completed Phase 16 Plan 3 (CTF instructor dashboard, leaderboard, heatmap, reset)
 progress:
   total_phases: 11
   completed_phases: 10
   total_plans: 18
-  completed_plans: 17
-  percent: 94
+  completed_plans: 18
+  percent: 97
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 ## Current Position
 
 Phase: 16 of 16 (CTF Pentest Lab)
-Plan: 2 of 4 (16-02 complete)
+Plan: 3 of 4 (16-03 complete)
 Status: Phase 16 in progress
-Last activity: 2026-03-22 -- Completed Phase 16 Plan 2 (CTF student routes, views, CSS animations, hint UX)
+Last activity: 2026-03-22 -- Completed Phase 16 Plan 3 (CTF instructor dashboard, leaderboard, heatmap, reset)
 
-Progress: [█████████░] 94%
+Progress: [█████████░] 97%
 
 ## Performance Metrics
 
@@ -53,7 +53,7 @@ Progress: [█████████░] 94%
 | 13. Documentation | 0/? | - | - |
 | 14. Code Quality | 2/2 | 7min | 3.5min |
 | 15. CSS Extraction | 2/2 | 12min | 6min |
-| 16. CTF Pentest Lab | 2/4 | 14min | 7min |
+| 16. CTF Pentest Lab | 3/4 | 21min | 7min |
 
 *Updated after each plan completion*
 | Phase 06 P01 | 4min | 2 tasks | 10 files |
@@ -72,6 +72,7 @@ Progress: [█████████░] 94%
 | Phase 15 P02 | 4min | 2 tasks | 8 files |
 | Phase 16 P01 | 5min | 2 tasks | 9 files |
 | Phase 16 P02 | 9min | 2 tasks | 7 files |
+| Phase 16 P03 | 7min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -116,6 +117,7 @@ Recent decisions affecting current work:
 - [Phase 15]: Section comment headers (/* ===== Section Name ===== */) for CSS organization
 - [Phase 15]: Only standalone pages (login, error, mfa-verify) and Prism conditional retain inline styles -- all authenticated templates use external stylesheet
 - [Phase 16]: Routes/pentest.js fully rewritten with CTF routes (old pentest form routes replaced)
+- [Phase 16]: Instructor routes added alongside existing CTF student routes (not overwritten); /api/summary pentest section replaced with CTF stats
 
 ### Roadmap Evolution
 
@@ -134,6 +136,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-22T14:32:23Z
-Stopped at: Completed 16-02-PLAN.md
-Resume file: .planning/phases/16-ctf-pentest-lab/16-03-PLAN.md
+Last session: 2026-03-22T14:45:05.534Z
+Stopped at: Completed 16-03-PLAN.md
+Resume file: None

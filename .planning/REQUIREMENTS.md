@@ -73,7 +73,7 @@ Requirements for v1.1 Polish & Pedagogy release. Each maps to roadmap phases.
 - [x] **CTF-01**: 12 CTF challenges available, each corresponding to an SCA finding, with flags planted in the codebase
 - [x] **CTF-02**: Progressive unlock system (4 Easy at start, solve 2 Easy unlocks 3 Medium, solve 2 Medium unlocks 5 Advanced)
 - [x] **CTF-03**: Scoring system (Easy=100, Medium=200, Advanced=300 pts; hints deduct 10/20 pts; max 2,500)
-- [ ] **CTF-04**: Instructor leaderboard with ranked student progress and challenge heatmap
+- [x] **CTF-04**: Instructor leaderboard with ranked student progress and challenge heatmap
 - [x] **CTF-05**: Flag capture celebration animation (radial pulse + counter tick-up) with tier unlock banner
 - [x] **CTF-06**: Sticky hunt reminder bar on all pages showing active challenge
 - [x] **CTF-07**: Two-click hint confirmation to prevent accidental point loss
@@ -154,7 +154,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CTF-01 | Phase 16 | Complete |
 | CTF-02 | Phase 16 | Complete |
 | CTF-03 | Phase 16 | Complete |
-| CTF-04 | Phase 16 | Pending |
+| CTF-04 | Phase 16 | Complete |
 | CTF-05 | Phase 16 | Complete |
 | CTF-06 | Phase 16 | Complete |
 | CTF-07 | Phase 16 | Complete |
