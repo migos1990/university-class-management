@@ -12,6 +12,15 @@ function seedDatabase() {
   db.prepare('DELETE FROM users').run();
   db.prepare('DELETE FROM audit_logs').run();
   db.prepare('DELETE FROM rate_limit_attempts').run();
+  db.prepare('DELETE FROM sca_findings').run();
+  db.prepare('DELETE FROM sca_student_reviews').run();
+  db.prepare('DELETE FROM dast_scenarios').run();
+  db.prepare('DELETE FROM dast_student_findings').run();
+  db.prepare('DELETE FROM vulnerabilities').run();
+  db.prepare('DELETE FROM vm_status_history').run();
+  db.prepare('DELETE FROM vm_comments').run();
+  db.prepare('DELETE FROM ctf_challenges').run();
+  db.prepare('DELETE FROM ctf_submissions').run();
 
   // Insert users
   console.log('Creating users...');

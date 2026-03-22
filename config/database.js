@@ -1064,13 +1064,54 @@ function executeSQL(sql, params = []) {
 
     // --- CTF ---
     if (sql.includes('FROM ctf_submissions')) {
+      if (!db.ctf_submissions) db.ctf_submissions = [];
       if (sql.includes('WHERE student_id')) {
-        if (!db.ctf_submissions) db.ctf_submissions = [];
         const studentId = parseInt(params[0]);
         const before = db.ctf_submissions.length;
         db.ctf_submissions = db.ctf_submissions.filter((s) => s.student_id !== studentId);
         return { changes: before - db.ctf_submissions.length };
       }
+      db.ctf_submissions = [];
+      return { changes: 1 };
+    }
+    if (sql.includes('FROM ctf_challenges')) {
+      if (!db.ctf_challenges) db.ctf_challenges = [];
+      db.ctf_challenges = [];
+      return { changes: 1 };
+    }
+
+    // --- SCA ---
+    if (sql.includes('FROM sca_findings')) {
+      db.sca_findings = [];
+      return { changes: 1 };
+    }
+    if (sql.includes('FROM sca_student_reviews')) {
+      if (!db.sca_student_reviews) db.sca_student_reviews = [];
+      db.sca_student_reviews = [];
+      return { changes: 1 };
+    }
+
+    // --- DAST ---
+    if (sql.includes('FROM dast_scenarios')) {
+      db.dast_scenarios = [];
+      return { changes: 1 };
+    }
+    if (sql.includes('FROM dast_student_findings')) {
+      if (!db.dast_student_findings) db.dast_student_findings = [];
+      db.dast_student_findings = [];
+      return { changes: 1 };
+    }
+
+    // --- VM (bulk only — WHERE id handled above) ---
+    if (sql.includes('FROM vm_status_history')) {
+      if (!db.vm_status_history) db.vm_status_history = [];
+      db.vm_status_history = [];
+      return { changes: 1 };
+    }
+    if (sql.includes('FROM vm_comments')) {
+      if (!db.vm_comments) db.vm_comments = [];
+      db.vm_comments = [];
+      return { changes: 1 };
     }
   }
 
