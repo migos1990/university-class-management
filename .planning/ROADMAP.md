@@ -221,17 +221,27 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 15. CSS Extraction | 2/2 | Complete    | 2026-03-21 | - |
 | 16. CTF Pentest Lab | 4/4 | Complete    | 2026-03-22 | - |
 
-### Phase 17: Fix QA audit issues — deduplication, i18n, role gates, nav fixes
+### Phase 17: Fix QA audit issues -- deduplication, i18n, role gates, nav fixes
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Fix all 6 QA audit issues: 5x finding deduplication in seedData.js (CRITICAL), untranslated English strings on dashboards and VM pages (HIGH), dashboard role gates (MEDIUM), /classes 404 (MEDIUM), locked CTF JSON error (LOW), and "Mes inscriptions" nav loop (LOW)
+**Requirements**: ISSUE-001, ISSUE-002, ISSUE-003, ISSUE-004, ISSUE-005, ISSUE-006
 **Depends on:** Phase 16
-**Plans:** 0 plans
+**Success Criteria** (what must be TRUE):
+  1. SCA page shows exactly 12 findings, DAST shows 6, VM shows 12 (no duplication)
+  2. Student, professor, and admin dashboards display all text in Quebec French
+  3. VM student-lab and instructor pages display UI chrome in Quebec French
+  4. Instructor cannot access student dashboard when RBAC is enabled (403)
+  5. Clicking "Cours" nav link does not 404
+  6. Locked CTF challenge returns HTML error page, not raw JSON
+  7. "Mes inscriptions" sidebar link does not loop to same page
+**Plans:** 3 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 17 to break down)
+- [ ] 17-01-PLAN.md -- Seed data deduplication fix (add DELETE statements for curriculum tables, re-seed)
+- [ ] 17-02-PLAN.md -- i18n translation of dashboard and VM templates (~60 new keys, 5 templates)
+- [ ] 17-03-PLAN.md -- Dashboard role gates, /classes redirect, locked CTF error page, nav link fix
 
-### Phase 18: Security & Environment Hardening — session secret, CSRF protection, npm CVEs, Helmet headers, .env setup, health check endpoint
+### Phase 18: Security & Environment Hardening -- session secret, CSRF protection, npm CVEs, Helmet headers, .env setup, health check endpoint
 
 **Goal:** Close actionable security audit findings (bcrypt CVEs, .env setup) and formally document the 5 findings that overlap with intentional teaching vulnerabilities as accepted risks -- separating real security debt from pedagogical design
 **Requirements**: SEC-C01, SEC-C02, SEC-H01, SEC-H02, SEC-M01, SEC-M02, DEP-C01, DEP-H02
@@ -249,7 +259,7 @@ Plans:
 Plans:
 - [ ] 18-01-PLAN.md -- Environment config (.env.example, .gitignore, process.loadEnvFile), bcrypt 6.0.0 upgrade, audit finding annotations
 
-### Phase 19: CI/CD & Deployment Pipeline — GitHub Actions workflow, Dockerfile, automated tests on PR, process manager
+### Phase 19: CI/CD & Deployment Pipeline -- GitHub Actions workflow, Dockerfile, automated tests on PR, process manager
 
 **Goal:** [To be planned]
 **Requirements**: TBD
