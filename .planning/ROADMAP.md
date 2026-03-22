@@ -220,3 +220,41 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 14. Code Quality | 2/2 | Complete    | 2026-03-21 | - |
 | 15. CSS Extraction | 2/2 | Complete    | 2026-03-21 | - |
 | 16. CTF Pentest Lab | 4/4 | Complete    | 2026-03-22 | - |
+
+### Phase 17: Fix QA audit issues — deduplication, i18n, role gates, nav fixes
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 16
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 17 to break down)
+
+### Phase 18: Security & Environment Hardening — session secret, CSRF protection, npm CVEs, Helmet headers, .env setup, health check endpoint
+
+**Goal:** Close actionable security audit findings (bcrypt CVEs, .env setup) and formally document the 5 findings that overlap with intentional teaching vulnerabilities as accepted risks -- separating real security debt from pedagogical design
+**Requirements**: SEC-C01, SEC-C02, SEC-H01, SEC-H02, SEC-M01, SEC-M02, DEP-C01, DEP-H02
+**Depends on:** Phase 17
+**Success Criteria** (what must be TRUE):
+  1. .env.example exists with PORT and NODE_ENV (SESSION_SECRET deliberately absent -- intentional vuln #1)
+  2. .env is in .gitignore so it can never be committed
+  3. server.js loads .env via process.loadEnvFile() when file exists
+  4. bcrypt upgraded to 6.0.0, npm audit reports 0 high-severity vulnerabilities
+  5. All 12 intentional teaching vulnerabilities preserved (full test suite passes)
+  6. SECURITY-AUDIT.md annotates 5 teaching-overlap findings as accepted risk
+  7. Health check endpoint at /health confirmed working (DEP-H02 closed)
+**Plans:** 1 plan
+
+Plans:
+- [ ] 18-01-PLAN.md -- Environment config (.env.example, .gitignore, process.loadEnvFile), bcrypt 6.0.0 upgrade, audit finding annotations
+
+### Phase 19: CI/CD & Deployment Pipeline — GitHub Actions workflow, Dockerfile, automated tests on PR, process manager
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 18
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 19 to break down)
