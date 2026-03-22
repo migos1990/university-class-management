@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
+const { requireRole } = require('../middleware/rbac');
 const { db } = require('../config/database');
 const { decrypt } = require('../utils/encryption');
 
@@ -27,7 +28,7 @@ router.get('/', requireAuth, (req, res) => {
  * GET /dashboard/student
  * Student dashboard
  */
-router.get('/student', requireAuth, (req, res) => {
+router.get('/student', requireAuth, requireRole(['student']), (req, res) => {
   const userId = req.session.user.id;
 
   // Get enrolled classes with decrypted grades
@@ -67,7 +68,7 @@ router.get('/student', requireAuth, (req, res) => {
  * GET /dashboard/professor
  * Professor dashboard
  */
-router.get('/professor', requireAuth, (req, res) => {
+router.get('/professor', requireAuth, requireRole(['professor', 'admin']), (req, res) => {
   // Get all classes (or classes assigned to this professor)
   const classes = db
     .prepare(
@@ -92,7 +93,7 @@ router.get('/professor', requireAuth, (req, res) => {
  * GET /dashboard/admin
  * Admin dashboard
  */
-router.get('/admin', requireAuth, (req, res) => {
+router.get('/admin', requireAuth, requireRole(['admin']), (req, res) => {
   // Get statistics
   const stats = {
     totalUsers: db.prepare('SELECT COUNT(*) as count FROM users').get().count,

@@ -6,6 +6,14 @@ const { auditLog } = require('../middleware/audit');
 const { db } = require('../config/database');
 
 /**
+ * GET /classes
+ * Redirect to dashboard (which shows class list by role)
+ */
+router.get('/', requireAuth, (req, res) => {
+  res.redirect('/dashboard');
+});
+
+/**
  * GET /classes/:id
  * View class details and sessions
  */
