@@ -78,6 +78,7 @@ app.use(languageMiddleware);
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
   res.locals.currentPath = req.path;
+  res.locals.activeChallenge = req.session ? req.session.activeChallenge || null : null;
   res.locals.formatDate = (dateStr) => {
     if (!dateStr) return 'Never';
     const d = new Date(dateStr);
