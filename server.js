@@ -229,22 +229,15 @@ app.get('/api/summary', requireAuth, (req, res) => {
       per_student: dastPerStudent
     };
 
-    // Pentest progress
-    const engagements = db.prepare('SELECT * FROM pentest_engagements').all() || [];
-    const PHASES = ['recon', 'enumeration', 'vuln_id', 'exploitation', 'reporting'];
-    const phaseDist = {};
-    PHASES.forEach((p) => {
-      phaseDist[p] = 0;
-    });
-    engagements.forEach((e) => {
-      if (phaseDist[e.phase_current] !== undefined) phaseDist[e.phase_current]++;
-    });
+    // CTF Pentest progress (replaces old pentest_engagements)
+    const ctf_challenges = db.prepare('SELECT * FROM ctf_challenges').all() || [];
+    const ctf_correctSubs = db.prepare('SELECT * FROM ctf_submissions WHERE correct = ?').all(1) || [];
+    const ctf_studentIds = new Set(ctf_correctSubs.map((s) => s.student_id));
     const pentest = {
-      total_students: students.length,
-      in_progress: engagements.filter((e) => e.status === 'in_progress').length,
-      submitted: engagements.filter((e) => e.status === 'submitted').length,
-      graded: engagements.filter((e) => e.status === 'graded').length,
-      phase_distribution: phaseDist
+      type: 'ctf',
+      totalChallenges: ctf_challenges.length,
+      totalCaptures: ctf_correctSubs.length,
+      studentsWithCaptures: ctf_studentIds.size
     };
 
     res.json({
