@@ -37,7 +37,7 @@ Full details: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 - [ ] **Phase 13: Documentation** - README and instructor docs reflecting the v1.1 feature set
 - [x] **Phase 14: Code Quality** - ESLint/Prettier tooling, dead code removal (preserving intentional vulnerabilities) (completed 2026-03-21)
 - [x] **Phase 15: CSS Extraction** - Move shared severity/badge/card CSS from inline styles into public/styles.css (completed 2026-03-21)
-- [ ] **Phase 16: CTF Pentest Lab** - CTF-style challenge board replacing the pentest form-filling module with 12 exploit challenges
+- [x] **Phase 16: CTF Pentest Lab** - CTF-style challenge board replacing the pentest form-filling module with 12 exploit challenges (completed 2026-03-22)
 
 ## Phase Details
 
@@ -187,7 +187,7 @@ Plans:
   7. Hint system uses two-click inline confirmation to prevent accidental point loss
   8. All CTF content (challenge descriptions, hints, UI) is in Quebec French
   9. Old pentest form-filling module is replaced (old routes/views/tables removed)
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 - [x] 16-01-PLAN.md -- CTF database handlers, seed data (12 challenges), flag planting, i18n keys, and test scaffold
@@ -219,4 +219,4 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 13. Documentation | v1.1 | 0/? | Not started | - |
 | 14. Code Quality | 2/2 | Complete    | 2026-03-21 | - |
 | 15. CSS Extraction | 2/2 | Complete    | 2026-03-21 | - |
-| 16. CTF Pentest Lab | 3/4 | In Progress|  | - |
+| 16. CTF Pentest Lab | 4/4 | Complete   | 2026-03-22 | - |

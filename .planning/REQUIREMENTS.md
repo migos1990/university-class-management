@@ -78,7 +78,7 @@ Requirements for v1.1 Polish & Pedagogy release. Each maps to roadmap phases.
 - [x] **CTF-06**: Sticky hunt reminder bar on all pages showing active challenge
 - [x] **CTF-07**: Two-click hint confirmation to prevent accidental point loss
 - [x] **CTF-08**: All CTF content (challenge descriptions, hints, UI) in Quebec French
-- [ ] **CTF-09**: Old pentest form-filling module replaced (old routes/views/tables removed)
+- [x] **CTF-09**: Old pentest form-filling module replaced (old routes/views/tables removed)
 
 ## Future Requirements
 
@@ -159,7 +159,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CTF-06 | Phase 16 | Complete |
 | CTF-07 | Phase 16 | Complete |
 | CTF-08 | Phase 16 | Complete |
-| CTF-09 | Phase 16 | Pending |
+| CTF-09 | Phase 16 | Complete |
 
 **Coverage:**
 - v1.1 requirements: 40 total

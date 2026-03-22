@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Polish & Pedagogy
-status: executing
-stopped_at: Completed 16-03-PLAN.md
-last_updated: "2026-03-22T14:45:05.538Z"
-last_activity: 2026-03-22 -- Completed Phase 16 Plan 3 (CTF instructor dashboard, leaderboard, heatmap, reset)
+status: complete
+stopped_at: Completed 16-04-PLAN.md
+last_updated: "2026-03-22T14:55:05Z"
+last_activity: 2026-03-22 -- Completed Phase 16 Plan 4 (old pentest module removal, all CTF tests passing)
 progress:
   total_phases: 11
-  completed_phases: 10
-  total_plans: 18
-  completed_plans: 18
-  percent: 97
+  completed_phases: 11
+  total_plans: 19
+  completed_plans: 19
+  percent: 100
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** The SCA lab must work flawlessly end-to-end in French -- from Codespace boot to student submission to instructor review -- with zero friction for non-technical students.
-**Current focus:** Phase 16 in progress -- CTF Pentest Lab (Plan 02 complete)
+**Current focus:** Phase 16 complete -- CTF Pentest Lab (all 4 plans done)
 
 ## Current Position
 
 Phase: 16 of 16 (CTF Pentest Lab)
-Plan: 3 of 4 (16-03 complete)
-Status: Phase 16 in progress
-Last activity: 2026-03-22 -- Completed Phase 16 Plan 3 (CTF instructor dashboard, leaderboard, heatmap, reset)
+Plan: 4 of 4 (16-04 complete)
+Status: All phases complete
+Last activity: 2026-03-22 -- Completed Phase 16 Plan 4 (old pentest module removal, all CTF tests passing)
 
-Progress: [█████████░] 97%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -53,7 +53,7 @@ Progress: [█████████░] 97%
 | 13. Documentation | 0/? | - | - |
 | 14. Code Quality | 2/2 | 7min | 3.5min |
 | 15. CSS Extraction | 2/2 | 12min | 6min |
-| 16. CTF Pentest Lab | 3/4 | 21min | 7min |
+| 16. CTF Pentest Lab | 4/4 | 28min | 7min |
 
 *Updated after each plan completion*
 | Phase 06 P01 | 4min | 2 tasks | 10 files |
@@ -73,6 +73,7 @@ Progress: [█████████░] 97%
 | Phase 16 P01 | 5min | 2 tasks | 9 files |
 | Phase 16 P02 | 9min | 2 tasks | 7 files |
 | Phase 16 P03 | 7min | 2 tasks | 4 files |
+| Phase 16 P04 | 7min | 1 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -118,6 +119,7 @@ Recent decisions affecting current work:
 - [Phase 15]: Only standalone pages (login, error, mfa-verify) and Prism conditional retain inline styles -- all authenticated templates use external stylesheet
 - [Phase 16]: Routes/pentest.js fully rewritten with CTF routes (old pentest form routes replaced)
 - [Phase 16]: Instructor routes added alongside existing CTF student routes (not overwritten); /api/summary pentest section replaced with CTF stats
+- [Phase 16]: CTF test idempotency via dynamic student ID lookup from /pentest/stats + admin reset endpoint (avoids brittle hardcoded IDs)
 
 ### Roadmap Evolution
 
@@ -136,6 +138,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-22T14:45:05.534Z
-Stopped at: Completed 16-03-PLAN.md
+Last session: 2026-03-22T14:55:05Z
+Stopped at: Completed 16-04-PLAN.md (Phase 16 complete, all v1.1 phases done)
 Resume file: None
