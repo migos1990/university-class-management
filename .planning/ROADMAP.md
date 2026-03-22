@@ -221,7 +221,7 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 15. CSS Extraction | 2/2 | Complete    | 2026-03-21 | - |
 | 16. CTF Pentest Lab | 4/4 | Complete    | 2026-03-22 | - |
 | 17. QA Audit Fixes | v1.2 | 0/3 | Planned | - |
-| 18. Security & Env Hardening | v1.2 | 1/1 | Complete | 2026-03-22 |
+| 18. Security & Env Hardening | v1.2 | Complete    | 2026-03-22 | 2026-03-22 |
 | 19. CI/CD Pipeline | v1.2 | 0/? | Not started | - |
 
 ### Phase 17: Fix QA audit issues -- deduplication, i18n, role gates, nav fixes

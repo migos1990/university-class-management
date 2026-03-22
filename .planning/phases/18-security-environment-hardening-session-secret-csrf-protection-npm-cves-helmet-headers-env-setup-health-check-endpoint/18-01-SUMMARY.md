@@ -11,7 +11,7 @@ requires:
 provides:
   - Conditional .env loading via process.loadEnvFile() in server.js
   - bcrypt 6.0.0 (0 npm audit vulnerabilities)
-  - Formally dispositioned security audit findings (5 accepted risk, 2 resolved)
+  - Formally dispositioned security audit findings (4 accepted risk, 2 resolved)
   - Formally dispositioned deployment audit findings (2 resolved)
 affects: [19-ci-cd-deployment-pipeline]
 
@@ -46,7 +46,7 @@ completed: 2026-03-22
 
 # Phase 18 Plan 01: Security & Environment Hardening Summary
 
-**Conditional .env loading via process.loadEnvFile(), bcrypt 6.0.0 upgrade eliminating tar CVE chain, and formal disposition of 7 security audit findings (5 accepted risk, 2 resolved)**
+**Conditional .env loading via process.loadEnvFile(), bcrypt 6.0.0 upgrade eliminating tar CVE chain, and formal disposition of 6 security audit findings (4 accepted risk, 2 resolved)**
 
 ## Performance
 
