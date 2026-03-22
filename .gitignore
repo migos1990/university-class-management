@@ -40,3 +40,9 @@ FLAG.txt
 
 # Obsidian
 .obsidian/
+.gstack/
+
+# Environment variables (never commit actual .env)
+.env
+.env.local
+.env.*.local
