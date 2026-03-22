@@ -220,6 +220,9 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 14. Code Quality | 2/2 | Complete    | 2026-03-21 | - |
 | 15. CSS Extraction | 2/2 | Complete    | 2026-03-21 | - |
 | 16. CTF Pentest Lab | 4/4 | Complete    | 2026-03-22 | - |
+| 17. QA Audit Fixes | v1.2 | 0/3 | Planned | - |
+| 18. Security & Env Hardening | v1.2 | 1/1 | Complete | 2026-03-22 |
+| 19. CI/CD Pipeline | v1.2 | 0/? | Not started | - |
 
 ### Phase 17: Fix QA audit issues -- deduplication, i18n, role gates, nav fixes
 
@@ -254,10 +257,10 @@ Plans:
   5. All 12 intentional teaching vulnerabilities preserved (full test suite passes)
   6. SECURITY-AUDIT.md annotates 5 teaching-overlap findings as accepted risk
   7. Health check endpoint at /health confirmed working (DEP-H02 closed)
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
-- [ ] 18-01-PLAN.md -- Environment config (.env.example, .gitignore, process.loadEnvFile), bcrypt 6.0.0 upgrade, audit finding annotations
+- [x] 18-01-PLAN.md -- Environment config (.env.example, .gitignore, process.loadEnvFile), bcrypt 6.0.0 upgrade, audit finding annotations
 
 ### Phase 19: CI/CD & Deployment Pipeline -- GitHub Actions workflow, Dockerfile, automated tests on PR, process manager
 

@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Polish & Pedagogy
-status: completed
-stopped_at: Completed 16-04-PLAN.md (Phase 16 complete, all v1.1 phases done)
-last_updated: "2026-03-22T15:03:54.726Z"
-last_activity: 2026-03-22 -- Completed Phase 16 Plan 4 (old pentest module removal, all CTF tests passing)
+status: executing
+stopped_at: Completed 18-01-PLAN.md
+last_updated: "2026-03-22T18:20:51Z"
+last_activity: 2026-03-22 -- Completed Phase 18 Plan 1 (env config, bcrypt 6.0.0 upgrade, audit annotations)
 progress:
-  total_phases: 11
-  completed_phases: 11
-  total_plans: 18
-  completed_plans: 18
-  percent: 100
+  total_phases: 14
+  completed_phases: 12
+  total_plans: 22
+  completed_plans: 19
+  percent: 86
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** The SCA lab must work flawlessly end-to-end in French -- from Codespace boot to student submission to instructor review -- with zero friction for non-technical students.
-**Current focus:** Phase 16 complete -- CTF Pentest Lab (all 4 plans done)
+**Current focus:** Phase 18 Plan 01 complete -- Security & Environment Hardening (.env config, bcrypt 6.0.0, audit annotations)
 
 ## Current Position
 
-Phase: 16 of 16 (CTF Pentest Lab)
-Plan: 4 of 4 (16-04 complete)
-Status: All phases complete
-Last activity: 2026-03-22 -- Completed Phase 16 Plan 4 (old pentest module removal, all CTF tests passing)
+Phase: 18 of 19 (Security & Environment Hardening)
+Plan: 1 of 1 (18-01 complete)
+Status: Phase 18 complete
+Last activity: 2026-03-22 -- Completed Phase 18 Plan 1 (env config, bcrypt 6.0.0 upgrade, audit annotations)
 
-Progress: [██████████] 100%
+Progress: [████████░░] 86%
 
 ## Performance Metrics
 
@@ -74,6 +74,7 @@ Progress: [██████████] 100%
 | Phase 16 P02 | 9min | 2 tasks | 7 files |
 | Phase 16 P03 | 7min | 2 tasks | 4 files |
 | Phase 16 P04 | 7min | 1 tasks | 4 files |
+| Phase 18 P01 | 4min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -120,10 +121,16 @@ Recent decisions affecting current work:
 - [Phase 16]: Routes/pentest.js fully rewritten with CTF routes (old pentest form routes replaced)
 - [Phase 16]: Instructor routes added alongside existing CTF student routes (not overwritten); /api/summary pentest section replaced with CTF stats
 - [Phase 16]: CTF test idempotency via dynamic student ID lookup from /pentest/stats + admin reset endpoint (avoids brittle hardcoded IDs)
+- [Phase 18]: process.loadEnvFile() used instead of dotenv package (Node.js built-in, zero new deps)
+- [Phase 18]: .env.example and .gitignore entries pre-existed from planning phase; only server.js loadEnvFile was needed
+- [Phase 18]: 2 pre-existing integration test failures (answer-key-gating "placeholder" assertion) are out of scope for Phase 18
 
 ### Roadmap Evolution
 
 - 2026-03-19: Roadmap expanded from 4 to 11 phases based on product review. Original phases 7-9 renumbered to 12-14. Added: Quick Wins (7), Testing (8), Security Boundary Doc (9), DAST French (10), Instructor Tools (11), CSS Extraction (15), CTF Pentest Lab (16)
+- 2026-03-22: Phase 17 added: Fix QA audit issues — deduplication, i18n, role gates, nav fixes (6 issues from .planning/QA-AUDIT.md)
+- 2026-03-22: Phase 18 added: Security & Environment Hardening — session secret, CSRF, npm CVEs, Helmet, .env, health check (from .planning/SECURITY-AUDIT.md + .planning/DEPLOYMENT-AUDIT.md)
+- 2026-03-22: Phase 19 added: CI/CD & Deployment Pipeline — GitHub Actions, Dockerfile, automated tests on PR (from .planning/DEPLOYMENT-AUDIT.md)
 
 ### Pending Todos
 
@@ -138,6 +145,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-22T14:55:05Z
-Stopped at: Completed 16-04-PLAN.md (Phase 16 complete, all v1.1 phases done)
+Last session: 2026-03-22T18:20:51Z
+Stopped at: Completed 18-01-PLAN.md (Phase 18 complete)
 Resume file: None
