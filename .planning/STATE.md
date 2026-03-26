@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Polish & Pedagogy
 status: in-progress
-stopped_at: Completed 17-01 and 17-02 (Wave 1 complete)
-last_updated: "2026-03-26T18:45:00Z"
-last_activity: 2026-03-26 -- Completed Phase 17 Wave 1 (dedup fix + i18n)
+stopped_at: Completed 17-03 (Phase 17 complete -- all 6 QA audit issues resolved)
+last_updated: "2026-03-26T19:00:00Z"
+last_activity: 2026-03-26 -- Completed Phase 17 Plan 03 (role gates, /classes 404, CTF error, nav link)
 progress:
   total_phases: 15
-  completed_phases: 12
+  completed_phases: 13
   total_plans: 22
-  completed_plans: 20
-  percent: 90
+  completed_plans: 21
+  percent: 95
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** The SCA lab must work flawlessly end-to-end in French -- from Codespace boot to student submission to instructor review -- with zero friction for non-technical students.
-**Current focus:** Phase 17 Wave 1 complete (17-01 dedup fix + 17-02 i18n) -- executing Wave 2
+**Current focus:** Phase 17 complete (all 6 QA audit issues resolved) -- Phase 18 already completed
 
 ## Current Position
 
-Phase: 17 of 19 (QA Audit Fixes)
-Plan: 2 of 3 (Wave 1 complete: 17-01, 17-02)
-Status: In progress — executing Wave 2
-Last activity: 2026-03-26 -- Completed Phase 17 Wave 1 (dedup fix + i18n)
+Phase: 17 of 19 (QA Audit Fixes -- COMPLETE)
+Plan: 3 of 3 (All plans complete: 17-01, 17-02, 17-03)
+Status: Phase 17 complete -- all 6 QA audit issues resolved
+Last activity: 2026-03-26 -- Completed Phase 17 Plan 03 (role gates, /classes 404, CTF error, nav link)
 
-Progress: [█████████░] 90%
+Progress: [█████████▌] 95%
 
 ## Performance Metrics
 
@@ -76,6 +76,7 @@ Progress: [█████████░] 90%
 | Phase 16 P04 | 7min | 1 tasks | 4 files |
 | Phase 17 P01 | 2min | 2 tasks | 2 files |
 | Phase 17 P02 | 2min | 2 tasks | 8 files |
+| Phase 17 P03 | 2min | 3 tasks | 4 files |
 | Phase 18 P01 | 4min | 2 tasks | 4 files |
 
 ## Accumulated Context
@@ -125,6 +126,10 @@ Recent decisions affecting current work:
 - [Phase 16]: CTF test idempotency via dynamic student ID lookup from /pentest/stats + admin reset endpoint (avoids brittle hardcoded IDs)
 - [Phase 17]: vm.common.* namespace for shared VM labels reused across student-lab and instructor views
 - [Phase 17]: Severity/status badge values kept in English (DB-sourced, used for CSS class names)
+- [Phase 17]: Dashboard role gates use requireRole middleware only (no secondary checks); RBAC-off allows all access (intentional for DAST lab)
+- [Phase 17]: GET /classes redirects to /dashboard (no separate view) -- dashboards already show class lists by role
+- [Phase 17]: Locked CTF error uses render('error') pattern consistent with other 403 pages
+- [Phase 17]: "Mes inscriptions" points to /classes for semantic correctness (future-proof for dedicated view)
 - [Phase 18]: process.loadEnvFile() used instead of dotenv package (Node.js built-in, zero new deps)
 - [Phase 18]: .env.example and .gitignore entries pre-existed from planning phase; only server.js loadEnvFile was needed
 - [Phase 18]: 2 pre-existing integration test failures (answer-key-gating "placeholder" assertion) are out of scope for Phase 18
@@ -149,6 +154,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-26T18:31:00Z
-Stopped at: Completed 17-02-PLAN.md (dashboard & VM i18n)
-Resume file: .planning/phases/17-fix-qa-audit-issues-deduplication-i18n-role-gates-nav-fixes/17-02-SUMMARY.md
+Last session: 2026-03-26T19:00:00Z
+Stopped at: Completed 17-03-PLAN.md (role gates, /classes 404, CTF error, nav link -- Phase 17 complete)
+Resume file: .planning/phases/17-fix-qa-audit-issues-deduplication-i18n-role-gates-nav-fixes/17-03-SUMMARY.md

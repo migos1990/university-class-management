@@ -80,6 +80,15 @@ Requirements for v1.1 Polish & Pedagogy release. Each maps to roadmap phases.
 - [x] **CTF-08**: All CTF content (challenge descriptions, hints, UI) in Quebec French
 - [x] **CTF-09**: Old pentest form-filling module replaced (old routes/views/tables removed)
 
+### QA Audit Fixes
+
+- [x] **ISSUE-001**: SCA/DAST/VM pages show correct finding counts with no duplication (12/6/12)
+- [x] **ISSUE-002**: Student, professor, admin dashboards and VM pages display all text in Quebec French
+- [x] **ISSUE-003**: Instructor accessing /dashboard/student gets 403 when RBAC is enabled
+- [x] **ISSUE-004**: Clicking "Cours" nav link renders a page (not 404)
+- [x] **ISSUE-005**: Locked CTF challenge renders HTML error page (not raw JSON)
+- [x] **ISSUE-006**: "Mes inscriptions" sidebar link points to /classes (not /dashboard)
+
 ## Future Requirements
 
 Deferred to v2+. Tracked but not in current roadmap.
@@ -161,9 +170,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CTF-08 | Phase 16 | Complete |
 | CTF-09 | Phase 16 | Complete |
 
+| ISSUE-001 | Phase 17 | Complete |
+| ISSUE-002 | Phase 17 | Complete |
+| ISSUE-003 | Phase 17 | Complete |
+| ISSUE-004 | Phase 17 | Complete |
+| ISSUE-005 | Phase 17 | Complete |
+| ISSUE-006 | Phase 17 | Complete |
+
 **Coverage:**
-- v1.1 requirements: 40 total
-- Mapped to phases: 40
+- v1.1 requirements: 46 total (40 original + 6 QA audit)
+- Mapped to phases: 46
 - Unmapped: 0
 
 ---
