@@ -220,7 +220,7 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 14. Code Quality | 2/2 | Complete    | 2026-03-21 | - |
 | 15. CSS Extraction | 2/2 | Complete    | 2026-03-21 | - |
 | 16. CTF Pentest Lab | 4/4 | Complete    | 2026-03-22 | - |
-| 17. QA Audit Fixes | v1.2 | 0/3 | Planned | - |
+| 17. QA Audit Fixes | v1.2 | 1/3 | In Progress | - |
 | 18. Security & Env Hardening | v1.2 | Complete    | 2026-03-22 | 2026-03-22 |
 | 19. CI/CD Pipeline | v1.2 | 0/? | Not started | - |
 
@@ -241,7 +241,7 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 
 Plans:
 - [ ] 17-01-PLAN.md -- Seed data deduplication fix (add DELETE statements for curriculum tables, re-seed)
-- [ ] 17-02-PLAN.md -- i18n translation of dashboard and VM templates (~60 new keys, 5 templates)
+- [x] 17-02-PLAN.md -- i18n translation of dashboard and VM templates (~60 new keys, 5 templates)
 - [ ] 17-03-PLAN.md -- Dashboard role gates, /classes redirect, locked CTF error page, nav link fix
 
 ### Phase 18: Security & Environment Hardening -- session secret, CSRF protection, npm CVEs, Helmet headers, .env setup, health check endpoint

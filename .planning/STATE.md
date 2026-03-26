@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Polish & Pedagogy
-status: completed
-stopped_at: Phase 17 context gathered
-last_updated: "2026-03-26T18:16:57.084Z"
-last_activity: 2026-03-22 -- Completed Phase 18 Plan 1 (env config, bcrypt 6.0.0 upgrade, audit annotations)
+status: in-progress
+stopped_at: Completed 17-02-PLAN.md (dashboard & VM i18n)
+last_updated: "2026-03-26T18:31:00Z"
+last_activity: 2026-03-26 -- Completed Phase 17 Plan 2 (dashboard & VM i18n translation)
 progress:
   total_phases: 15
   completed_phases: 12
   total_plans: 22
-  completed_plans: 19
-  percent: 86
+  completed_plans: 20
+  percent: 90
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** The SCA lab must work flawlessly end-to-end in French -- from Codespace boot to student submission to instructor review -- with zero friction for non-technical students.
-**Current focus:** Phase 18 Plan 01 complete -- Security & Environment Hardening (.env config, bcrypt 6.0.0, audit annotations)
+**Current focus:** Phase 17 Plan 02 complete -- Dashboard & VM i18n translation (88 t() calls across 5 templates)
 
 ## Current Position
 
-Phase: 18 of 19 (Security & Environment Hardening)
-Plan: 1 of 1 (18-01 complete)
-Status: Phase 18 complete
-Last activity: 2026-03-22 -- Completed Phase 18 Plan 1 (env config, bcrypt 6.0.0 upgrade, audit annotations)
+Phase: 17 of 19 (QA Audit Fixes)
+Plan: 2 of 3 (17-02 complete)
+Status: In progress
+Last activity: 2026-03-26 -- Completed Phase 17 Plan 2 (dashboard & VM i18n translation)
 
-Progress: [████████░░] 86%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
@@ -74,6 +74,7 @@ Progress: [████████░░] 86%
 | Phase 16 P02 | 9min | 2 tasks | 7 files |
 | Phase 16 P03 | 7min | 2 tasks | 4 files |
 | Phase 16 P04 | 7min | 1 tasks | 4 files |
+| Phase 17 P02 | 2min | 2 tasks | 8 files |
 | Phase 18 P01 | 4min | 2 tasks | 4 files |
 
 ## Accumulated Context
@@ -121,6 +122,8 @@ Recent decisions affecting current work:
 - [Phase 16]: Routes/pentest.js fully rewritten with CTF routes (old pentest form routes replaced)
 - [Phase 16]: Instructor routes added alongside existing CTF student routes (not overwritten); /api/summary pentest section replaced with CTF stats
 - [Phase 16]: CTF test idempotency via dynamic student ID lookup from /pentest/stats + admin reset endpoint (avoids brittle hardcoded IDs)
+- [Phase 17]: vm.common.* namespace for shared VM labels reused across student-lab and instructor views
+- [Phase 17]: Severity/status badge values kept in English (DB-sourced, used for CSS class names)
 - [Phase 18]: process.loadEnvFile() used instead of dotenv package (Node.js built-in, zero new deps)
 - [Phase 18]: .env.example and .gitignore entries pre-existed from planning phase; only server.js loadEnvFile was needed
 - [Phase 18]: 2 pre-existing integration test failures (answer-key-gating "placeholder" assertion) are out of scope for Phase 18
@@ -145,6 +148,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-26T18:16:57.075Z
-Stopped at: Phase 17 context gathered
-Resume file: .planning/phases/17-qa-audit-fixes/17-CONTEXT.md
+Last session: 2026-03-26T18:31:00Z
+Stopped at: Completed 17-02-PLAN.md (dashboard & VM i18n)
+Resume file: .planning/phases/17-fix-qa-audit-issues-deduplication-i18n-role-gates-nav-fixes/17-02-SUMMARY.md
