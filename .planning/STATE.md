@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Polish & Pedagogy
 status: in-progress
-stopped_at: Completed 17-02-PLAN.md (dashboard & VM i18n)
-last_updated: "2026-03-26T18:31:00Z"
-last_activity: 2026-03-26 -- Completed Phase 17 Plan 2 (dashboard & VM i18n translation)
+stopped_at: Completed 17-01 and 17-02 (Wave 1 complete)
+last_updated: "2026-03-26T18:45:00Z"
+last_activity: 2026-03-26 -- Completed Phase 17 Wave 1 (dedup fix + i18n)
 progress:
   total_phases: 15
   completed_phases: 12
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** The SCA lab must work flawlessly end-to-end in French -- from Codespace boot to student submission to instructor review -- with zero friction for non-technical students.
-**Current focus:** Phase 17 Plan 02 complete -- Dashboard & VM i18n translation (88 t() calls across 5 templates)
+**Current focus:** Phase 17 Wave 1 complete (17-01 dedup fix + 17-02 i18n) -- executing Wave 2
 
 ## Current Position
 
 Phase: 17 of 19 (QA Audit Fixes)
-Plan: 2 of 3 (17-02 complete)
-Status: In progress
-Last activity: 2026-03-26 -- Completed Phase 17 Plan 2 (dashboard & VM i18n translation)
+Plan: 2 of 3 (Wave 1 complete: 17-01, 17-02)
+Status: In progress — executing Wave 2
+Last activity: 2026-03-26 -- Completed Phase 17 Wave 1 (dedup fix + i18n)
 
 Progress: [█████████░] 90%
 
@@ -74,6 +74,7 @@ Progress: [█████████░] 90%
 | Phase 16 P02 | 9min | 2 tasks | 7 files |
 | Phase 16 P03 | 7min | 2 tasks | 4 files |
 | Phase 16 P04 | 7min | 1 tasks | 4 files |
+| Phase 17 P01 | 2min | 2 tasks | 2 files |
 | Phase 17 P02 | 2min | 2 tasks | 8 files |
 | Phase 18 P01 | 4min | 2 tasks | 4 files |
 

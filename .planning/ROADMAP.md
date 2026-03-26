@@ -220,7 +220,7 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
 | 14. Code Quality | 2/2 | Complete    | 2026-03-21 | - |
 | 15. CSS Extraction | 2/2 | Complete    | 2026-03-21 | - |
 | 16. CTF Pentest Lab | 4/4 | Complete    | 2026-03-22 | - |
-| 17. QA Audit Fixes | v1.2 | 1/3 | In Progress | - |
+| 17. QA Audit Fixes | 2/3 | In Progress|  | - |
 | 18. Security & Env Hardening | v1.2 | Complete    | 2026-03-22 | 2026-03-22 |
 | 19. CI/CD Pipeline | v1.2 | 0/? | Not started | - |
 
@@ -237,7 +237,7 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 
   5. Clicking "Cours" nav link does not 404
   6. Locked CTF challenge returns HTML error page, not raw JSON
   7. "Mes inscriptions" sidebar link does not loop to same page
-**Plans:** 3 plans
+**Plans:** 2/3 plans executed
 
 Plans:
 - [ ] 17-01-PLAN.md -- Seed data deduplication fix (add DELETE statements for curriculum tables, re-seed)
