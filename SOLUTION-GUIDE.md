@@ -25,7 +25,7 @@ This guide is designed so that any new instructor can pick up the platform and t
 15. [Lab: Static Code Analysis (SCA)](#15-lab-static-code-analysis-sca)
 16. [Lab: Dynamic Application Security Testing (DAST)](#16-lab-dynamic-application-security-testing-dast)
 17. [Lab: Vulnerability Manager (VM)](#17-lab-vulnerability-manager-vm)
-18. [Lab: Penetration Testing (Pentest)](#18-lab-penetration-testing-pentest)
+18. [Lab: CTF Penetration Testing](#18-lab-ctf-penetration-testing)
 19. [Classroom Management](#19-classroom-management)
 20. [Pre-Class Checklist](#20-pre-class-checklist)
 21. [Troubleshooting](#21-troubleshooting)
@@ -104,6 +104,11 @@ Each team instance is fully isolated with its own database, SSL certificates, an
 | `charlie_student` | `student123` | Student | Enrolled in CS201, CS301 |
 | `diana_student` | `student123` | Student | Enrolled in CS101 |
 | `eve_student` | `student123` | Student | Enrolled in CS201, CS301 |
+| `frank_student` | `student123` | Student | Enrolled in CS101 |
+| `grace_student` | `student123` | Student | Enrolled in CS201 |
+| `henry_student` | `student123` | Student | Enrolled in CS301 |
+| `iris_student` | `student123` | Student | Enrolled in CS101 |
+| `jack_student` | `student123` | Student | Enrolled in CS201 |
 
 ### Role Permissions
 
@@ -190,8 +195,8 @@ Students understand why a second authentication factor matters and observe the T
 ### Key Code References
 | File | Lines | What It Does |
 |------|-------|--------------|
-| `routes/admin.js` | 140-172 | MFA setup: generates secret, creates QR code |
-| `routes/admin.js` | 179-218 | MFA verification: validates TOTP code, saves secret |
+| `routes/admin.js` | 172-205 | MFA setup: generates secret, creates QR code |
+| `routes/admin.js` | 211-254 | MFA verification: validates TOTP code, saves secret |
 | `routes/auth.js` | 58-62 | Login check: redirects admin to MFA if enabled |
 | `routes/auth.js` | 102-157 | MFA verify page: validates code, creates session |
 
@@ -235,8 +240,8 @@ Students understand how access control restricts actions based on user roles, an
 ### Key Code References
 | File | Lines | What It Does |
 |------|-------|--------------|
-| `middleware/rbac.js` | 1-58 | `requireRole()` middleware factory; checks role against allowed list |
-| `routes/classes.js` | 33-47 | Enrollment check that depends on `rbac_enabled` |
+| `middleware/rbac.js` | 1-61 | `requireRole()` middleware factory; checks role against allowed list |
+| `routes/classes.js` | 45-63 | Enrollment check that depends on `rbac_enabled` |
 
 ### Expected Answer / What Students Should Observe
 - With RBAC ON: each role is confined to its authorized pages and API endpoints.
@@ -282,8 +287,8 @@ Students understand the difference between storing passwords in plaintext vs. ha
 | File | Lines | What It Does |
 |------|-------|--------------|
 | `utils/passwordHash.js` | all | `hashPassword()` and `comparePassword()` wrappers around bcrypt |
-| `routes/admin.js` | 245-280 | `migratePasswordsToHashed()` — bulk hash with rollback |
-| `routes/admin.js` | 285-292 | `migratePasswordsToPlaintext()` — revert flag |
+| `routes/admin.js` | 285-326 | `migratePasswordsToHashed()` — bulk hash with rollback |
+| `routes/admin.js` | 331-340 | `migratePasswordsToPlaintext()` — revert flag |
 | `routes/auth.js` | 32-39 | Login: branches on `password_is_hashed` flag |
 
 ### Expected Answer / What Students Should Observe
@@ -331,7 +336,7 @@ Students understand encryption at rest for sensitive data fields (PII) and how A
 | File | Lines | What It Does |
 |------|-------|--------------|
 | `utils/encryption.js` | all | `encrypt()` / `decrypt()` functions, key loading, BYOK support |
-| `routes/admin.js` | 297-366 | `encryptSensitiveFields()` / `decryptSensitiveFields()` with rollback |
+| `routes/admin.js` | 345-442 | `encryptSensitiveFields()` / `decryptSensitiveFields()` with rollback |
 
 ### Expected Answer / What Students Should Observe
 - Plaintext: `ssn: "111-22-3333"`, `grade: "A"`
@@ -419,7 +424,7 @@ Students understand why security event logging is essential for detection, inves
 | File | Lines | What It Does |
 |------|-------|--------------|
 | `middleware/audit.js` | 1-81 | `auditLog()` middleware factory, `logAuthAttempt()` helper |
-| `routes/admin.js` | 112-134 | Audit log viewer with pagination |
+| `routes/admin.js` | 134-166 | Audit log viewer with pagination |
 
 ### Expected Answer / What Students Should Observe
 - With logging OFF: no record of any activity — an attacker could operate undetected.
@@ -460,7 +465,7 @@ Students understand brute-force attacks and how rate limiting mitigates them.
 | File | Lines | What It Does |
 |------|-------|--------------|
 | `middleware/rateLimiter.js` | 1-88 | `checkRateLimit` and `recordLoginAttempt` functions |
-| `routes/admin.js` | 759-776 | Rate limit reset endpoint |
+| `routes/admin.js` | 870-889 | Rate limit reset endpoint |
 
 ### Expected Answer / What Students Should Observe
 - Without rate limiting: unlimited login attempts with no consequence.
@@ -500,10 +505,10 @@ Students understand the principle that no single individual should control all a
 ### Key Code References
 | File | Lines | What It Does |
 |------|-------|--------------|
-| `routes/classes.js` | 169-207 | DELETE endpoint: checks SoD and blocks professors |
-| `routes/classes.js` | 212-307 | Deletion request form and submission |
-| `routes/admin.js` | 613-633 | Deletion request list view |
-| `routes/admin.js` | 639-753 | Approve and reject endpoints |
+| `routes/classes.js` | 213-257 | DELETE endpoint: checks SoD and blocks professors |
+| `routes/classes.js` | 263-377 | Deletion request form and submission |
+| `routes/admin.js` | 711-736 | Deletion request list view |
+| `routes/admin.js` | 742-864 | Approve and reject endpoints |
 
 ### Expected Answer / What Students Should Observe
 - Without SoD: professors can delete classes immediately with no oversight.
@@ -520,7 +525,7 @@ Students understand the importance of backups for data recovery and business con
 - **Toggle location:** Admin → Backup & Restore
 - **Features:** Manual backup creation, automatic scheduled backups (5 min to 24 hr intervals), restore from backup, download backup files, cleanup old backups
 - **Storage:** `backups/` directory with files named `backup-YYYY-MM-DD-HHMMSS.json`
-- **Code:** `utils/backupManager.js` (236 lines), `routes/admin.js:372-517`
+- **Code:** `utils/backupManager.js` (236 lines), `routes/admin.js:448-609`
 
 ### Teaching Flow
 
@@ -552,7 +557,7 @@ Students understand the importance of backups for data recovery and business con
 | File | Lines | What It Does |
 |------|-------|--------------|
 | `utils/backupManager.js` | all | `createBackup()`, `listBackups()`, `restoreBackup()`, scheduling |
-| `routes/admin.js` | 372-517 | Backup management endpoints |
+| `routes/admin.js` | 448-609 | Backup management endpoints |
 
 ### Expected Answer / What Students Should Observe
 - Backups capture the entire database state at a point in time.
@@ -602,7 +607,7 @@ Students understand encryption key management and the risks of shared/default ke
 | File | Lines | What It Does |
 |------|-------|--------------|
 | `utils/encryption.js` | (key loading) | Loads custom key from file, falls back to default |
-| `routes/admin.js` | 523-607 | BYOK upload and delete endpoints |
+| `routes/admin.js` | 615-705 | BYOK upload and delete endpoints |
 
 ### Expected Answer / What Students Should Observe
 - Default key: hardcoded, shared across all deployments — a single point of failure.
@@ -621,7 +626,7 @@ Students learn to review code for security vulnerabilities, classify findings, a
 - **Pre-seeded data:** 12 real findings mapped to actual code in the codebase
 - **Student workflow:** Review each finding, classify it (confirmed / false positive / needs investigation), add notes, submit
 - **Instructor workflow:** View the review matrix (students x findings), drill into individual student reviews, import confirmed findings to the Vulnerability Manager
-- **Code:** `routes/sca.js` (181 lines)
+- **Code:** `routes/sca.js` (413 lines)
 
 ### The 12 SCA Findings
 
@@ -629,14 +634,14 @@ Students learn to review code for security vulnerabilities, classify findings, a
 |---|-------|------|-----|----------|------------------------|
 | 1 | Hardcoded Session Secret | `server.js:44` | CWE-798 | Critical | **Confirmed** — the secret is in source code |
 | 2 | Hardcoded AES Encryption Key | `utils/encryption.js:6` | CWE-321 | Critical | **Confirmed** — AES key is in source code |
-| 3 | Plaintext Credentials Logged to Console | `server.js:141` | CWE-312 | High | **Confirmed** — passwords appear in logs |
+| 3 | Plaintext Credentials Logged to Console | `server.js:141` | CWE-312 | High | **False Positive** — the console.log that previously logged credentials has been removed. The SCA seed data still references it, but the vulnerability no longer exists in the code. Good teaching moment for students about scan results becoming stale. |
 | 4 | Plaintext Password Comparison | `routes/auth.js:38` | CWE-256 | Critical | **Confirmed** — password stored in plaintext |
 | 5 | Audit Logging Defaults to OFF | `config/database.js:18` | CWE-778 | High | **Confirmed** — security events go unrecorded |
-| 6 | IDOR: No Ownership Check | `routes/classes.js:39` | CWE-639 | High | **Confirmed** — student ID from URL, not session |
+| 6 | IDOR: No Ownership Check | `routes/classes.js:45` | CWE-639 | High | **Confirmed** — enrollment check gated on `rbac_enabled` |
 | 7 | No CSRF Protection | `server.js:1` | CWE-352 | High | **Confirmed** — no CSRF middleware configured |
 | 8 | Rate Limiting Only on Login | `middleware/rateLimiter.js:1` | CWE-307 | Medium | **Confirmed** — other endpoints unprotected |
 | 9 | No HTTP Security Headers | `server.js:1` | CWE-693 | Medium | **Confirmed** — no helmet middleware |
-| 10 | Path Traversal in Backup Download | `routes/admin.js:435` | CWE-22 | High | **Confirmed** — filename from URL unsanitized |
+| 10 | Path Traversal in Backup Download | `routes/admin.js:597` | CWE-22 | High | **Confirmed** — filename from URL unsanitized |
 | 11 | Outdated express-session | `package.json:24` | CWE-1035 | Medium | **Needs Investigation** — requires `npm audit` to verify |
 | 12 | Session Cookie Missing secure Flag | `server.js:50` | CWE-614 | Medium | **Confirmed** — `secure: false` in config |
 
@@ -686,10 +691,11 @@ The instructor can access a standalone answer key at `/sca/answer-key` showing e
 ### Key Code References
 | File | Lines | What It Does |
 |------|-------|--------------|
-| `routes/sca.js` | 42-87 | Dashboard: student lab vs. instructor matrix |
-| `routes/sca.js` | 120-154 | Student review submission |
-| `routes/sca.js` | 176-179 | Import to Vulnerability Manager |
-| `utils/seedData.js` | 173-253 | All 12 pre-seeded SCA findings |
+| `routes/sca.js` | 84-141 | Dashboard: student lab vs. instructor matrix |
+| `routes/sca.js` | 287-341 | Student review submission |
+| `routes/sca.js` | 373-376 | Import to Vulnerability Manager |
+| `routes/sca.js` | 379-411 | Answer key (role-gated, RBAC-bypass hardened) |
+| `utils/seedData.js` | 441-700 | All 12 pre-seeded SCA findings |
 
 ---
 
@@ -705,7 +711,7 @@ Students learn to actively test a running application for vulnerabilities, execu
 - **Instructor workflow:** View submission counts per scenario, review student findings, provide feedback and grades, import to VM
 - **Preconditions:** Some scenarios require specific security settings (e.g., RBAC disabled)
 - **Language:** All 6 DAST scenarios (descriptions, instructions, and results) display in Quebec French using the platform's localization system
-- **Code:** `routes/dast.js` (235 lines)
+- **Code:** `routes/dast.js` (325 lines)
 
 ### The 6 DAST Scenarios
 
@@ -765,14 +771,16 @@ Students learn to actively test a running application for vulnerabilities, execu
 **Why it works:** `middleware/rateLimiter.js` is only applied to `/auth/login`, not to `/auth/mfa-verify`. The MFA endpoint accepts unlimited attempts.
 
 #### Scenario 5: Credentials in Server Logs
+> **Note:** The original `console.log` statement at `server.js:141` that logged plaintext credentials on every login attempt has been removed from the codebase. The DAST seed data still references this vulnerability, but students will not be able to reproduce it in the current code. This makes it a useful teaching moment: DAST scenarios can become stale when code is patched. Students should document that the vulnerability was remediated and note the evidence of its absence.
+
 **Steps and expected results:**
 1. Log in as admin. Open the Audit Logs page.
 2. In another tab, attempt to log in as any user.
 3. Check the server console output (visible in the Codespaces terminal).
-4. **Expected result:** The console shows `Login attempt: username:password` in plaintext.
-5. **Evidence:** Screenshot of the console log showing plaintext credentials.
+4. **Expected result (current code):** The console does NOT show plaintext credentials — the vulnerability has been fixed.
+5. **Evidence:** Screenshot showing the absence of credential logging in the console.
 
-**Why it works:** `server.js:141` contains a `console.log` that outputs both username and password on every login attempt.
+**Discussion:** This scenario demonstrates that security findings can become outdated. The original vulnerability existed but was removed during a code update. Students should classify this as "remediated" in their findings.
 
 #### Scenario 6: Path Traversal
 **Steps and expected results:**
@@ -782,7 +790,7 @@ Students learn to actively test a running application for vulnerabilities, execu
 4. **Expected result:** The server returns the contents of `package.json` (or any file you specify).
 5. **Evidence:** Screenshot of the response showing file contents from outside the backup directory.
 
-**Why it works:** `routes/admin.js:498-508` passes `req.params.filename` directly to `res.download()` without validating that the resolved path stays within the backup directory.
+**Why it works:** `routes/admin.js:597-600` (the `/admin/backups/raw/:filename` endpoint) passes `req.params.filename` directly to `path.join()` and `res.download()` without validating that the resolved path stays within the backup directory.
 
 ### Teaching Flow
 
@@ -794,11 +802,11 @@ Students learn to actively test a running application for vulnerabilities, execu
 ### Key Code References
 | File | Lines | What It Does |
 |------|-------|--------------|
-| `routes/dast.js` | 34-71 | Dashboard views |
-| `routes/dast.js` | 74-105 | Scenario detail view |
-| `routes/dast.js` | 108-138 | Precondition checking |
-| `routes/dast.js` | 141-180 | Student finding submission |
-| `utils/seedData.js` | 258-356 | All 6 pre-seeded DAST scenarios |
+| `routes/dast.js` | 54-97 | Dashboard views (student lab + instructor) |
+| `routes/dast.js` | 100-145 | Scenario detail view |
+| `routes/dast.js` | 148-179 | Precondition checking |
+| `routes/dast.js` | 182-243 | Student finding submission |
+| `utils/seedData.js` | 755-920 | All 6 pre-seeded DAST scenarios |
 
 ---
 
@@ -813,7 +821,7 @@ Students learn how organizations track, prioritize, and remediate security vulne
 - **Sources:** Findings can be imported from SCA, DAST, and Pentest labs, or created manually
 - **Status workflow:** `open` → `in_progress` → `resolved` (or `wont_fix`)
 - **Features:** Priority levels (1-4), CVSS scores, assigned-to tracking, remediation plans with deadlines, collaborative comments, full status history
-- **Code:** `routes/vm.js` (240 lines)
+- **Code:** `routes/vm.js` (320 lines)
 
 ### Status Transition Rules
 
@@ -875,144 +883,179 @@ wont_fix ─────→ open            (reopen)
 | File | Lines | What It Does |
 |------|-------|--------------|
 | `routes/vm.js` | 12-17 | Status transition rules |
-| `routes/vm.js` | 47-70 | Dashboard with sorting and statistics |
-| `routes/vm.js` | 89-104 | Vulnerability detail with history and comments |
-| `routes/vm.js` | 153-209 | Status transition logic with validation |
-| `routes/vm.js` | 220-238 | Collaborative comments |
-| `utils/seedData.js` | 362-454 | All 12 pre-seeded VM vulnerabilities |
+| `routes/vm.js` | 60-83 | Dashboard with sorting and statistics |
+| `routes/vm.js` | 102-125 | Vulnerability detail with history and comments |
+| `routes/vm.js` | 216-286 | Status transition logic with validation |
+| `routes/vm.js` | 297-318 | Collaborative comments |
+| `utils/seedData.js` | 930-1170 | All 12 pre-seeded VM vulnerabilities |
 
 ---
 
-## 18. Lab: Penetration Testing (Pentest)
+## 18. Lab: CTF Penetration Testing
 
 ### Learning Objective
-Students learn the structured methodology of a penetration test by conducting their own engagement through all 5 phases.
+Students learn to identify and exploit real vulnerabilities in a running application through a gamified Capture-the-Flag (CTF) format with 12 challenges across three difficulty tiers.
 
 ### How It Works
-- **Access:** Students via "Pentest Lab" in the sidebar; instructors see all engagements
-- **Auto-creation:** A student's engagement is automatically created when they first visit the lab
-- **Phases:** Reconnaissance → Enumeration → Vulnerability Identification → Exploitation → Reporting
-- **Progression:** Students must add at least 1 finding per phase before advancing to the next
-- **Submission:** All 5 phases must have findings before the engagement can be submitted
-- **Report builder:** Generates a structured pentest report from all findings and notes
-- **Code:** `routes/pentest.js` (315 lines)
+- **Access:** Students via "Pentest Lab" in the sidebar; instructors see a leaderboard and heatmap
+- **Format:** 12 flag-based challenges, each with a hidden `FLAG{...}` value the student must find and submit
+- **Difficulty tiers:** Easy (4 challenges, 100 pts each) → Medium (4 challenges, 200 pts each) → Advanced (4 challenges, 300 pts each)
+- **Tier unlocking:** Easy is always available. Medium unlocks after 2 easy flags captured. Advanced unlocks after 2 medium flags captured.
+- **Hints:** Each challenge has 2 purchasable hints that deduct from the points earned (hint 1 costs 10 pts, hint 2 costs 20 pts)
+- **Scoring:** Points are awarded on correct flag submission, reduced by any hints used. No penalty for incorrect attempts.
+- **Code:** `routes/pentest.js` (621 lines)
 
-### The 5 Phases — What Students Should Do
+### The 12 CTF Challenges
 
-#### Phase 1: Reconnaissance
-**Objective:** Gather information about the target application.
+| # | Title | Category | CWE | Difficulty | Points | Flag |
+|---|-------|----------|-----|:----------:|:------:|------|
+| 1 | Hardcoded Session Secret | A02 - Cryptographic Failures | CWE-798 | Easy | 100 | `FLAG{session-secret-exposed}` |
+| 2 | Hardcoded AES Key | A02 - Cryptographic Failures | CWE-321 | Easy | 100 | `FLAG{aes-key-hardcoded}` |
+| 3 | Plaintext Passwords in DB | A02 - Cryptographic Failures | CWE-256 | Easy | 100 | `FLAG{plaintext-passwords-exposed}` |
+| 4 | Plaintext Password Comparison | A07 - Auth Failures | CWE-287 | Easy | 100 | `FLAG{auth-bypass-plaintext}` |
+| 5 | IDOR on Enrollment Access | A01 - Broken Access Control | CWE-639 | Medium | 200 | `FLAG{idor-grades-exposed}` |
+| 6 | No CSRF Protection | A01 - Broken Access Control | CWE-352 | Medium | 200 | `FLAG{csrf-no-token-required}` |
+| 7 | Path Traversal in Backup Download | A01 - Broken Access Control | CWE-22 | Medium | 200 | `FLAG{path-traversal-arbitrary-read}` |
+| 8 | Rate Limiting Only on Login | A07 - Auth Failures | CWE-307 | Advanced | 300 | `FLAG{no-mfa-rate-limit}` |
+| 9 | No HTTP Security Headers | A05 - Security Misconfiguration | CWE-693 | Advanced | 300 | `FLAG{missing-security-headers}` |
+| 10 | Audit Logging Defaults to OFF | A09 - Logging Failures | CWE-778 | Advanced | 300 | `FLAG{audit-logging-disabled}` |
+| 11 | Outdated Dependencies | A06 - Vulnerable Components | CWE-1035 | Advanced | 300 | `FLAG{outdated-deps-known-cves}` |
+| 12 | Session Cookie Missing Secure Flag | A02 - Cryptographic Failures | CWE-614 | Advanced | 300 | `FLAG{cookie-no-secure-flag}` |
 
-**Expected student actions:**
-- Identify the technology stack (Node.js, Express, EJS templates)
-- Map the application URLs and endpoints
-- Identify user roles and login pages
-- Note all visible functionality
+**Maximum score:** 2400 points (with no hints used)
 
-**Tools to mention:** Wappalyzer, Nmap, Google dorking, manual browsing
+### Challenge-by-Challenge Solutions
 
-**Sample finding:**
-- Title: "Application Technology Stack Identified"
-- Severity: Info
-- Description: "The application runs on Node.js with Express framework. EJS is used for server-side rendering. The application uses a JSON-based database."
+#### Challenge 1: Hardcoded Session Secret (Easy, 100 pts)
+**Where:** `server.js:66`
+**How to find:** Read the server source code. The `express-session` configuration uses a hardcoded string: `'university-class-management-secret-key-change-in-production'`.
+**Flag:** `FLAG{session-secret-exposed}`
+**Teaching point:** Session secrets should come from environment variables, never hardcoded in source.
 
-#### Phase 2: Enumeration
-**Objective:** Identify specific services, endpoints, and user accounts.
+#### Challenge 2: Hardcoded AES Key (Easy, 100 pts)
+**Where:** `utils/encryption.js:6`
+**How to find:** Read the encryption module. The constant `DEFAULT_ENCRYPTION_KEY = 'university-app-secret-key-32!'` is hardcoded.
+**Flag:** `FLAG{aes-key-hardcoded}`
+**Teaching point:** Encryption keys must be managed externally (env vars, KMS, HSM).
 
-**Expected student actions:**
-- Enumerate all accessible URL paths
-- Identify API endpoints and their methods
-- List user accounts (via login error messages or public pages)
-- Map the application's file structure if accessible
+#### Challenge 3: Plaintext Passwords in DB (Easy, 100 pts)
+**Where:** Admin user record in the database (the `ctf_flag` field)
+**How to find:** Download a database backup (Admin → Backup & Restore → Create Backup → Download). Open the JSON file and find the admin user record. The `ctf_flag` field contains the flag. Alternatively, inspect the user data through the application when RBAC is disabled.
+**Flag:** `FLAG{plaintext-passwords-exposed}`
+**Teaching point:** Passwords should always be hashed (bcrypt/argon2), never stored in plaintext.
 
-**Tools to mention:** Burp Suite, dirb/gobuster, browser DevTools
+#### Challenge 4: Plaintext Password Comparison (Easy, 100 pts)
+**Where:** `routes/pentest.js:572-583` — the `/pentest/api/whoami` endpoint
+**How to find:** Navigate to `/pentest/api/whoami` while logged in. If your role is `admin`, the flag is returned in the JSON response. The challenge is about understanding that the auth system does a direct `password === user.password` comparison when `password_is_hashed` is 0.
+**Flag:** `FLAG{auth-bypass-plaintext}`
+**Teaching point:** Direct string comparison leaks timing information and requires plaintext storage.
 
-**Sample finding:**
-- Title: "User Enumeration via Login Error Messages"
-- Severity: Low
-- Description: "The login page returns 'Invalid username or password' for both invalid usernames and invalid passwords, which is good practice. However, the default accounts are documented in the README."
+#### Challenge 5: IDOR on Enrollment Access (Medium, 200 pts)
+**Where:** Hidden enrollment record in the database with a `ctf_flag` field
+**How to find:** When RBAC is disabled, students can access any class by changing the `:id` parameter in `/classes/:id`. There is a hidden enrollment record (admin enrolled in a class) with `ctf_flag = 'FLAG{idor-grades-exposed}'`. Students need to enumerate class/enrollment IDs to find it.
+**Flag:** `FLAG{idor-grades-exposed}`
+**Prerequisite:** RBAC must be disabled in the Security Panel.
+**Teaching point:** Always verify resource ownership server-side; never trust URL parameters alone.
 
-#### Phase 3: Vulnerability Identification
-**Objective:** Find specific vulnerabilities in the target.
+#### Challenge 6: No CSRF Protection (Medium, 200 pts)
+**Where:** `routes/pentest.js:586-598` — the `/pentest/api/csrf-check` endpoint
+**How to find:** The application has no CSRF middleware. Students must craft an external HTML page that submits a POST request to toggle a security setting (e.g., `/admin/security/toggle/audit_logging`). After the setting changes, visiting `/pentest/api/csrf-check` returns the flag (it compares the `security_settings.updated_at` timestamp against the session start time).
+**Flag:** `FLAG{csrf-no-token-required}`
+**Teaching point:** All state-changing requests need CSRF tokens or SameSite cookie attributes.
 
-**Expected student actions:**
-- Reference findings from the SCA and DAST labs
-- Test for additional vulnerabilities not covered in other labs
-- Classify each vulnerability with CWE and severity
-- Document the affected component
+#### Challenge 7: Path Traversal in Backup Download (Medium, 200 pts)
+**Where:** `routes/admin.js:597-600` — the `/admin/backups/raw/:filename` endpoint
+**How to find:** The raw backup endpoint does not sanitize the filename. Request `/admin/backups/raw/../../FLAG.txt` to read `FLAG.txt` from the project root.
+**Flag:** `FLAG{path-traversal-arbitrary-read}`
+**Teaching point:** Always validate that resolved file paths stay within the intended directory.
 
-**Tools to mention:** OWASP ZAP, Burp Scanner, manual testing
+#### Challenge 8: Rate Limiting Only on Login (Advanced, 300 pts)
+**Where:** `middleware/rateLimiter.js:5` — a code comment containing the flag
+**How to find:** Read the rate limiter source code. Line 5 contains the comment `// CTF-FLAG: FLAG{no-mfa-rate-limit}`. The comment also documents the fact that MFA verification (`/auth/mfa-verify`) has no rate limiting.
+**Flag:** `FLAG{no-mfa-rate-limit}`
+**Teaching point:** Rate limiting should cover all authentication endpoints, not just login.
 
-**Sample finding:**
-- Title: "No CSRF Protection on Forms"
-- Severity: High
-- CWE: CWE-352
-- Description: "All POST endpoints accept requests without CSRF tokens. This allows cross-site request forgery attacks."
+#### Challenge 9: No HTTP Security Headers (Advanced, 300 pts)
+**Where:** Server HTTP response headers
+**How to find:** Use browser DevTools (Network tab) or `curl -I` to inspect response headers. Confirm the absence of `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Strict-Transport-Security`, etc. The flag value must be known from the challenge description or briefing.
+**Flag:** `FLAG{missing-security-headers}`
+**Teaching point:** Use `helmet` middleware to set security headers. CSP prevents XSS, X-Frame-Options prevents clickjacking.
 
-#### Phase 4: Exploitation
-**Objective:** Demonstrate the impact of identified vulnerabilities.
+#### Challenge 10: Audit Logging Defaults to OFF (Advanced, 300 pts)
+**Where:** `routes/pentest.js:601-607` — the `/pentest/api/audit-check` endpoint
+**How to find:** Check the security settings. When `audit_logging` is `0` (the default), visiting `/pentest/api/audit-check` returns the flag.
+**Flag:** `FLAG{audit-logging-disabled}`
+**Teaching point:** Security monitoring should be enabled by default, not opt-in.
 
-**Expected student actions:**
-- Attempt to exploit at least one vulnerability
-- Document the exact steps to reproduce
-- Capture evidence (screenshots, request/response logs)
-- Assess the real-world impact
+#### Challenge 11: Outdated Dependencies (Advanced, 300 pts)
+**Where:** `routes/pentest.js:610-619` — the `/pentest/api/audit` endpoint
+**How to find:** When RBAC is disabled, visiting `/pentest/api/audit` returns the flag along with a note about outdated dependencies. Students should also run `npm audit` to see real CVE reports.
+**Flag:** `FLAG{outdated-deps-known-cves}`
+**Prerequisite:** RBAC must be disabled.
+**Teaching point:** Regularly audit and update dependencies. Use `npm audit` and automated tools like Dependabot.
 
-**Sample finding:**
-- Title: "Exploited Path Traversal to Read Server Files"
-- Severity: High
-- Evidence: "Modified the backup download URL to `../../package.json` and received the server's package.json file."
-- Impact: "An attacker with admin access can read any file on the server."
+#### Challenge 12: Session Cookie Missing Secure Flag (Advanced, 300 pts)
+**Where:** `server.js:48-58` — the `ctf_check` cookie set on every request
+**How to find:** Open browser DevTools → Application → Cookies. Find the `ctf_check` cookie. It is set with `httpOnly: false` and `secure: false`, and its value IS the flag.
+**Flag:** `FLAG{cookie-no-secure-flag}`
+**Teaching point:** Cookies containing sensitive data must use `httpOnly`, `secure`, and `SameSite` attributes.
 
-#### Phase 5: Reporting
-**Objective:** Compile all findings into a professional penetration test report.
+### Tier Unlock Mechanics
 
-**Expected student actions:**
-- Use the Report Builder to compile their findings
-- Write an executive summary
-- Prioritize findings by severity and business impact
-- Provide clear remediation recommendations for each finding
-- Submit the engagement
+```
+Easy (always unlocked)
+  └─ Solve 2 easy challenges ──→ Medium unlocked
+                                    └─ Solve 2 medium challenges ──→ Advanced unlocked
+```
+
+The unlock logic is in `routes/pentest.js:24-51` (`getUnlockState` function). Students cannot view or attempt challenges in locked tiers.
+
+### Instructor Dashboard
+
+The instructor view (`/pentest` for professors/admins) shows:
+- **Leaderboard:** Students ranked by score with flag count, last capture time, and rank
+- **Class summary:** Active students, average flags captured, current leader
+- **Challenge heatmap:** Students × challenges grid showing which flags each student has captured
+- **Per-challenge stats:** Solve count per challenge to identify which are too easy/hard
+- **Live polling:** The dashboard auto-refreshes via `/pentest/stats` every 30 seconds
 
 ### Teaching Flow
 
-1. **Introduction (30 minutes):**
-   - Explain the pentest methodology and the 5 phases.
-   - Emphasize: always get written authorization before testing (scope, rules of engagement).
-   - Walk through the lab interface and show how to add findings and notes.
+1. **Introduction (20 minutes):**
+   - Explain CTF format: find vulnerabilities, extract flags, submit for points.
+   - Show the challenge board: tiers, unlock mechanics, hints, scoring.
+   - Emphasize: always get authorization before testing real systems (this platform IS the authorized target).
 
 2. **Lab work (2-3 class sessions):**
-   - Students work through each phase independently.
-   - They must document findings, tools used, and notes for each phase.
-   - They advance through phases as they complete them.
+   - Students work through challenges independently, starting with the 4 easy challenges.
+   - They use hints strategically (each hint costs points).
+   - The tier unlock system ensures progression from simple to complex.
+   - Monitor progress on the instructor dashboard leaderboard and heatmap.
 
-3. **Report submission:**
-   - Students use the Report Builder to create their final report.
-   - All 5 phases must have at least 1 finding to submit.
+3. **Debrief per tier:**
+   - After most students complete a tier, discuss the vulnerabilities and remediation.
+   - Use the challenge solutions above to guide the discussion.
 
-4. **Grading (instructor):**
-   - Go to Pentest Lab → see all engagements.
-   - Click on each student's engagement to review.
-   - Provide feedback and grades.
-
-5. **Grading rubric suggestion:**
-   - Reconnaissance thoroughness: 15 points
-   - Enumeration completeness: 15 points
-   - Vulnerability identification accuracy: 25 points
-   - Exploitation quality and evidence: 25 points
-   - Report clarity and recommendations: 20 points
-   - Total: 100 points
+4. **Grading rubric suggestion:**
+   - CTF score (points earned): 50% of grade
+   - Written report documenting findings and remediations: 30% of grade
+   - Class participation and discussion: 20% of grade
+   - Bonus: first student to capture all 12 flags
 
 ### Key Code References
 | File | Lines | What It Does |
 |------|-------|--------------|
-| `routes/pentest.js` | 7-14 | Phase definitions and labels |
-| `routes/pentest.js` | 21-31 | Auto-create engagement |
-| `routes/pentest.js` | 77-97 | Student lab view |
-| `routes/pentest.js` | 121-142 | Phase advancement with guard |
-| `routes/pentest.js` | 170-192 | Finding submission |
-| `routes/pentest.js` | 237-263 | Engagement submission |
-| `routes/pentest.js` | 266-277 | Instructor grading |
-| `routes/pentest.js` | 280-313 | Bulk import to VM |
+| `routes/pentest.js` | 14-18 | `sanitizeChallenge()` — strips flag values before sending to views |
+| `routes/pentest.js` | 24-51 | `getUnlockState()` — tier unlock logic based on correct submissions |
+| `routes/pentest.js` | 64-91 | `getStudentStats()` — score calculation and ranking |
+| `routes/pentest.js` | 120-236 | Student challenge board and instructor dashboard |
+| `routes/pentest.js` | 239-308 | Challenge detail page with hint display |
+| `routes/pentest.js` | 311-430 | Flag submission with scoring and tier unlock detection |
+| `routes/pentest.js` | 433-485 | Hint unlock system |
+| `routes/pentest.js` | 496-560 | Instructor stats JSON endpoint (30s polling) |
+| `routes/pentest.js` | 563-567 | Admin reset student progress |
+| `routes/pentest.js` | 572-619 | Hidden API endpoints for CTF challenges 4, 6, 10, 11 |
+| `utils/seedData.js` | 1195-1421 | All 12 CTF challenges and FLAG.txt creation |
 
 ---
 
